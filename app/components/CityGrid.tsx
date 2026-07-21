@@ -10,7 +10,7 @@ export function Dashboard({ caseData, x, y }: { caseData: CityCase; x: number; y
   return <div className="dashboard-grid">{caseData.constraints.map((constraint) => {
     const value = constraint.a * x + constraint.b * y; const met = satisfies(constraint, x, y);
     const ratio = constraint.op === "<=" ? Math.min(100, value / constraint.limit * 100) : Math.min(100, value / constraint.limit * 100);
-    return <article className={`metric-card ${met ? "met" : "unmet"}`} key={constraint.id}><div><span className={`metric-icon ${constraint.type}`}>{typeIcon[constraint.type]}</span><small>{constraint.label}</small><b>{met ? "TERPENUHI" : "BELUM"}</b></div><strong>{value}<small> / {constraint.op === "<=" ? "maks." : "min."} {constraint.limit} {constraint.unit}</small></strong><div className="meter"><i style={{ width: `${ratio}%` }} /></div><p>{constraint.a}x + {constraint.b}y {constraint.op === "<=" ? "≤" : "≥"} {constraint.limit}</p></article>;
+    return <article className={`metric-card ${met ? "met" : "unmet"}`} key={constraint.id}><div><span className={`metric-icon ${constraint.type}`}>{typeIcon[constraint.type]}</span><small>{constraint.label}</small><b>{met ? "AMAN" : "RAWAN"}</b></div><strong>{value}<small> / {constraint.op === "<=" ? "maks." : "min."} {constraint.limit} {constraint.unit}</small></strong><div className="meter"><i style={{ width: `${ratio}%` }} /></div><p>{constraint.a}x + {constraint.b}y {constraint.op === "<=" ? "≤" : "≥"} {constraint.limit}</p></article>;
   })}</div>;
 }
 
@@ -23,17 +23,17 @@ export function CityGrid({ caseData, onEvidence, onComplete }: { caseData: CityC
 
   const place = (index: number) => {
     const next = [...grid];
-    if (tool === "park" && grid[index] !== "park" && parks >= caseData.optionalParkLimit) { setFlash(`Ruang hijau opsional dibatasi ${caseData.optionalParkLimit} petak.`); return; }
+    if (tool === "park" && grid[index] !== "park" && parks >= caseData.optionalParkLimit) { setFlash(`Slot bonus ruang hijau dibatasi ${caseData.optionalParkLimit} petak.`); return; }
     next[index] = tool === null ? null : (grid[index] === tool ? null : tool);
     setGrid(next); setFlash("");
   };
   const checkPlan = () => {
     const signature = `${x}-${y}-${parks}`;
     let nextRevisions = revisions;
-    if (lastSignature && signature !== lastSignature) { nextRevisions += 1; setRevisions(nextRevisions); onEvidence("revision", `Strategi direvisi menjadi x=${x}, y=${y} setelah evaluasi sebelumnya.`); }
+    if (lastSignature && signature !== lastSignature) { nextRevisions += 1; setRevisions(nextRevisions); onEvidence("revision", `Build direvisi menjadi x=${x}, y=${y} setelah scan kota sebelumnya.`); }
     const violations = values.filter((item) => !item.met).map((item) => item.constraint.label);
-    onEvidence(violations.length ? "warning" : "decision", violations.length ? `Evaluasi x=${x}, y=${y}: melanggar ${violations.join(", ")}.` : `Evaluasi x=${x}, y=${y}: seluruh kendala terpenuhi.`);
-    setLastSignature(signature); setChecks(checks + 1); setFlash(violations.length ? `Perbaiki: ${violations.join(", ")}` : "Rancangan feasible. Kamu dapat mengunci keputusan.");
+    onEvidence(violations.length ? "warning" : "decision", violations.length ? `City scan x=${x}, y=${y}: zona rawan pada ${violations.join(", ")}.` : `City scan x=${x}, y=${y}: semua resource aman.`);
+    setLastSignature(signature); setChecks(checks + 1); setFlash(violations.length ? `Alarm kota: ${violations.join(", ")} perlu diperbaiki.` : "Distrik stabil. Desain bisa dikunci.");
   };
   const lock = () => {
     const metPoints = Math.round(values.filter((item) => item.met).length / values.length * 16);
@@ -43,17 +43,17 @@ export function CityGrid({ caseData, onEvidence, onComplete }: { caseData: CityC
     const diversity = x > 0 && y > 0 ? 1 : 0;
     const process = (checks > 0 ? 1 : 0) + (revisions > 0 || (checks > 0 && allMet) ? 1 : 0);
     const score = Math.min(25, metPoints + efficiency + diversity + process);
-    onEvidence("decision", `Keputusan dikunci: x=${x}, y=${y}; ${values.filter((v) => v.met).length}/${values.length} kendala terpenuhi.`);
+    onEvidence("decision", `Desain distrik dikunci: x=${x}, y=${y}; ${values.filter((v) => v.met).length}/${values.length} resource aman.`);
     onComplete(score, { x, y, checks, revisions, values });
   };
 
   const toolButton = (value: Tile, label: string, kind: string) => <button className={tool === value ? `tool active ${kind}` : `tool ${kind}`} onClick={() => setTool(value)}><span className={`building-symbol ${kind}`} />{label}</button>;
   return (
     <section className="phase-card execute-card">
-      <div className="phase-title"><span className="phase-number orange">03</span><div><span className="kicker orange">LANGKAH POLYA</span><h1>Melaksanakan rencana</h1><p>Bangun kota dan cari pasangan bilangan bulat (x, y) yang feasible.</p></div></div>
+      <div className="phase-title"><span className="phase-number orange">03</span><div><span className="kicker orange">BUILD MODE</span><h1>Bangun distrik dan jaga resource tetap aman</h1><p>Tempatkan bangunan seperti city-builder. Setiap tile mengubah x dan y, lalu dashboard menunjukkan apakah kota stabil.</p></div></div>
       <Dashboard caseData={caseData} x={x} y={y} />
-      <div className="builder-layout"><div className="map-panel"><div className="map-toolbar"><span className="map-title"><i/> DISTRIK A-07</span><span>x = <b>{x}</b> · y = <b>{y}</b></span></div><div className="city-viewport"><div className="map-coordinate top">N</div><div className="map-coordinate bottom">GRID 7×5</div><span className="map-cloud one"/><span className="map-cloud two"/><div className="city-grid" role="grid" aria-label="Peta kota 7 kali 5">{grid.map((tile, index) => <button key={index} role="gridcell" aria-label={`Petak ${index + 1}: ${tile ?? "kosong"}`} className={`city-tile ${tile ? `filled ${tile}` : ""}`} onClick={() => place(index)}><span className="lot-code">{index + 1}</span>{tile && <span className={`building-shape ${tile === "x" ? caseData.variables[0].kind : tile === "y" ? caseData.variables[1].kind : tile}`}><i /><b /><em /></span>}</button>)}</div></div><div className="build-dock"><small>BUILD MENU</small><div>{toolButton("x", caseData.variables[0].shortName, caseData.variables[0].kind)}{toolButton("y", caseData.variables[1].shortName, caseData.variables[1].kind)}{toolButton("park", "Ruang hijau", "park")}{toolButton(null, "Bulldozer", "erase")}</div></div><p className="map-note">Ruang hijau opsional adalah lapisan visual (maks. {caseData.optionalParkLimit}) dan tidak menjadi variabel ketiga dalam model.</p></div>
-        <aside className="decision-panel"><span className="kicker">KEPUTUSAN SAAT INI</span><div className="xy-total"><div><b>x</b><strong>{x}</strong><small>{caseData.variables[0].shortName}</small></div><div><b>y</b><strong>{y}</strong><small>{caseData.variables[1].shortName}</small></div></div><div className={`feasible-state ${allMet ? "ok" : ""}`}><span>{allMet ? "✓" : "!"}</span><div><strong>{allMet ? "Wilayah feasible" : "Belum feasible"}</strong><small>{values.filter((v) => v.met).length}/{values.length} kendala terpenuhi</small></div></div>{flash && <p className="feedback-box">{flash}</p>}<button className="secondary-btn full" onClick={checkPlan}>Uji cepat kendala</button><button className="primary-btn full" onClick={lock} disabled={x + y === 0}>Kunci rancangan →</button><small className="attempts">{checks} evaluasi · {revisions} revisi terekam</small></aside>
+      <div className="builder-layout"><div className="map-panel"><div className="map-toolbar"><span className="map-title"><i/> DISTRIK A-07</span><span>x = <b>{x}</b> · y = <b>{y}</b></span></div><div className="city-viewport"><div className="map-coordinate top">N</div><div className="map-coordinate bottom">GRID 7×5</div><span className="map-cloud one"/><span className="map-cloud two"/><div className="city-grid" role="grid" aria-label="Peta kota 7 kali 5">{grid.map((tile, index) => <button key={index} role="gridcell" aria-label={`Petak ${index + 1}: ${tile ?? "kosong"}`} className={`city-tile ${tile ? `filled ${tile}` : ""}`} onClick={() => place(index)}><span className="lot-code">{index + 1}</span>{tile && <span className={`building-shape ${tile === "x" ? caseData.variables[0].kind : tile === "y" ? caseData.variables[1].kind : tile}`}><i /><b /><em /></span>}</button>)}</div></div><div className="build-dock"><small>BUILD MENU</small><div>{toolButton("x", caseData.variables[0].shortName, caseData.variables[0].kind)}{toolButton("y", caseData.variables[1].shortName, caseData.variables[1].kind)}{toolButton("park", "Ruang hijau", "park")}{toolButton(null, "Bulldozer", "erase")}</div></div><p className="map-note">Ruang hijau adalah bonus visual (maks. {caseData.optionalParkLimit}) dan tidak menambah variabel baru.</p></div>
+        <aside className="decision-panel"><span className="kicker">CITY STATUS</span><div className="xy-total"><div><b>x</b><strong>{x}</strong><small>{caseData.variables[0].shortName}</small></div><div><b>y</b><strong>{y}</strong><small>{caseData.variables[1].shortName}</small></div></div><div className={`feasible-state ${allMet ? "ok" : ""}`}><span>{allMet ? "✓" : "!"}</span><div><strong>{allMet ? "Distrik stabil" : "Alarm resource"}</strong><small>{values.filter((v) => v.met).length}/{values.length} resource aman</small></div></div>{flash && <p className="feedback-box">{flash}</p>}<button className="secondary-btn full" onClick={checkPlan}>Scan kota</button><button className="primary-btn full" onClick={lock} disabled={x + y === 0}>Lock desain distrik →</button><small className="attempts">{checks} scan · {revisions} revisi build terekam</small></aside>
       </div>
     </section>
   );
