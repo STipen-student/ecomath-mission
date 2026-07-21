@@ -60,7 +60,7 @@ into source files.
 npx wrangler secret put AUTH_GOOGLE_ID --config wrangler.standalone.jsonc
 npx wrangler secret put AUTH_GOOGLE_SECRET --config wrangler.standalone.jsonc
 npx wrangler secret put AUTH_SECRET --config wrangler.standalone.jsonc
-npx wrangler secret put ECOMATH_TEACHER_PASSWORD_HASH --config wrangler.standalone.jsonc
+npx wrangler secret put ECOMATH_TEACHER_PASSWORD --config wrangler.standalone.jsonc
 npx wrangler secret put ECOMATH_SESSION_SECRET --config wrangler.standalone.jsonc
 ```
 
