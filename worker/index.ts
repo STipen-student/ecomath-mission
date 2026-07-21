@@ -10,6 +10,7 @@ interface Env {
   AUTH_GOOGLE_SECRET?: string;
   AUTH_SECRET?: string;
   ECOMATH_TEACHER_USERNAME?: string;
+  ECOMATH_TEACHER_PASSWORD?: string;
   ECOMATH_TEACHER_PASSWORD_HASH?: string;
   ECOMATH_SESSION_SECRET?: string;
   IMAGES: {
