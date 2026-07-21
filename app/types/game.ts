@@ -58,6 +58,13 @@ export interface GenerationResult {
   notice?: string;
 }
 
+export interface CasePackGenerationResult {
+  cases: CityCase[];
+  provider: ProviderMode;
+  status: string;
+  notice?: string;
+}
+
 export interface EvidenceEntry {
   id: string;
   phase: Phase;
