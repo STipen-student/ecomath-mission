@@ -5,6 +5,7 @@ const SESSION_SECONDS = 60 * 60 * 10;
 
 type RuntimeSecrets = {
   ECOMATH_TEACHER_USERNAME?: string;
+  ECOMATH_TEACHER_PASSWORD?: string;
   ECOMATH_TEACHER_PASSWORD_HASH?: string;
   ECOMATH_SESSION_SECRET?: string;
 };
@@ -32,9 +33,12 @@ async function signature(email: string, expires: number) {
 
 export async function verifyTeacherCredentials(username: string, password: string) {
   const config = secrets();
-  if (!config.ECOMATH_TEACHER_USERNAME || !config.ECOMATH_TEACHER_PASSWORD_HASH || !config.ECOMATH_SESSION_SECRET) return false;
+  if (!config.ECOMATH_TEACHER_USERNAME || !config.ECOMATH_SESSION_SECRET) return false;
+  const configuredPasswordHash = config.ECOMATH_TEACHER_PASSWORD_HASH
+    || (config.ECOMATH_TEACHER_PASSWORD ? await sha256(config.ECOMATH_TEACHER_PASSWORD) : "");
+  if (!configuredPasswordHash) return false;
   const usernameMatches = username.trim().toLowerCase() === config.ECOMATH_TEACHER_USERNAME.toLowerCase();
-  const passwordMatches = await sha256(password) === config.ECOMATH_TEACHER_PASSWORD_HASH;
+  const passwordMatches = await sha256(password) === configuredPasswordHash;
   return usernameMatches && passwordMatches;
 }
 
