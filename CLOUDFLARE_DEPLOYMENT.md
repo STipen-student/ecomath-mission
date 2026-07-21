@@ -23,8 +23,7 @@ npx wrangler d1 create ecomath-mission-db
 ```
 
 Copy the returned database ID into `wrangler.standalone.jsonc`, replacing the
-placeholder `00000000-0000-4000-8000-000000000000`. Then apply the existing
-schema:
+placeholder value. Then apply the existing schema:
 
 ```bash
 npx wrangler d1 migrations apply ecomath-mission-db --remote --config wrangler.standalone.jsonc
