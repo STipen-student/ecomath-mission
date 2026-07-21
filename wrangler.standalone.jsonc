@@ -16,7 +16,7 @@
     {
       "binding": "DB",
       "database_name": "ecomath-mission-db",
-      "database_id": "00000000-0000-4000-8000-000000000000",
+      "database_id": "16981448-484f-4d90-8614-088e1184236c",
       "migrations_dir": "drizzle"
     }
   ],
