@@ -97,10 +97,22 @@ export function App({ embedded = false, studentName, onMissionComplete }: { embe
       <div className="microcopy"><span>✓ 10 kasus lokal</span><span>✓ Pilih 4–5 misi</span><span>✓ Jejak strategi tersimpan</span><span>✓ Gameplay lebih dominan</span></div>
     </div>
     <div className="hero-visual"><div className="visual-halo" /><span className="pixel-cloud cloud-a"/><span className="pixel-cloud cloud-b"/><div className="float-card mission"><span>◎</span><div><small>DISTRIK TERPILIH</small><strong>{selectedIds.length}/5 misi</strong></div></div><div className="city-board"><div className="terrain-patch patch-a"/><div className="terrain-patch patch-b"/><div className="road horizontal"/><div className="road vertical"/><div className="css-building a"><i/><i/><i/></div><div className="css-building b"><i/><i/></div><div className="css-building c"><i/><i/></div><div className="css-tree one"><i/></div><div className="css-tree two"><i/></div><div className="blue-route"><i/><b/><em/></div></div><div className="float-card target"><div className="target-ring">{Math.max(0, selectedIds.length)}</div><div><small>QUEST CHAIN</small><strong>4–5 distrik</strong></div></div><div className="pixel-mini-hud"><span><small>KAS</small><b>{getLimit(caseData, "budget")} M</b></span><span><small>LAHAN</small><b>{getLimit(caseData, "land")}</b></span><span><small>EMISI</small><b>{getLimit(caseData, "emission")}</b></span></div><article className="case-preview"><div><span className="difficulty">{caseData.difficulty}</span><small>PREVIEW DISTRIK</small></div><h2>{caseData.title}</h2><p>{caseData.initialCondition}</p><footer>{caseData.sdgFocus.map((item) => <span key={item}>{item.split("·")[0]}</span>)}</footer></article></div></section>
+    <PlayPrinciples />
     <MissionBoard missions={casePack} selectedIds={selectedIds} loading={loading} onToggle={toggleMission} onPreview={setCaseData} onStart={startCampaign} onGenerate={() => generate(false)} />
     <footer className="page-footer"><span>EcoMath Mission</span><i>•</i><span>Campaign City Builder</span><i>•</i><span>SDG 11 & 13</span></footer>
     {help && <div className="modal-backdrop" onMouseDown={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onMouseDown={(e) => e.stopPropagation()}><button className="close-btn" aria-label="Tutup" onClick={() => setHelp(false)}>×</button><span className="kicker">CARA BERMAIN</span><h2 id="help-title">Satu campaign, beberapa distrik</h2><ol><li><b>01</b><div><strong>Pilih 4–5 distrik</strong><p>Setiap distrik adalah kasus kota berbeda dengan angka dan kendala sendiri.</p></div></li><li><b>02</b><div><strong>Mainkan quest kota</strong><p>Buka intel, buat blueprint, lalu bangun distrik di grid.</p></div></li><li><b>03</b><div><strong>Jaga resource</strong><p>Kas, lahan, layanan, dan emisi menjadi aturan permainan.</p></div></li><li><b>04</b><div><strong>Naikkan reputasi</strong><p>Reward distrik muncul dari strategi, scan resource, revisi, dan keputusan akhir.</p></div></li></ol><button className="primary-btn full" onClick={() => { setHelp(false); startCampaign(); }}>Saya siap mulai →</button></section></div>}
   </main>;
+}
+
+function PlayPrinciples() {
+  const items = [
+    ["Tujuan", "Naikkan reputasi kota dengan distrik yang stabil."],
+    ["Aturan", "Kas, lahan, layanan, dan emisi menjadi batas permainan."],
+    ["Pilihan", "Pemain bebas memilih 4–5 distrik dan menyusun bangunan."],
+    ["Feedback", "Scan kota memberi alarm resource secara langsung."],
+    ["Reward", "Badge dan XP muncul dari strategi, revisi, dan keputusan."],
+  ];
+  return <section className="play-principles"><div><span className="kicker orange"><i />GAME ASSESSMENT LOOP</span><h2>Bermain dulu, berpikir Polya tanpa terasa</h2><p>Polya tidak diposisikan sebagai halaman tes. Ia menjadi alur alami di balik gameplay: pemain membaca situasi, menyusun aturan, mencoba desain, lalu mengecek hasil kota.</p></div><div>{items.map(([title, text]) => <article key={title}><b>{title}</b><span>{text}</span></article>)}</div></section>;
 }
 
 function MissionBoard({ missions, selectedIds, loading, onToggle, onPreview, onStart, onGenerate }: { missions: CityCase[]; selectedIds: string[]; loading: boolean; onToggle: (missionId: string) => void; onPreview: (mission: CityCase) => void; onStart: () => void; onGenerate: () => void }) {
