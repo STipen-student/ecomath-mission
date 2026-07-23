@@ -1,0 +1,80 @@
+/* Keep buildings upright while the city board remains isometric. */
+.pixel-game-theme .city-grid.city-grid-3d,
+.pixel-game-theme .city-tile.city-tile-3d,
+.pixel-game-theme .city-tile.city-tile-3d .tile-top {
+  transform-style: preserve-3d;
+}
+
+.pixel-game-theme .city-tile.city-tile-3d .tile-top {
+  overflow: visible;
+  isolation: auto;
+}
+
+.pixel-game-theme .city-tile.city-tile-3d.filled {
+  z-index: 12;
+}
+
+.pixel-game-theme .city-tile.city-tile-3d.filled:hover {
+  z-index: 20;
+}
+
+.pixel-game-theme .building-shape.building-3d {
+  width: 72px;
+  height: 92px;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 100%;
+  transform: translate3d(-50%, -78%, 34px) rotateZ(-45deg) rotateX(-58deg);
+  backface-visibility: hidden;
+  filter: drop-shadow(9px 13px 3px rgba(22, 43, 37, 0.34));
+}
+
+.pixel-game-theme .building-shape.building-3d::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 2%;
+  bottom: -9px;
+  height: 12px;
+  background: rgba(20, 43, 35, 0.3);
+  transform: skewX(-34deg);
+  z-index: -1;
+}
+
+.pixel-game-theme .building-3d .building-roof,
+.pixel-game-theme .building-3d .building-face {
+  backface-visibility: hidden;
+}
+
+.pixel-game-theme .building-3d .building-roof {
+  filter: brightness(1.07);
+}
+
+.pixel-game-theme .building-3d .building-face.front {
+  box-shadow: 8px 9px 0 #916236;
+}
+
+.pixel-game-theme .building-3d .building-face.side {
+  width: 22%;
+  right: -4%;
+  background: #a8733d;
+}
+
+.pixel-game-theme .building-3d.park {
+  width: 64px;
+  height: 78px;
+}
+
+@media (max-width: 760px) {
+  .pixel-game-theme .building-shape.building-3d {
+    width: 68px;
+    height: 88px;
+    transform: translate3d(-50%, -76%, 32px) rotateZ(-45deg) rotateX(-58deg) scale(0.94);
+  }
+}
+
+@media (max-width: 430px) {
+  .pixel-game-theme .building-shape.building-3d {
+    transform: translate3d(-50%, -76%, 30px) rotateZ(-45deg) rotateX(-58deg) scale(0.9);
+  }
+}
