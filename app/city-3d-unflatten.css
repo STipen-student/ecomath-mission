@@ -1,0 +1,27 @@
+/* Grouping properties such as filter force preserve-3d descendants to flatten. */
+.pixel-game-theme .city-grid.city-grid-3d,
+.pixel-game-theme .building-shape.building-3d {
+  filter: none !important;
+}
+
+.pixel-game-theme .city-grid.city-grid-3d,
+.pixel-game-theme .city-tile.city-tile-3d,
+.pixel-game-theme .city-tile.city-tile-3d .tile-top,
+.pixel-game-theme .building-shape.building-3d {
+  transform-style: preserve-3d !important;
+}
+
+/* Replace filtered shadows without creating a flattened compositing layer. */
+.pixel-game-theme .city-grid.city-grid-3d::before {
+  box-shadow: 18px 18px 0 #5d7b4e, 30px 35px 22px rgba(23, 45, 34, 0.25) !important;
+}
+
+.pixel-game-theme .building-shape.building-3d::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: rgba(17, 37, 31, 0.28);
+  transform: translate3d(14px, 16px, -14px);
+  z-index: -2;
+  pointer-events: none;
+}
