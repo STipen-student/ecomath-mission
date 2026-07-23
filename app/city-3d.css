@@ -1,0 +1,42 @@
+/* 3D city-planning board upgrade */
+.pixel-game-theme .city-sim-panel{background:#1d3641;border:4px solid #132a34;border-radius:0;box-shadow:7px 7px #132a34}
+.pixel-game-theme .city-sim-panel .map-toolbar{background:#203c4d;color:#f8f0b8;border-bottom:3px solid #132a34}
+.city-resource-stack{position:absolute;left:18px;top:56px;z-index:8;display:grid;gap:10px}
+.city-resource-stack span{width:46px;height:46px;display:grid;place-items:center;background:#203c4d;border:3px solid #102832;box-shadow:4px 4px #102832;color:#f1d45d;font-weight:900}
+.city-resource-stack .tree{color:#73c760}.city-resource-stack .water{color:#66c8ef}.city-resource-stack .bolt{color:#efc247}
+.pixel-game-theme .city-viewport{background:linear-gradient(#7fcde0 0 22%,#c8e9e9 22% 35%,#639c56 35% 100%);border-bottom:4px solid #132a34;position:relative;overflow:hidden}
+.pixel-game-theme .city-viewport:after{content:"";position:absolute;left:0;right:0;bottom:0;height:54%;background-image:linear-gradient(30deg,rgba(255,255,255,.07) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.07) 87.5%);background-size:54px 92px;pointer-events:none}
+.pixel-game-theme .city-grid.city-grid-3d{position:relative;z-index:2;width:min(760px,82vw);min-height:510px;margin:82px auto 54px;padding:18px;gap:0;background:transparent;transform:perspective(1000px) rotateX(58deg) rotateZ(45deg);transform-style:preserve-3d;filter:drop-shadow(22px 32px 18px rgba(23,45,34,.28))}
+.pixel-game-theme .city-grid.city-grid-3d:before{content:"";position:absolute;inset:8px;background:#8aa76a;border:3px solid #213b36;box-shadow:18px 18px 0 #5d7b4e;transform:translateZ(-22px);z-index:-2}
+.pixel-game-theme .city-grid.city-grid-3d:after{content:"";position:absolute;inset:18px;background:linear-gradient(90deg,transparent 47%,#303f45 47% 53%,transparent 53%),linear-gradient(0deg,transparent 37%,#303f45 37% 47%,transparent 47%);opacity:.22;pointer-events:none;z-index:1}
+.pixel-game-theme .city-tile.city-tile-3d{border:0;border-radius:0;background:transparent;aspect-ratio:1;transform-style:preserve-3d;overflow:visible;display:block;min-width:0;padding:0}
+.pixel-game-theme .city-tile.city-tile-3d:hover{background:transparent;z-index:10}
+.city-tile-3d .tile-shadow{position:absolute;inset:12px;background:rgba(23,42,32,.2);transform:translate3d(13px,15px,-20px);filter:blur(1px)}
+.city-tile-3d .tile-top{position:absolute;inset:5px;border:1px solid rgba(36,73,54,.65);background:#91bc70;box-shadow:inset 0 0 0 2px rgba(255,255,255,.12);transform:translateZ(16px);display:grid;place-items:center;overflow:visible}
+.city-tile-3d .tile-side{position:absolute;background:#5c844d;border:1px solid rgba(35,57,38,.45)}
+.city-tile-3d .side-a{left:5px;right:5px;bottom:-6px;height:12px;transform:rotateX(-90deg);transform-origin:top}
+.city-tile-3d .side-b{top:5px;bottom:5px;right:-6px;width:12px;transform:rotateY(90deg);transform-origin:left;background:#6b9659}
+.city-tile-3d.zone-residential .tile-top{background:#9cca78}.city-tile-3d.zone-green .tile-top{background:#76b968}.city-tile-3d.zone-civic .tile-top{background:#d9c676}.city-tile-3d.zone-water .tile-top{background:#62b8c7}.city-tile-3d.zone-industrial .tile-top{background:#9a83b7}.city-tile-3d.zone-plaza .tile-top{background:#d7be78}
+.city-tile-3d.road-tile .tile-top{background:#2f3f45;border-color:#17272c;box-shadow:inset 0 0 0 3px #47585e}
+.city-tile-3d.road-tile .tile-accent:before{content:"";position:absolute;left:14%;right:14%;top:47%;height:4px;background:repeating-linear-gradient(90deg,#f5d75f 0 14px,transparent 14px 28px)}
+.city-tile-3d.mission-route .tile-top{outline:4px solid rgba(242,216,86,.75);box-shadow:0 0 20px rgba(242,216,86,.48),inset 0 0 0 2px rgba(255,255,255,.18)}
+.tile-accent{position:absolute;inset:0;pointer-events:none}.home-zone:before,.park-zone:before,.service-zone:before,.industry-zone:before,.canal-zone:before,.center-zone:before,.soft-zone:before{content:"";position:absolute;inset:9px;border:2px dashed rgba(255,255,255,.25)}
+.canal-zone:after{content:"";position:absolute;left:8%;right:8%;top:42%;height:16%;background:rgba(31,120,155,.55);border-top:2px solid rgba(255,255,255,.35);border-bottom:2px solid rgba(20,77,104,.35)}
+.park-zone:after,.soft-zone:after{content:"";position:absolute;width:16px;height:16px;border-radius:4px;background:#397b43;left:18%;top:18%;box-shadow:22px 12px #4f994f,12px 32px #356e3a}
+.city-tile-3d .lot-code{position:absolute;left:6px;bottom:5px;font:900 7px monospace;color:rgba(23,50,39,.48);transform:rotateZ(-45deg);z-index:2}
+.city-tile-3d.road-tile .lot-code{color:rgba(255,255,255,.35)}
+.pixel-game-theme .building-shape.building-3d{position:absolute;left:50%;top:50%;width:58%;height:64%;border-radius:0;background:transparent;box-shadow:none;transform:translate(-50%,-67%) rotateZ(-45deg) rotateX(-58deg);transform-style:preserve-3d;z-index:8;display:block}
+.building-3d .building-roof{position:absolute;left:12%;right:12%;top:0;height:30%;background:#d95f45;border:3px solid #17313b;clip-path:polygon(50% 0,100% 65%,100% 100%,0 100%,0 65%);z-index:3}
+.building-3d .building-face.front{position:absolute;left:7%;right:7%;top:24%;height:70%;background:#e6cf72;border:4px solid #17313b;box-shadow:7px 8px 0 #916236;z-index:2}
+.building-3d .building-face.front i,.building-3d .building-face.front b,.building-3d .building-face.front em{position:absolute;top:24%;width:15%;height:18%;background:#a9d7e2;border:2px solid #2f6573}
+.building-3d .building-face.front i{left:17%}.building-3d .building-face.front b{left:42%}.building-3d .building-face.front em{right:17%}
+.building-3d .building-face.side{position:absolute;right:0;top:31%;width:18%;height:62%;background:#b48746;border:3px solid #17313b;transform:skewY(28deg);transform-origin:left top;z-index:1}
+.building-3d .building-label{position:absolute;right:-10px;top:-12px;background:#203c4d;color:#f1d45d;border:2px solid #102832;padding:2px 5px;font:900 10px monospace;z-index:6}
+.building-3d.transit .building-roof{background:#3c82b6}.building-3d.transit .building-face.front{background:#6fb4d0;min-height:34%}
+.building-3d.solar .building-roof{background:#264e68}.building-3d.solar .building-roof:after{content:"";position:absolute;inset:28% 18%;background:repeating-linear-gradient(90deg,#63a6c9 0 7px,#2d6888 7px 9px)}
+.building-3d.civic .building-roof{background:#e9d36c}.building-3d.civic .building-face.front{background:#f4f0d8}.building-3d.civic .building-face.front:after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:28%;background:repeating-linear-gradient(90deg,#596d78 0 8px,transparent 8px 18px)}
+.building-3d.park{width:54%;height:54%}.building-3d.park .building-roof{display:none}.building-3d.park .building-face.front{left:18%;right:auto;top:12%;width:58%;height:58%;border-radius:50%;background:#53a75f;border:3px solid #18343d;box-shadow:8px 8px 0 #346d3f}
+.building-3d.park .building-face.front:after{content:"";position:absolute;left:40%;top:70%;width:18%;height:46%;background:#7b5537;border:2px solid #18343d}.building-3d.park .building-face.front i,.building-3d.park .building-face.front b,.building-3d.park .building-face.front em,.building-3d.park .building-face.side{display:none}
+.pixel-game-theme .build-dock{background:#203c4d;border-top:3px solid #132a34;color:#f1d45d}.pixel-game-theme .build-dock .tool{background:#314e58;color:#e4f3ef;border:3px solid #132a34;box-shadow:3px 3px #132a34;border-radius:0}.pixel-game-theme .build-dock .tool.active{background:#f1d45d;color:#17333e;transform:translate(-2px,-2px)}
+@media(max-width:760px){.city-resource-stack{display:none}.pixel-game-theme .city-grid.city-grid-3d{width:720px;min-height:500px;margin:74px auto 34px;transform:perspective(900px) rotateX(58deg) rotateZ(45deg) scale(.72);transform-origin:top center}.pixel-game-theme .building-shape.building-3d{transform:translate(-50%,-67%) rotateZ(-45deg) rotateX(-58deg) scale(.9)}}
+@media(max-width:430px){.pixel-game-theme .city-grid.city-grid-3d{transform:perspective(860px) rotateX(58deg) rotateZ(45deg) scale(.56);margin-left:-78px}.city-tile-3d .lot-code{display:none}}
