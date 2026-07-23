@@ -16,12 +16,18 @@
   box-shadow: 18px 18px 0 #5d7b4e, 30px 35px 22px rgba(23, 45, 34, 0.25) !important;
 }
 
+/* The tile top is already elevated, so the building base only needs a 1px offset. */
+.pixel-game-theme .building-shape.building-3d {
+  transform: translate3d(-50%, -50%, 1px) !important;
+}
+
 .pixel-game-theme .building-shape.building-3d::before {
   content: "";
   position: absolute;
-  inset: 2px;
-  background: rgba(17, 37, 31, 0.28);
-  transform: translate3d(14px, 16px, -14px);
+  inset: 3px;
+  background: rgba(17, 37, 31, 0.32);
+  transform: translate3d(7px, 8px, -1px);
+  box-shadow: 0 0 0 3px rgba(17, 37, 31, 0.1);
   z-index: -2;
   pointer-events: none;
 }
