@@ -4,6 +4,7 @@ import "./globals.css";
 import "./campaign.css";
 import "./city-3d.css";
 import "./city-3d-fix.css";
+import "./city-3d-unflatten.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
