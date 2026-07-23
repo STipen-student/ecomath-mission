@@ -1,12 +1,14 @@
-/* Keep buildings upright while the city board remains isometric. */
+/* True CSS 3D extrusion for buildings on the isometric board. */
 .pixel-game-theme .city-grid.city-grid-3d,
 .pixel-game-theme .city-tile.city-tile-3d,
-.pixel-game-theme .city-tile.city-tile-3d .tile-top {
-  transform-style: preserve-3d;
+.pixel-game-theme .city-tile.city-tile-3d .tile-top,
+.pixel-game-theme .building-shape.building-3d {
+  transform-style: preserve-3d !important;
 }
 
+.pixel-game-theme .city-tile.city-tile-3d,
 .pixel-game-theme .city-tile.city-tile-3d .tile-top {
-  overflow: visible;
+  overflow: visible !important;
   isolation: auto;
 }
 
@@ -15,66 +17,146 @@
 }
 
 .pixel-game-theme .city-tile.city-tile-3d.filled:hover {
-  z-index: 20;
+  z-index: 24;
 }
 
+/* The footprint stays parallel to the lot. Its faces rise on the local Z axis. */
 .pixel-game-theme .building-shape.building-3d {
-  width: 72px;
-  height: 92px;
+  --building-height: 68px;
+  position: absolute;
   left: 50%;
   top: 50%;
-  transform-origin: 50% 100%;
-  transform: translate3d(-50%, -78%, 34px) rotateZ(-45deg) rotateX(-58deg);
-  backface-visibility: hidden;
-  filter: drop-shadow(9px 13px 3px rgba(22, 43, 37, 0.34));
+  width: 62px;
+  height: 52px;
+  display: block;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  transform: translate3d(-50%, -50%, 18px) !important;
+  transform-origin: center;
+  backface-visibility: visible;
+  filter: drop-shadow(13px 15px 5px rgba(17, 37, 31, 0.34));
+  z-index: 15;
 }
 
-.pixel-game-theme .building-shape.building-3d::after {
-  content: "";
-  position: absolute;
-  left: 12%;
-  right: 2%;
-  bottom: -9px;
-  height: 12px;
-  background: rgba(20, 43, 35, 0.3);
-  transform: skewX(-34deg);
-  z-index: -1;
-}
-
-.pixel-game-theme .building-3d .building-roof,
-.pixel-game-theme .building-3d .building-face {
-  backface-visibility: hidden;
-}
-
+/* Flat roof, lifted above the lot. */
 .pixel-game-theme .building-3d .building-roof {
-  filter: brightness(1.07);
+  position: absolute;
+  inset: -4px;
+  width: auto;
+  height: auto;
+  display: block;
+  clip-path: none;
+  border: 3px solid #17313b;
+  background: #d95f45;
+  transform: translateZ(var(--building-height));
+  transform-origin: center;
+  backface-visibility: visible;
+  box-shadow: inset 0 0 0 4px rgba(255, 232, 153, 0.25);
+  z-index: 4;
 }
 
+/* Front wall stands perpendicular to the board. */
 .pixel-game-theme .building-3d .building-face.front {
-  box-shadow: 8px 9px 0 #916236;
+  position: absolute;
+  left: 0;
+  right: auto;
+  top: auto;
+  bottom: 0;
+  width: 100%;
+  height: var(--building-height);
+  display: block;
+  background: #e6cf72;
+  border: 3px solid #17313b;
+  box-sizing: border-box;
+  transform: rotateX(-90deg);
+  transform-origin: 50% 100%;
+  backface-visibility: visible;
+  box-shadow: inset 0 -8px rgba(145, 98, 54, 0.22);
+  z-index: 3;
 }
 
-.pixel-game-theme .building-3d .building-face.side {
-  width: 22%;
-  right: -4%;
-  background: #a8733d;
+.pixel-game-theme .building-3d .building-face.front i,
+.pixel-game-theme .building-3d .building-face.front b,
+.pixel-game-theme .building-3d .building-face.front em {
+  position: absolute;
+  top: 24%;
+  width: 15%;
+  height: 20%;
+  display: block;
+  background: #a9d7e2;
+  border: 2px solid #2f6573;
 }
+
+.pixel-game-theme .building-3d .building-face.front i { left: 14%; }
+.pixel-game-theme .building-3d .building-face.front b { left: 42%; }
+.pixel-game-theme .building-3d .building-face.front em { right: 14%; }
+
+/* Right wall closes the volume. */
+.pixel-game-theme .building-3d .building-face.side {
+  position: absolute;
+  left: auto;
+  right: 0;
+  top: auto;
+  bottom: 0;
+  width: var(--building-height);
+  height: 100%;
+  display: block;
+  background: #a8733d;
+  border: 3px solid #17313b;
+  box-sizing: border-box;
+  transform: rotateY(90deg);
+  transform-origin: 100% 50%;
+  backface-visibility: visible;
+  z-index: 2;
+}
+
+.pixel-game-theme .building-3d .building-label {
+  position: absolute;
+  right: -9px;
+  top: -9px;
+  transform: translateZ(calc(var(--building-height) + 8px)) rotateZ(-45deg);
+  background: #203c4d;
+  color: #f1d45d;
+  border: 2px solid #102832;
+  padding: 2px 5px;
+  font: 900 10px monospace;
+  z-index: 8;
+}
+
+/* Distinct building families keep their identity in the city. */
+.pixel-game-theme .building-3d.transit { --building-height: 54px; width: 68px; height: 46px; }
+.pixel-game-theme .building-3d.transit .building-roof { background: #3c82b6; }
+.pixel-game-theme .building-3d.transit .building-face.front { background: #6fb4d0; }
+.pixel-game-theme .building-3d.solar { --building-height: 48px; width: 66px; height: 52px; }
+.pixel-game-theme .building-3d.solar .building-roof { background: repeating-linear-gradient(90deg, #63a6c9 0 9px, #264e68 9px 13px); }
+.pixel-game-theme .building-3d.civic { --building-height: 76px; width: 66px; height: 56px; }
+.pixel-game-theme .building-3d.civic .building-roof { background: #e9d36c; }
+.pixel-game-theme .building-3d.civic .building-face.front { background: #f4f0d8; }
 
 .pixel-game-theme .building-3d.park {
-  width: 64px;
-  height: 78px;
+  --building-height: 42px;
+  width: 50px;
+  height: 50px;
+}
+.pixel-game-theme .building-3d.park .building-roof {
+  inset: 4px;
+  border-radius: 50%;
+  background: #53a75f;
+  border-color: #18343d;
+}
+.pixel-game-theme .building-3d.park .building-face.front,
+.pixel-game-theme .building-3d.park .building-face.side {
+  background: #397b43;
 }
 
 @media (max-width: 760px) {
   .pixel-game-theme .building-shape.building-3d {
-    width: 68px;
-    height: 88px;
-    transform: translate3d(-50%, -76%, 32px) rotateZ(-45deg) rotateX(-58deg) scale(0.94);
+    --building-height: 62px;
+    width: 58px;
+    height: 48px;
   }
-}
-
-@media (max-width: 430px) {
-  .pixel-game-theme .building-shape.building-3d {
-    transform: translate3d(-50%, -76%, 30px) rotateZ(-45deg) rotateX(-58deg) scale(0.9);
-  }
+  .pixel-game-theme .building-3d.transit { --building-height: 50px; width: 62px; }
+  .pixel-game-theme .building-3d.solar { --building-height: 45px; width: 60px; }
+  .pixel-game-theme .building-3d.civic { --building-height: 68px; width: 60px; }
 }
