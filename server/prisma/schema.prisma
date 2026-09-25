@@ -1,0 +1,149 @@
+// Skema database Ecomath Mission
+//
+// PORTABILITAS SQLite <-> PostgreSQL
+// Pengembangan lokal memakai SQLite (tanpa instalasi server database), produksi
+// memakai PostgreSQL di Railway sesuai Panduan Deployment. Agar migrasi antar
+// keduanya cukup dengan mengganti satu baris `provider` di bawah, skema ini
+// sengaja dibatasi pada subset yang didukung KEDUANYA:
+//   - TIDAK memakai `enum`      -> dipakai String, divalidasi Zod di lapisan aplikasi
+//   - TIDAK memakai tipe `Json` -> payload disimpan sebagai String berisi JSON
+//   - TIDAK memakai array skalar
+// Gunakan `npm run db:use-postgres` / `npm run db:use-sqlite` untuk menukarnya.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Satu sesi = satu siswa mengerjakan rangkaian level dalam satu duduk.
+model Session {
+  id          String    @id @default(cuid())
+  /// Nama atau inisial siswa. Panduan etika menyarankan memakai kode/inisial,
+  /// bukan nama lengkap, bila desain penelitian memungkinkan.
+  studentName String
+  /// NIS atau kode siswa; opsional agar sesi anonim tetap dimungkinkan.
+  studentId   String?
+  /// Kode kelas / sesi pengambilan data, dipakai memilah data saat analisis.
+  classCode   String
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  userAgent   String?
+
+  /// Rata-rata komposit berbobot seluruh percobaan pada sesi ini.
+  sessionComposite Float?
+
+  /// ─── Tutorial antarmuka (kovariat penelitian, BUKAN bukti klaim) ───
+  /// Dipakai memeriksa apakah antarmuka masih menyumbang varians yang tidak
+  /// relevan dengan konstruk: bila siswa yang melewati tutorial atau banyak
+  /// salah langkah cenderung berskor lebih rendah, sebagian kesulitan mereka
+  /// berasal dari aplikasinya, bukan dari kemampuan matematisnya.
+  /// NULL = sesi dibuat sebelum tutorial ada, atau ringkasannya gagal terkirim.
+  tutorialStatus     String?
+  tutorialDurationMs Int?
+  /// Aksi yang tidak cocok dengan langkah tutorial mana pun yang belum selesai.
+  tutorialMissteps   Int?
+  tutorialSteps      Int?
+
+  attempts TaskAttempt[]
+
+  @@index([classCode])
+  @@index([startedAt])
+}
+
+/// Satu percobaan = satu siswa mengerjakan SATU task pada satu level.
+/// Unit inilah yang menjadi "butir" (item) pada analisis butir/Rasch.
+model TaskAttempt {
+  id         String    @id @default(cuid())
+  sessionId  String
+  session    Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  level      Int
+  taskId     String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  events EventLog[]
+  score  Score?
+
+  /// Satu level hanya dikerjakan satu kali per sesi; menjadikan pemberian task
+  /// bersifat idempoten sehingga refresh halaman tidak menggandakan percobaan.
+  @@unique([sessionId, level])
+  @@index([taskId])
+}
+
+/// Log event mentah, mengikuti skema Bagian 5.1 dokumen ECD.
+/// Nama kolom sengaja dipertahankan seperti dokumen agar hasil ekspor CSV dapat
+/// dipetakan langsung ke tabel skema log pada BAB III skripsi.
+model EventLog {
+  id        String      @id @default(cuid())
+  attemptId String
+  attempt   TaskAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  /// Didenormalisasi dari TaskAttempt supaya ekspor CSV tidak perlu join ganda.
+  sessionId String
+  taskId    String
+
+  timestampMs              Int
+  eventType                String
+  /// JSON hasil serialisasi; divalidasi Zod sebelum disimpan.
+  payload                  String
+  isValidAtTime            Boolean
+  durationSinceLastEventMs Int
+
+  /// Waktu server menerima event; berbeda dari timestampMs (waktu klien) dan
+  /// berguna mendeteksi log yang tertunda akibat jaringan sekolah tidak stabil.
+  receivedAt DateTime @default(now())
+
+  @@index([attemptId, timestampMs])
+  @@index([sessionId])
+  @@index([eventType])
+}
+
+/// Skor rubrik satu percobaan task.
+model Score {
+  id        String      @id @default(cuid())
+  attemptId String      @unique
+  attempt   TaskAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  sessionId String
+  taskId    String
+  level     Int
+
+  k1 Int
+  k2 Int
+  k3 Int
+  k4 Int
+
+  /// Jumlah mentah K1+K2+K3+K4 (0-12).
+  rawSum Int
+  /// Komposit berbobot per level (0-3), bobot pada scoring/thresholds.ts.
+  weightedComposite Float
+
+  /// Koreksi manual skor K4 oleh peneliti/rater kedua. NULL = memakai skor otomatis.
+  /// Disediakan karena K4 memakai heuristik teks terbuka yang dapat keliru.
+  k4ManualOverride Int?
+  k4ReviewNote     String?
+
+  /// Jejak audit lengkap (JSON): deskriptor rubrik, alasan, dan observable per klaim.
+  /// Ditulis untuk peneliti - bahasanya teknis, dipakai halaman guru dan ekspor CSV.
+  trace String
+
+  /// Umpan balik yang benar-benar ditampilkan ke siswa (JSON): ringkasan dan saran
+  /// per klaim dalam bahasa siswa, plus satu kalimat penutup. Disimpan APA ADANYA
+  /// pada saat submit, bukan dihitung ulang saat dibaca - scoring/feedback.ts dapat
+  /// direvisi di kemudian hari, dan tanpa penyimpanan ini catatan "apa yang dilihat
+  /// siswa saat itu" akan hilang begitu kalimatnya berubah.
+  feedback String
+
+  /// Versi rubrik yang menghasilkan skor ini; wajib diperiksa saat menggabungkan
+  /// data dari beberapa gelombang pengambilan data.
+  scoringVersion String
+  computedAt     DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([taskId])
+  @@index([level])
+}

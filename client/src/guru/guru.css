@@ -1,0 +1,518 @@
+/*
+ * Halaman laporan guru.
+ *
+ * Mengimpor stylesheet permainan agar token warna, panel bevel, tombol, dan
+ * tabel persis sama - guru dan siswa melihat sistem visual yang satu. Halaman
+ * ini kemudian MEMBALIK aturan tata letak layar penuh: laporan adalah dokumen
+ * yang digulir, bukan kanvas permainan yang mengunci layar.
+ */
+
+@import '../style.css';
+
+html,
+body {
+  height: auto;
+  overflow: auto;
+}
+
+body {
+  background: linear-gradient(180deg, var(--sky-hi) 0%, var(--sky) 40%, var(--sky-lo) 100%);
+  background-attachment: fixed;
+}
+
+.guru-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.guru-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 14px 14px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------------- Kepala halaman ---------------- */
+
+.guru-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.guru-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.guru-title h1 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.guru-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.field-inline {
+  width: auto;
+  min-width: 150px;
+  padding: 7px 9px;
+  font-family: var(--font-pixel);
+  font-size: 0.72rem;
+}
+
+/* ---------------- Kartu angka ---------------- */
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+}
+
+.stat-label {
+  font-family: var(--font-pixel);
+  font-size: 0.64rem;
+  color: var(--ink-dim);
+}
+
+.stat-value {
+  font-family: var(--font-pixel);
+  font-size: 1.5rem;
+  color: var(--yellow);
+  line-height: 1.2;
+}
+
+.stat-note {
+  font-size: 0.72rem;
+  color: var(--ink-mute);
+}
+
+/* ---------------- Kartu umum ---------------- */
+
+.guru-page .card {
+  max-width: none;
+  padding: 16px;
+}
+
+.guru-page h2 {
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.guru-page h3 {
+  font-size: 0.76rem;
+  margin-bottom: 4px;
+  color: var(--ink-dim);
+}
+
+/* ---------------- Rata-rata per klaim ---------------- */
+
+.claim-row {
+  padding: 11px 0;
+  border-top: 2px solid var(--ink);
+}
+
+.claim-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-pixel);
+  font-size: 0.72rem;
+  margin-bottom: 6px;
+}
+
+.claim-mean {
+  color: var(--yellow);
+}
+
+.meter-bar {
+  height: 13px;
+  background: var(--paper-3);
+  border: 3px solid var(--ink);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.meter-bar-sm {
+  height: 9px;
+  min-width: 60px;
+}
+
+.meter-fill {
+  height: 100%;
+  background: var(--green);
+}
+
+/* Sebaran skor 0-3 sebagai satu batang bersegmen. */
+.dist {
+  display: flex;
+  margin-top: 6px;
+  height: 20px;
+  border: 2px solid var(--ink);
+}
+
+.dist-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  color: #0b1220;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.dist-0 {
+  background: #c3d0d6;
+}
+.dist-1 {
+  background: #efa06a;
+}
+.dist-2 {
+  background: var(--yellow);
+}
+.dist-3 {
+  background: var(--green);
+  color: #fff;
+}
+
+.legend-dist {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+}
+
+.dist-key {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border: 2px solid var(--ink);
+}
+
+/* Penanda kemungkinan hambatan antarmuka pada laporan siswa. */
+.tutorial-flag {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: #fdf3d6;
+  border: 3px solid var(--ink);
+  border-left-width: 10px;
+  border-left-color: var(--yellow);
+  border-radius: 4px;
+  font-family: var(--font-read);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* ---------------- Mode pemilihan soal ---------------- */
+
+.adaptive-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.adaptive-head .hint {
+  margin: 0;
+  flex: 1;
+  min-width: 220px;
+}
+
+/* Peringatan validitas sengaja mencolok: ia harus terbaca pada saat saklarnya
+   dinyalakan, bukan ditemukan belakangan di dokumentasi. */
+.adaptive-warning {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  background: #fdf3d6;
+  border: 3px solid var(--ink);
+  border-left-width: 10px;
+  border-left-color: var(--yellow);
+  border-radius: 4px;
+  font-family: var(--font-read);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* ---------------- Tabel ---------------- */
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.guru-page .data-table {
+  font-size: 0.78rem;
+}
+
+.guru-page .data-table td {
+  vertical-align: middle;
+}
+
+.cell-wrap {
+  min-width: 160px;
+}
+
+.cell-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 130px;
+}
+
+.cell-pct {
+  font-family: var(--font-pixel);
+  font-size: 0.68rem;
+  color: var(--yellow);
+}
+
+.sub {
+  color: var(--ink-mute);
+  font-size: 0.72rem;
+}
+
+.table-siswa td.lv {
+  text-align: center;
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  min-width: 52px;
+}
+
+.lv.is-clickable {
+  cursor: pointer;
+}
+
+.lv.is-clickable:hover {
+  outline: 2px solid var(--yellow);
+  outline-offset: -2px;
+}
+
+.lv-kosong {
+  color: var(--ink-mute);
+}
+
+/* Warna sel level mengikuti capaian, supaya pola kelas terbaca sekilas. */
+.lv-0 {
+  background: #f8cfc6;
+}
+.lv-1 {
+  background: #fbe0bd;
+}
+.lv-2 {
+  background: #fbf0bd;
+}
+.lv-3 {
+  background: #cdeec2;
+}
+
+.lv-flag {
+  font-size: 0.7rem;
+  color: var(--yellow);
+  margin-left: 3px;
+}
+
+/* ---------------- Rincian percobaan ---------------- */
+
+.modal-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(22, 50, 63, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 14px;
+  overflow-y: auto;
+}
+
+.modal-panel {
+  width: min(860px, 100%);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 10px;
+}
+
+.modal-head h2 {
+  font-size: 0.9rem;
+  margin: 0 0 3px;
+}
+
+.sub-card {
+  background: var(--paper-3);
+  border: 2px solid var(--ink);
+  padding: 12px;
+}
+
+.trace-row {
+  padding: 9px 0;
+  border-top: 2px solid var(--ink);
+}
+
+.trace-row:first-of-type {
+  border-top: none;
+}
+
+.trace-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-pixel);
+  font-size: 0.7rem;
+}
+
+.trace-score {
+  padding: 1px 7px;
+  border: 2px solid var(--ink);
+}
+
+.s-0 {
+  background: #f8cfc6;
+}
+.s-1 {
+  background: #fbe0bd;
+}
+.s-2 {
+  background: var(--yellow);
+}
+.s-3 {
+  background: var(--green);
+  color: #fff;
+}
+
+.trace-desc {
+  font-size: 0.8rem;
+  color: var(--ink);
+  margin: 6px 0 4px;
+}
+
+.trace-reasons {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-dim);
+  font-size: 0.76rem;
+}
+
+.trace-reasons li {
+  margin-bottom: 2px;
+}
+
+/* Refleksi & peninjauan K4 */
+
+.reflect-block {
+  margin-bottom: 12px;
+}
+
+.reflect-label {
+  display: block;
+  font-family: var(--font-pixel);
+  font-size: 0.64rem;
+  color: var(--ink-dim);
+  margin-bottom: 4px;
+}
+
+.reflect-text {
+  margin: 0;
+  padding: 9px 11px;
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.reflect-open {
+  white-space: pre-wrap;
+}
+
+.reflect-q {
+  color: var(--yellow);
+  font-family: var(--font-pixel);
+  font-size: 0.7rem;
+}
+
+.override-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 2px solid var(--ink);
+}
+
+.override-row .field:not(.field-inline) {
+  flex: 1;
+  min-width: 180px;
+  width: auto;
+}
+
+.chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip-count {
+  font-family: var(--font-pixel);
+  font-size: 0.64rem;
+  padding: 4px 8px;
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  color: var(--ink-dim);
+}
+
+/* ---------------- Layar sempit ---------------- */
+
+@media (max-width: 700px) {
+  .guru-head {
+    position: static;
+  }
+
+  .guru-actions {
+    width: 100%;
+  }
+
+  .field-inline {
+    flex: 1;
+  }
+
+  .modal-wrap {
+    padding: 12px 8px;
+  }
+}

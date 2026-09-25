@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Kredensial - JANGAN PERNAH di-commit
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Database lokal (SQLite) - berisi data siswa
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+server/prisma/dev.db*
+
+# Hasil ekspor data penelitian - jangan masuk repo publik
+exports/
+*.csv
+
+# Log
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Cache
+.vite/
+coverage/
+.cache/
