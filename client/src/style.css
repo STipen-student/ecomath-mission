@@ -2067,10 +2067,11 @@ code {
   align-items: center;
   gap: 6px;
   padding: 9px 11px;
+  min-height: 44px;
   flex: none;
   cursor: pointer;
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--ink);
   background: var(--yellow);
 }
@@ -2237,6 +2238,7 @@ code {
   font-family: var(--font-pixel);
   font-size: 0.6rem;
   white-space: nowrap;
+  text-align: right;
 }
 
 .aal-calibration h3 {
@@ -2252,7 +2254,8 @@ code {
 
 .aal-cal-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  /* Kolom status selebar tetap supaya keempat baris rata satu sama lain. */
+  grid-template-columns: minmax(0, 1fr) auto auto 7.2rem;
   gap: 4px 10px;
   align-items: center;
   padding: 8px 10px;
@@ -2318,5 +2321,116 @@ code {
   }
   .aal-cal-row .aal-status {
     grid-column: 1 / -1;
+    text-align: left;
+  }
+}
+
+/* ---------------- AaL: penyesuaian ponsel & tablet ---------------- */
+
+.aal-self-step {
+  font-family: var(--font-pixel);
+  font-size: 0.62rem;
+  color: var(--ink-dim);
+}
+
+.aal-self.is-answered legend::after {
+  content: '✓';
+  color: var(--green-lo);
+}
+
+.aal-self legend .key-tag,
+.aal-claim .key-tag {
+  font-size: 0.62rem;
+}
+
+/* Fieldset digulir otomatis ke atas; beri jarak dari tepi panel. */
+.aal-self {
+  scroll-margin-top: 8px;
+}
+
+/*
+ * Tombol KIRIM selalu terlihat. Pada layar sempit bilah alat dapat digulir
+ * ke samping, dan sebelumnya KIRIM - tombol terpenting - justru berada di
+ * ujung yang tersembunyi.
+ */
+.tool-go {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  box-shadow: -10px 0 0 var(--ink);
+}
+
+@media (max-width: 780px) {
+  /*
+   * HUD dua baris: [identitas][jam] lalu [target][meter]. Bila target ikut di
+   * baris pertama, nama kota terpotong hingga tak terbaca di HP.
+   */
+  .hud .plate-identity {
+    flex: 1 1 calc(100% - 120px);
+  }
+
+  .hud .plate-goal {
+    order: 3;
+    align-self: stretch;
+  }
+
+  .hud .meters {
+    order: 4;
+    flex: 1 1 calc(100% - 120px);
+  }
+
+  /* Lembar penilaian diri lebih tinggi: empat tahap x empat kriteria. */
+  .sheet.is-locked .sheet-panel {
+    max-height: 82vh;
+  }
+
+  .aal-self {
+    padding: 8px;
+  }
+
+  .aal-self .choice {
+    padding: 9px 10px;
+    gap: 8px;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .screen-center {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .plate-goal {
+    padding: 9px 8px;
+    gap: 3px;
+  }
+
+  .aal-claim {
+    padding: 8px 9px;
+  }
+
+  .aal-claim-title {
+    font-size: 0.8rem;
+  }
+
+  .aal-criterion {
+    font-size: 0.8rem;
+    padding: 6px 7px;
+  }
+
+  .aal-cal-row {
+    padding: 8px;
+    gap: 4px 8px;
+  }
+}
+
+/* Tablet: layar hasil dan target cukup lebar untuk kartu yang lebih lapang. */
+@media (min-width: 600px) and (max-width: 1024px) {
+  .screen-center .card {
+    max-width: 620px;
   }
 }

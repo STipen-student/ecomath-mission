@@ -174,7 +174,11 @@ export function renderLayarTarget(
       ...KLAIM.map((k) => {
         const tombol = el(
           'button',
-          { class: `aal-claim${k === fokus ? ' is-active' : ''}`, type: 'button' },
+          {
+            class: `aal-claim${k === fokus ? ' is-active' : ''}`,
+            type: 'button',
+            ariaLabel: `${k} ${JUDUL_KLAIM[k]}${sebelumnya ? `, skor Level ${sebelumnya.level}: ${sebelumnya.scores[k]}` : ''}${k === disarankan ? ', disarankan' : ''}`,
+          },
           el('span', { class: 'aal-claim-key' }, k),
           el('span', { class: 'aal-claim-title' }, JUDUL_KLAIM[k]),
           sebelumnya ? el('span', { class: 'aal-claim-prev' }, `Level ${sebelumnya.level}: ${sebelumnya.scores[k]}/3`) : null,
@@ -192,7 +196,11 @@ export function renderLayarTarget(
 
     wadahTarget.replaceChildren(
       ...[1, 2, 3].map((v) => {
-        const tombol = el('button', { class: `aal-seg${v === target ? ' is-active' : ''}`, type: 'button' }, String(v));
+        const tombol = el(
+          'button',
+          { class: `aal-seg${v === target ? ' is-active' : ''}`, type: 'button', ariaLabel: `Target skor ${v}` },
+          String(v),
+        );
         tombol.addEventListener('click', () => {
           target = v;
           gambar();
@@ -293,20 +301,45 @@ export function formPenilaianDiri(
   const pesan = el('p', { class: 'form-error' });
   const tombol = el('button', { class: 'btn btn-primary btn-block' }, 'Lihat hasil & bandingkan');
 
-  const blok = KLAIM.map((k) => {
+  const blok: HTMLElement[] = [];
+
+  /**
+   * Di HP keempat tahap tidak muat sekaligus di layar. Setelah satu tahap
+   * dinilai, tahap berikutnya yang belum dinilai digulir ke atas otomatis,
+   * supaya siswa tidak perlu mencari-cari sambil menggulir panjang.
+   */
+  const keTahapBerikutnya = (i: number): void => {
+    const berikut = KLAIM.findIndex((k, j) => j > i && pilihan[k] === undefined);
+    const tujuan = berikut >= 0 ? blok[berikut] : tombol;
+    tujuan?.scrollIntoView({ behavior: 'smooth', block: berikut >= 0 ? 'start' : 'center' });
+  };
+
+  KLAIM.forEach((k, i) => {
     const opsi = kriteria(k, task).map((teks, skor) => {
       const radio = el('input', { type: 'radio', name: `aal-diri-${k}` });
       radio.addEventListener('change', () => {
-        if (radio.checked) pilihan[k] = skor;
+        if (!radio.checked) return;
+        const pertamaKali = pilihan[k] === undefined;
+        pilihan[k] = skor;
+        blok[i]?.classList.add('is-answered');
+        if (pertamaKali) window.setTimeout(() => keTahapBerikutnya(i), 180);
       });
       return el('label', { class: 'choice aal-self-choice' }, radio, el('span', { class: 'aal-crit-score' }, String(skor)), el('span', {}, teks));
     });
     const fokus = target?.focusClaim === k;
-    return el(
-      'fieldset',
-      { class: `aal-self${fokus ? ' is-focus' : ''}` },
-      el('legend', {}, `${k} · ${JUDUL_KLAIM[k]}`, fokus ? el('span', { class: 'key-tag' }, `🎯 TARGET ${target!.targetScore}`) : null),
-      el('div', { class: 'choice-group' }, ...opsi),
+    blok.push(
+      el(
+        'fieldset',
+        { class: `aal-self${fokus ? ' is-focus' : ''}` },
+        el(
+          'legend',
+          {},
+          el('span', { class: 'aal-self-step' }, `${i + 1}/4`),
+          `${k} · ${JUDUL_KLAIM[k]}`,
+          fokus ? el('span', { class: 'key-tag' }, `🎯 TARGET ${target!.targetScore}`) : null,
+        ),
+        el('div', { class: 'choice-group' }, ...opsi),
+      ),
     );
   });
 
