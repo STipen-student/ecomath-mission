@@ -9,6 +9,10 @@
  * sessionStorage: hilang begitu tab ditutup, dan tidak ikut berpindah ke tab lain.
  */
 
+import type { AsesmenSebagaiBelajar } from '../api/types.js';
+
+export type { AsesmenSebagaiBelajar };
+
 const API_URL: string =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000';
 
@@ -211,7 +215,12 @@ export interface RincianPercobaan {
     scoringVersion: string;
     trace: { claims?: JejakKlaim[]; observablesRingkas?: Record<string, unknown> };
     /** Persis kalimat yang dilihat siswa saat submit - disimpan apa adanya, bukan dihitung ulang. */
-    studentFeedback: { claims?: UmpanBalikKlaim[]; overallMessage?: string };
+    studentFeedback: {
+      claims?: UmpanBalikKlaim[];
+      overallMessage?: string;
+      /** Tidak ada pada skor yang disimpan sebelum Assessment as Learning ditambahkan. */
+      assessmentAsLearning?: AsesmenSebagaiBelajar;
+    };
   } | null;
   refleksi: {
     closedOptionId: string | null;
@@ -247,6 +256,8 @@ export interface BarisLaporanLevel {
   weightedComposite: number;
   /** Kalimat penutup level ini, persis seperti yang dilihat siswa saat submit. */
   overallMessage: string;
+  /** Kalibrasi penilaian diri & tinjauan target; null pada data lama. */
+  assessmentAsLearning: AsesmenSebagaiBelajar | null;
 }
 
 /** Rata-rata satu klaim lintas seluruh level yang dikerjakan siswa. */
@@ -278,6 +289,8 @@ export interface LaporanSiswa {
   perLevel: BarisLaporanLevel[];
   profilKlaim: ProfilKlaim[];
   kesimpulan: string;
+  /** Refleksi belajar akhir sesi (Assessment as Learning); null bila tidak diisi. */
+  refleksiBelajar: { mostImprovedClaim: string | null; openText: string | null } | null;
 }
 
 /* ------------------------------------------------------------------ */

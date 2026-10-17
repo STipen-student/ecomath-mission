@@ -25,6 +25,7 @@ import { toCsv, type CsvRow } from '../lib/csv.js';
 import { effectiveScore } from '../lib/scoreView.js';
 import { narrateEvent } from '../lib/eventNarrator.js';
 import { SCORING_VERSION } from '../scoring/thresholds.js';
+import type { Kalibrasi, TinjauanTarget } from '../scoring/assessmentAsLearning.js';
 
 const prisma = new PrismaClient();
 
@@ -41,6 +42,27 @@ function tulis(outDir: string, nama: string, rows: CsvRow[]): void {
   const path = join(outDir, nama);
   writeFileSync(path, toCsv(rows), 'utf8');
   console.log(`  ${nama.padEnd(18)} ${String(rows.length).padStart(6)} baris  -> ${path}`);
+}
+
+/**
+ * Ambil hasil Assessment as Learning dari Score.feedback (disimpan apa adanya
+ * saat submit). Skor lama tanpa field ini menghasilkan sel kosong.
+ */
+function asesmenDiri(feedbackJson: string): {
+  self: Record<'K1' | 'K2' | 'K3' | 'K4', number> | null;
+  calibration: Kalibrasi | null;
+  goal: TinjauanTarget | null;
+} {
+  try {
+    const fb = JSON.parse(feedbackJson) as { assessmentAsLearning?: { calibration?: Kalibrasi | null; goalReview?: TinjauanTarget | null } };
+    const calibration = fb.assessmentAsLearning?.calibration ?? null;
+    const self = calibration
+      ? (Object.fromEntries(calibration.perClaim.map((c) => [c.claim, c.self])) as Record<'K1' | 'K2' | 'K3' | 'K4', number>)
+      : null;
+    return { self, calibration, goal: fb.assessmentAsLearning?.goalReview ?? null };
+  } catch {
+    return { self: null, calibration: null, goal: null };
+  }
 }
 
 export async function runExport(opts: ExportOptions): Promise<void> {
@@ -92,6 +114,7 @@ export async function runExport(opts: ExportOptions): Promise<void> {
     'scores_long.csv',
     scores.map((s) => {
       const eff = effectiveScore(s);
+      const aal = asesmenDiri(s.feedback);
       return {
         session_id: s.sessionId,
         student_name: s.attempt.session.studentName,
@@ -116,6 +139,18 @@ export async function runExport(opts: ExportOptions): Promise<void> {
           ? Math.round(((s.attempt.finishedAt.getTime() - s.attempt.startedAt.getTime()) / 60000) * 100) / 100
           : '',
         computed_at: s.computedAt.toISOString(),
+        // Assessment as Learning (docs/SCORING_SPEC.md §7.18) - kosong bila tidak diisi siswa.
+        self_K1: aal.self?.K1 ?? '',
+        self_K2: aal.self?.K2 ?? '',
+        self_K3: aal.self?.K3 ?? '',
+        self_K4: aal.self?.K4 ?? '',
+        calibration_exact: aal.calibration?.exactCount ?? '',
+        calibration_mean_abs_gap: aal.calibration?.meanAbsGap ?? '',
+        calibration_bias: aal.calibration?.bias ?? '',
+        goal_claim: aal.goal?.focusClaim ?? '',
+        goal_target: aal.goal?.targetScore ?? '',
+        goal_strategy: aal.goal?.strategyId ?? '',
+        goal_achieved: aal.goal ? aal.goal.achieved : '',
         ...(opts.includeTrace ? { trace: s.trace } : {}),
       };
     }),

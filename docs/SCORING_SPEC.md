@@ -750,11 +750,80 @@ Tutorial juga dapat dilewati, dan pelewatannya tercatat.
 Perubahan ini menambah empat kolom nullable pada `Session` dan satu endpoint;
 tidak menyentuh mesin skoring, tidak menuntut migrasi `SCORING_VERSION`.
 
+## 7.18 Assessment as Learning: siswa menilai pekerjaannya sendiri
+
+Sebelumnya mekanisme asesmen berupa **Assessment for Learning**: siswa
+mengerjakan, sistem menilai, lalu siswa *menerima* umpan balik (§7.10). Kini
+siswa juga menjadi **penilai pekerjaannya sendiri** (Assessment as Learning,
+Earl 2003) lewat tiga kebiasaan metakognitif pada setiap level:
+
+| Kapan | Yang dilakukan siswa | Event / tempat |
+|---|---|---|
+| Sebelum level | Membaca kriteria sukses, memilih **satu tahap** (K1–K4) yang ingin ditingkatkan, menetapkan **target skor** 1–3 dan **satu strategi** | `goal_set` (event pertama, t = 0) |
+| Selama level | Melihat pengingat target `🎯 K2→3` di HUD; ketuk untuk membaca ulang strateginya | — |
+| Setelah refleksi, **sebelum skor** | Menilai pekerjaannya sendiri 0–3 pada keempat tahap dengan kriteria yang sama | `self_assessment` (dikirim lewat `/api/submit`) |
+| Di layar hasil | Membandingkan penilaian diri dengan bukti (**kalibrasi**) dan memeriksa apakah targetnya tercapai | `Score.feedback.assessmentAsLearning` |
+| Akhir sesi | Melihat perjalanan kalibrasi dan target lintas level, lalu menulis refleksi belajar | `learning_reflection` |
+
+Level berikutnya dibuka dengan layar target yang menampilkan skor level
+sebelumnya dan **menyarankan** tahap terlemah (pemecah seri: kalibrasi
+terburuk). Saran itu hanya diisi awal — siswa bebas menggantinya, karena
+memilih sendiri adalah inti Assessment as Learning.
+
+### Kriteria sukses = terjemahan rubrik, bukan kunci jawaban
+
+Kriteria 0–3 yang dibaca siswa (`client/src/ui/asesmenDiri.ts` → `kriteria()`)
+adalah terjemahan deskriptor rubrik §4 ke perilaku yang dapat diperiksa siswa
+sendiri ("aku mengecek titik pojok sebelum mengirim"). Kriteria tidak pernah
+menyebut angka, pertidaksamaan, atau titik optimum soal mana pun. Seperti
+rubriknya, K3 dan K4 menyesuaikan bentuk task: tanpa fungsi tujuan K3 hanya
+tentang kelayakan, tanpa distraktor K4 hanya tentang refleksi. **Bila
+deskriptor rubrik direvisi, kriteria ini wajib ikut ditinjau.**
+
+### Tidak memengaruhi skor — dijamin uji
+
+`goal_set`, `self_assessment`, dan `learning_reflection` terdaftar pada
+`NON_EVIDENCE_EVENTS` (`domain/events.ts`) dan **disaring sebelum
+`deriveObservables()`** di `scoreAttempt()`. Tanpa penyaringan, waktu mengisi
+asesmen diri akan menambah `totalDurationMs`, dan `goal_set` dapat terbaca
+sebagai aksi pertama. Pencatat log client juga baru dimulai *setelah* siswa
+menetapkan target, sehingga waktu menimbang target tidak terhitung sebagai
+`planningTimeMs`. Uji `assessmentAsLearning.test.ts` memastikan skor, jejak
+audit, `totalDurationMs`, dan `planningTimeMs` identik dengan atau tanpa
+ketiga event ini. `SCORING_VERSION` tidak berubah.
+
+Penilaian diri dikirim **bersama submit**, bukan lewat `/api/log`, sehingga
+siswa tidak dapat melihat skor lebih dulu lalu menyesuaikan penilaiannya.
+
+### Kalibrasi dan tinjauan target (`scoring/assessmentAsLearning.ts`)
+
+Per tahap: `gap = penilaian diri − skor rubrik`; status `tepat`,
+`terlalu_tinggi`, atau `terlalu_rendah`. Per level: `exactCount` (0–4),
+`meanAbsGap`, dan `bias` (rata-rata gap; positif = melebihkan diri). Pembanding
+dipakai skor **otomatis**, karena itulah yang dilihat siswa; koreksi K4 oleh
+guru tidak mengubah kalibrasi yang tersimpan.
+
+Target dinyatakan **tercapai** bila skor tahap fokus ≥ target pilihan siswa.
+Bila belum, kalimatnya membedakan `meningkat`, `tetap`, dan `menurun`
+dibanding level sebelumnya pada sesi yang sama, atau `belum_tercapai` pada
+level pertama — keempatnya menuntut tindak lanjut yang berbeda.
+
+Hasilnya disimpan apa adanya pada `Score.feedback` (kunci
+`assessmentAsLearning`) dengan alasan yang sama seperti §7.10, ditampilkan di
+portal guru (rincian percobaan dan laporan siswa), dan diekspor pada
+`scores_long.csv` sebagai kolom `self_K1`…`self_K4`, `calibration_exact`,
+`calibration_mean_abs_gap`, `calibration_bias`, `goal_claim`, `goal_target`,
+`goal_strategy`, `goal_achieved`. Sel kosong berarti siswa tidak mengisinya
+(mis. data dari sebelum fitur ini ada), **bukan** nol.
+
+Tidak ada kolom database baru: seluruhnya memakai `EventLog` dan
+`Score.feedback` yang sudah ada.
+
 ---
 
 ## 8. Cakupan pengujian
 
-`cd server && npm test` — 253 uji, seluruhnya lolos.
+`cd server && npm test` — 263 uji, seluruhnya lolos.
 
 | Berkas | Jumlah | Cakupan |
 |---|---|---|
@@ -765,9 +834,10 @@ tidak menyentuh mesin skoring, tidak menuntut migrasi `SCORING_VERSION`.
 | `scoring.test.ts` | 15 | Tiga arketipe siswa, reproduktibilitas, komposit |
 | `domain.test.ts` | 18 | Kelayakan, titik pojok, nilai optimum acuan |
 | `taskbank.test.ts` | 69 | Integritas 12 task, assembly rule, kelengkapan opsi, identitas visual |
-| `api.integration.test.ts` | 48 | Alur HTTP penuh, validasi, kebocoran kunci jawaban, laporan guru |
+| `api.integration.test.ts` | 50 | Alur HTTP penuh, validasi, kebocoran kunci jawaban, laporan guru, asesmen diri |
 | `feedback.test.ts` | 17 | Umpan balik siswa + kesimpulan lintas level untuk laporan guru |
 | `eventNarrator.test.ts` | 13 | Terjemahan tiap jenis event ke kalimat, bertahan dari data rusak |
+| `assessmentAsLearning.test.ts` | 8 | Kalibrasi, tinjauan target, **skor tidak berubah oleh event asesmen diri** |
 
 Uji rubrik memakai log sintetis dari tiga arketipe siswa — **"sempurna"**,
 **"trial-error"**, dan **"gagal total"** — sesuai permintaan desain instrumen.

@@ -112,10 +112,60 @@ export interface SubmitResponse {
   feedback: StudentFeedback[];
   /** Satu kalimat penutup: bagian terkuat dan yang perlu dilatih. */
   overallMessage: string;
+  /** Kalibrasi penilaian diri dan tinjauan target (Assessment as Learning). */
+  assessmentAsLearning: AsesmenSebagaiBelajar;
   /** Deskriptor rubrik asli - dipakai layar guru, bukan ditampilkan ke siswa. */
   rubric: Array<{ claim: string; score: number; descriptor: string; reasons: string[] }>;
   optimum: { point: { x: number; y: number } | null; z: number | null } | null;
   scoringVersion: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Assessment as Learning - lihat server/src/scoring/assessmentAsLearning.ts */
+/* ------------------------------------------------------------------ */
+
+export type Klaim = 'K1' | 'K2' | 'K3' | 'K4';
+
+/** Skor 0-3 per tahap - dipakai untuk penilaian diri maupun skor rubrik. */
+export type SkorKlaim = Record<Klaim, number>;
+
+/** Target yang ditetapkan siswa sendiri sebelum level dimulai. */
+export interface TargetBelajar {
+  focusClaim: Klaim;
+  targetScore: number;
+  strategyId: string;
+  strategyText: string;
+}
+
+export interface KalibrasiKlaim {
+  claim: Klaim;
+  title: string;
+  self: number;
+  actual: number;
+  gap: number;
+  status: 'tepat' | 'terlalu_tinggi' | 'terlalu_rendah';
+  message: string;
+}
+
+export interface AsesmenSebagaiBelajar {
+  calibration: {
+    perClaim: KalibrasiKlaim[];
+    exactCount: number;
+    meanAbsGap: number;
+    bias: number;
+    summary: string;
+  } | null;
+  goalReview:
+    | (TargetBelajar & {
+        title: string;
+        previousScore: number | null;
+        currentScore: number;
+        achieved: boolean;
+        status: 'tercapai' | 'meningkat' | 'tetap' | 'menurun' | 'belum_tercapai';
+        message: string;
+      })
+    | null;
+  suggestedNextFocus: Klaim;
 }
 
 /** Jenis event log - harus sama persis dengan enum di server. */
@@ -130,7 +180,9 @@ export type EventType =
   | 'reflection_response'
   | 'revise_after_event'
   | 'distractor_shown'
-  | 'set_zone_center';
+  | 'set_zone_center'
+  | 'goal_set'
+  | 'learning_reflection';
 
 /** Satu baris log, mengikuti skema Bagian 5.1 dokumen ECD. */
 export interface LogEvent {

@@ -11,15 +11,18 @@
  * dikirim server pada field `rubric` dan dapat dibaca guru di halaman laporan.
  */
 
-import type { StudentFeedback, SubmitResponse, TaskDto } from '../api/types.js';
+import type { AsesmenSebagaiBelajar, StudentFeedback, SubmitResponse, TaskDto } from '../api/types.js';
 import { cornerCandidates, objectiveValue } from '../game/geometry.js';
 import { el, num } from './dom.js';
+import { bagianCerminDiri, formRefleksiBelajar, type RefleksiBelajar } from './asesmenDiri.js';
 
 /** Riwayat satu level untuk ringkasan akhir sesi. */
 export interface RiwayatLevel {
   level: number;
   rawSum: number;
   feedback: StudentFeedback[];
+  /** Kalibrasi penilaian diri dan tinjauan target level itu. */
+  aal?: AsesmenSebagaiBelajar;
 }
 
 function barSkor(score: number): HTMLElement {
@@ -178,12 +181,63 @@ export function renderResultScreen(
             ),
           ),
         ),
+        // Assessment as Learning: siswa melihat dulu seberapa tepat ia menilai
+        // dirinya dan apakah targetnya tercapai, baru rincian tiap tahap.
+        bagianCerminDiri(hasil.assessmentAsLearning),
         ...hasil.feedback.map(barisKlaim),
         catatanOptimum,
         kunciJawabanSection(task, hasil),
         tombol,
       ),
     ),
+  );
+}
+
+/**
+ * Perjalanan belajar lintas level: seberapa tepat siswa menilai dirinya dan
+ * berapa target yang tercapai. Inilah gambaran kemandirian belajar - apakah
+ * penilaian diri siswa makin mendekati bukti dari level ke level.
+ */
+function perjalananBelajar(riwayat: RiwayatLevel[]): HTMLElement | null {
+  const ada = riwayat.filter((r) => r.aal && (r.aal.calibration || r.aal.goalReview));
+  if (ada.length === 0) return null;
+
+  const baris = ada.map((r) => {
+    const k = r.aal!.calibration;
+    const t = r.aal!.goalReview;
+    return el(
+      'div',
+      { class: 'aal-journey-row' },
+      el('span', { class: 'lvl-badge' }, `LV${r.level}`),
+      el('span', { class: 'aal-journey-cell' }, k ? `Penilaian diri cocok ${k.exactCount}/4` : 'Tidak menilai diri'),
+      el(
+        'span',
+        { class: `aal-journey-cell${t?.achieved ? ' ok' : ''}` },
+        t ? `Target ${t.focusClaim}→${t.targetScore}: ${t.achieved ? 'tercapai ✓' : `dapat ${t.currentScore}`}` : 'Tanpa target',
+      ),
+    );
+  });
+
+  const tercapai = ada.filter((r) => r.aal!.goalReview?.achieved).length;
+  const denganTarget = ada.filter((r) => r.aal!.goalReview).length;
+  const kal = ada.map((r) => r.aal!.calibration).filter((k) => k !== null);
+  const awal = kal[0];
+  const akhir = kal[kal.length - 1];
+
+  let kesimpulan = `Kamu mencapai ${tercapai} dari ${denganTarget} target yang kamu tetapkan sendiri.`;
+  if (awal && akhir && kal.length > 1) {
+    if (akhir.meanAbsGap < awal.meanAbsGap) kesimpulan += ' Penilaian dirimu makin mendekati bukti dari level ke level — kamu makin mengenal kualitas kerjamu sendiri.';
+    else if (akhir.meanAbsGap > awal.meanAbsGap) kesimpulan += ' Penilaian dirimu di level akhir lebih jauh dari bukti dibanding di awal — coba cocokkan pekerjaanmu dengan kriteria lebih teliti.';
+    else kesimpulan += ' Ketepatan penilaian dirimu stabil sepanjang misi.';
+  }
+
+  return el(
+    'section',
+    { class: 'profile-block' },
+    el('h3', {}, 'PERJALANAN BELAJARMU'),
+    el('p', { class: 'hint' }, 'Seberapa tepat kamu menilai pekerjaanmu sendiri, dan target mana yang tercapai.'),
+    ...baris,
+    el('p', { class: 'optimum-note' }, kesimpulan),
   );
 }
 
@@ -201,6 +255,7 @@ export function renderFinishScreen(
     sessionComposite: number | null;
     riwayat: RiwayatLevel[];
   },
+  onRefleksi: (r: RefleksiBelajar) => Promise<void>,
 ): void {
   const klaim = ['K1', 'K2', 'K3', 'K4'] as const;
 
@@ -282,6 +337,9 @@ export function renderFinishScreen(
         data.sessionComposite !== null
           ? el('p', { class: 'note' }, `Rata-rata komposit seluruh level: ${num(data.sessionComposite)} dari 3.`)
           : null,
+
+        perjalananBelajar(data.riwayat),
+        formRefleksiBelajar(onRefleksi),
       ),
     ),
   );

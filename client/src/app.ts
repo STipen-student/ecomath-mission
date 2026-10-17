@@ -8,9 +8,10 @@
  */
 
 import { api, ApiError } from './api/client.js';
-import type { DistractorResponse, SubmitResponse, TaskDto } from './api/types.js';
+import type { DistractorResponse, Klaim, SkorKlaim, SubmitResponse, TargetBelajar, TaskDto } from './api/types.js';
 import { logger } from './logging/logger.js';
 import { el } from './ui/dom.js';
+import { renderLayarTarget, type LevelSebelumnya } from './ui/asesmenDiri.js';
 import { renderLandingScreen, type LandingHandle } from './ui/LandingScreen.js';
 import { renderLoginScreen } from './ui/LoginScreen.js';
 import { PlayScreen } from './ui/PlayScreen.js';
@@ -30,6 +31,10 @@ export class App {
   private landing: LandingHandle | null = null;
   private riwayat: RiwayatLevel[] = [];
   private sessionComposite: number | null = null;
+  /** Target belajar yang ditetapkan siswa untuk level yang sedang berjalan. */
+  private target: TargetBelajar | null = null;
+  /** Hasil level terakhir - bahan penetapan target level berikutnya. */
+  private sebelumnya: LevelSebelumnya | null = null;
   /** Menandai fase pengerjaan pada payload attempt_submit (Level 4). */
   private distractorSudahMuncul = false;
 
@@ -108,24 +113,43 @@ export class App {
       this.task = res.task;
       this.distractorSudahMuncul = false;
 
-      logger.start(this.sessionId, res.task.id);
-
       this.play?.destroy();
-      this.root.replaceChildren();
-      this.play = new PlayScreen(
+      this.play = null;
+      renderLayarTarget(
         this.root,
-        {
-          studentName: this.studentName,
-          level: this.levelSaatIni,
-          totalLevels: LEVELS.length,
-          task: res.task,
-        },
-        this.buatCallbacks(),
+        { level: this.levelSaatIni, totalLevels: LEVELS.length, task: res.task, sebelumnya: this.sebelumnya },
+        (target, disarankan) => this.mulaiBermain(res.task, target, disarankan),
       );
-      this.play.render();
     } catch (err) {
       this.tampilkanError(err, () => void this.mulaiLevel());
     }
+  }
+
+  /**
+   * Mulai mengerjakan setelah siswa menetapkan target.
+   *
+   * Pencatat log baru dijalankan DI SINI, bukan saat task dimuat: waktu yang
+   * dipakai siswa menimbang target tidak boleh terhitung sebagai waktu
+   * perencanaan pada observable K2. goal_set menjadi event pertama (t = 0).
+   */
+  private mulaiBermain(task: TaskDto, target: TargetBelajar, disarankan: Klaim | null): void {
+    this.target = target;
+    logger.start(this.sessionId, task.id);
+    logger.record('goal_set', { ...target, suggestedClaim: disarankan }, true);
+
+    this.root.replaceChildren();
+    this.play = new PlayScreen(
+      this.root,
+      {
+        studentName: this.studentName,
+        level: this.levelSaatIni,
+        totalLevels: LEVELS.length,
+        task,
+        target,
+      },
+      this.buatCallbacks(),
+    );
+    this.play.render();
   }
 
   private buatCallbacks() {
@@ -203,6 +227,7 @@ export class App {
         finalY: number;
         reflectionClosedOptionId?: string;
         reflectionOpenText?: string;
+        selfAssessment?: SkorKlaim;
       }): Promise<void> => {
         if (data.reflectionClosedOptionId || data.reflectionOpenText) {
           logger.record(
@@ -222,6 +247,7 @@ export class App {
           finalY: data.finalY,
           reflectionClosedOptionId: data.reflectionClosedOptionId,
           reflectionOpenText: data.reflectionOpenText,
+          selfAssessment: data.selfAssessment,
           finishSession: !adaLevelBerikutnya,
         });
 
@@ -231,7 +257,18 @@ export class App {
   }
 
   private tampilkanHasil(hasil: SubmitResponse, adaLevelBerikutnya: boolean): void {
-    this.riwayat.push({ level: this.levelSaatIni, rawSum: hasil.rawSum, feedback: hasil.feedback });
+    this.riwayat.push({
+      level: this.levelSaatIni,
+      rawSum: hasil.rawSum,
+      feedback: hasil.feedback,
+      aal: hasil.assessmentAsLearning,
+    });
+    this.sebelumnya = {
+      level: this.levelSaatIni,
+      scores: hasil.scores,
+      feedback: hasil.feedback,
+      suggestedNextFocus: hasil.assessmentAsLearning?.suggestedNextFocus ?? 'K1',
+    };
     this.sessionComposite = hasil.sessionComposite;
 
     const task = this.task!;
@@ -246,12 +283,21 @@ export class App {
           this.levelIndex++;
           void this.mulaiLevel();
         } else {
-          logger.stop();
-          renderFinishScreen(this.root, {
-            studentName: this.studentName,
-            sessionComposite: this.sessionComposite,
-            riwayat: this.riwayat,
-          });
+          renderFinishScreen(
+            this.root,
+            {
+              studentName: this.studentName,
+              sessionComposite: this.sessionComposite,
+              riwayat: this.riwayat,
+            },
+            // Refleksi akhir sesi dicatat pada percobaan level terakhir - pencatat
+            // log masih menunjuk ke task itu. Disaring dari skoring di server.
+            async (refleksi) => {
+              logger.record('learning_reflection', { ...refleksi }, true);
+              await logger.flush();
+              logger.stop();
+            },
+          );
         }
       },
     );

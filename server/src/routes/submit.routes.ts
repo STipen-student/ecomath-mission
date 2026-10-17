@@ -19,7 +19,7 @@ import { SubmitSchema } from '../schemas/api.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { submitLimiter } from '../middleware/rateLimit.js';
 import { getTaskById } from '../tasks/index.js';
-import { scoreAttempt } from '../scoring/index.js';
+import { buildAssessmentAsLearning, parseGoal, parseSelfAssessment, scoreAttempt } from '../scoring/index.js';
 import { evaluate } from '../domain/feasibility.js';
 import { rowsToRawEvents } from '../lib/eventMapper.js';
 
@@ -149,6 +149,22 @@ submitRouter.post(
       });
     }
 
+    // Penilaian diri (Assessment as Learning) dikirim HANYA lewat submit, tidak
+    // lewat /api/log, sehingga cukup diperiksa agar submit ulang tidak menggandakannya.
+    const penilaianDiriSudahTercatat = existingEvents.some((e) => e.eventType === 'self_assessment');
+    if (input.selfAssessment && !penilaianDiriSudahTercatat) {
+      closingEvents.push({
+        attemptId: attempt.id,
+        sessionId: input.sessionId,
+        taskId: input.taskId,
+        timestampMs: lastTimestamp + 3,
+        eventType: 'self_assessment',
+        payload: JSON.stringify(input.selfAssessment),
+        isValidAtTime: finalValid,
+        durationSinceLastEventMs: 0,
+      });
+    }
+
     if (closingEvents.length > 0) {
       await prisma.eventLog.createMany({ data: closingEvents });
     }
@@ -183,9 +199,31 @@ submitRouter.post(
     // scoring/feedback.ts dapat direvisi di kemudian hari; tanpa penyimpanan ini,
     // catatan "apa yang dilihat siswa saat submit" akan hilang begitu kalimatnya
     // berubah, karena trace hanya memuat deskriptor rubrik teknis untuk peneliti.
+    /*
+     * Assessment as Learning: bandingkan penilaian diri dan target siswa dengan
+     * skor yang BARU SAJA dihitung rubrik. Skor tidak disentuh - lihat
+     * scoring/assessmentAsLearning.ts. Pembanding target adalah skor level
+     * sebelumnya pada sesi yang sama (skor otomatis, karena itulah yang dilihat
+     * siswa saat menetapkan target).
+     */
+    const goalRow = [...allRows].reverse().find((e) => e.eventType === 'goal_set');
+    const selfRow = [...allRows].reverse().find((e) => e.eventType === 'self_assessment');
+    const previous = await prisma.score.findFirst({
+      where: { sessionId: input.sessionId, level: { lt: task.level } },
+      orderBy: { level: 'desc' },
+      select: { k1: true, k2: true, k3: true, k4: true },
+    });
+    const asesmenDiri = buildAssessmentAsLearning({
+      actual: { K1: result.K1, K2: result.K2, K3: result.K3, K4: result.K4 },
+      self: selfRow ? parseSelfAssessment(parsePayload(selfRow.payload)) : null,
+      goal: goalRow ? parseGoal(parsePayload(goalRow.payload)) : null,
+      previousScores: previous ? { K1: previous.k1, K2: previous.k2, K3: previous.k3, K4: previous.k4 } : null,
+    });
+
     const feedback = JSON.stringify({
       claims: result.studentFeedback,
       overallMessage: result.overallMessage,
+      assessmentAsLearning: asesmenDiri,
     });
 
     const score = await prisma.score.upsert({
@@ -261,6 +299,8 @@ submitRouter.post(
        */
       feedback: result.studentFeedback,
       overallMessage: result.overallMessage,
+      /** Kalibrasi penilaian diri dan tinjauan target - docs/SCORING_SPEC.md §7.18. */
+      assessmentAsLearning: asesmenDiri,
       rubric: result.claims.map((c) => ({
         claim: c.claim,
         score: c.score,

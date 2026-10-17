@@ -16,6 +16,7 @@ import {
   ambilKunci,
   lupakanKunci,
   simpanKunci,
+  type AsesmenSebagaiBelajar,
   type BarisLevelSiswa,
   type LaporanSiswa,
   type RincianPercobaan,
@@ -703,7 +704,144 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
     );
   }
 
+  bagian.push(...panelKemandirianBelajar(lap));
+
   return bagian;
+}
+
+/* ================================================================== */
+/* Assessment as Learning                                              */
+/* ================================================================== */
+
+const LABEL_KALIBRASI: Record<string, string> = {
+  tepat: 'tepat',
+  terlalu_tinggi: 'melebihkan diri',
+  terlalu_rendah: 'merendahkan diri',
+};
+
+/**
+ * Ringkasan kemandirian belajar lintas level: target yang ditetapkan siswa
+ * sendiri, ketepatan penilaian dirinya, dan refleksi akhir sesi.
+ *
+ * Bias positif yang konsisten (siswa selalu menilai dirinya lebih tinggi
+ * dari bukti) adalah sinyal yang tidak terlihat dari skor saja - siswa itu
+ * belum menyadari kekeliruannya sendiri dan perlu dibimbing memeriksa ulang.
+ */
+function panelKemandirianBelajar(lap: LaporanSiswa): HTMLElement[] {
+  const ada = lap.perLevel.filter((p) => p.assessmentAsLearning);
+  if (ada.length === 0 && !lap.refleksiBelajar) return [];
+
+  const rows = ada.map((p) => {
+    const k = p.assessmentAsLearning!.calibration;
+    const t = p.assessmentAsLearning!.goalReview;
+    return el(
+      'tr',
+      {},
+      el('td', {}, `Level ${p.level}`),
+      el('td', { class: 'cell-wrap' }, t ? `${t.focusClaim} → ${t.targetScore} · ${t.strategyText}` : '—'),
+      el('td', {}, t ? (t.achieved ? `tercapai (${t.currentScore})` : `belum (${t.currentScore})`) : '—'),
+      el('td', {}, k ? `${k.exactCount}/4` : '—'),
+      el('td', {}, k ? `${k.bias > 0 ? '+' : ''}${num(k.bias)}` : '—'),
+    );
+  });
+
+  const bagian: HTMLElement[] = [];
+  if (rows.length > 0) {
+    bagian.push(
+      el(
+        'section',
+        { class: 'sub-card' },
+        el('h3', {}, 'KEMANDIRIAN BELAJAR (ASSESSMENT AS LEARNING)'),
+        el(
+          'p',
+          { class: 'hint' },
+          'Target ditetapkan siswa sendiri sebelum tiap level; penilaian diri diisi sebelum skor ditampilkan. Bias = rata-rata (penilaian diri − skor rubrik): positif berarti siswa menilai dirinya lebih tinggi dari bukti. Tidak memengaruhi skor.',
+        ),
+        el(
+          'div',
+          { class: 'table-scroll' },
+          el(
+            'table',
+            { class: 'data-table' },
+            el('thead', {}, el('tr', {}, ...['Level', 'Target & strategi', 'Hasil target', 'Diri = bukti', 'Bias'].map((h) => el('th', {}, h)))),
+            el('tbody', {}, ...rows),
+          ),
+        ),
+      ),
+    );
+  }
+
+  if (lap.refleksiBelajar) {
+    const r = lap.refleksiBelajar;
+    bagian.push(
+      el(
+        'section',
+        { class: 'sub-card' },
+        el('h3', {}, 'REFLEKSI BELAJAR AKHIR SESI'),
+        el(
+          'div',
+          { class: 'reflect-block' },
+          el('span', { class: 'reflect-label' }, 'Tahap yang paling berkembang menurut siswa'),
+          el('p', { class: 'reflect-text' }, r.mostImprovedClaim ? `${r.mostImprovedClaim} · ${NAMA_KLAIM[r.mostImprovedClaim] ?? ''}` : 'Tidak dijawab'),
+        ),
+        el(
+          'div',
+          { class: 'reflect-block' },
+          el('span', { class: 'reflect-label' }, 'Apa yang dipelajari tentang caranya memecahkan masalah'),
+          el('p', { class: 'reflect-text reflect-open' }, r.openText ?? 'Tidak dijawab'),
+        ),
+      ),
+    );
+  }
+
+  return bagian;
+}
+
+/** Penilaian diri vs skor rubrik pada satu percobaan. */
+function panelAsesmenDiri(aal: AsesmenSebagaiBelajar | undefined): HTMLElement | null {
+  if (!aal || (!aal.calibration && !aal.goalReview)) return null;
+  const k = aal.calibration;
+  const t = aal.goalReview;
+
+  return el(
+    'section',
+    { class: 'sub-card' },
+    el('h3', {}, 'ASESMEN DIRI SISWA'),
+    el('p', { class: 'hint' }, 'Diisi siswa sebelum melihat skor. Dibandingkan dengan skor otomatis; koreksi K4 oleh guru tidak mengubah tabel ini.'),
+    t
+      ? el(
+          'p',
+          { class: 'overall-msg' },
+          el('strong', {}, `Target: ${t.focusClaim} → ${t.targetScore} (${t.achieved ? 'tercapai' : 'belum tercapai'}, skor ${t.currentScore}${t.previousScore !== null ? `, level lalu ${t.previousScore}` : ''}). `),
+          `Strategi: "${t.strategyText}"`,
+        )
+      : null,
+    k
+      ? el(
+          'div',
+          { class: 'table-scroll' },
+          el(
+            'table',
+            { class: 'data-table' },
+            el('thead', {}, el('tr', {}, ...['Tahap', 'Penilaian diri', 'Skor rubrik', 'Kalibrasi'].map((h) => el('th', {}, h)))),
+            el(
+              'tbody',
+              {},
+              ...k.perClaim.map((c) =>
+                el(
+                  'tr',
+                  {},
+                  el('td', {}, `${c.claim} · ${NAMA_KLAIM[c.claim] ?? c.title}`),
+                  el('td', {}, String(c.self)),
+                  el('td', {}, String(c.actual)),
+                  el('td', {}, LABEL_KALIBRASI[c.status] ?? c.status),
+                ),
+              ),
+            ),
+          ),
+        )
+      : null,
+  );
 }
 
 /* ================================================================== */
@@ -810,6 +948,9 @@ function isiRincian(r: RincianPercobaan, tutup: () => void): HTMLElement[] {
       ),
     );
   }
+
+  const asesmenDiri = panelAsesmenDiri(r.score.studentFeedback.assessmentAsLearning);
+  if (asesmenDiri) bagian.push(asesmenDiri);
 
   // Refleksi siswa + peninjauan K4.
   bagian.push(panelRefleksi(r));

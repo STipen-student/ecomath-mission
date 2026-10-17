@@ -24,8 +24,9 @@
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { defaultCenters } from '../game/iso/isoGrid.js';
 import { cornerCandidates, evaluate, objectiveValue } from '../game/geometry.js';
-import type { ConstraintDto, DistractorResponse, TaskDto } from '../api/types.js';
+import type { ConstraintDto, DistractorResponse, SkorKlaim, TargetBelajar, TaskDto } from '../api/types.js';
 import { clear, el, jam, num } from './dom.js';
+import { formPenilaianDiri } from './asesmenDiri.js';
 
 export interface PlayCallbacks {
   onIdentifyVariable: (variable: 'x' | 'y', optionId: string) => void;
@@ -43,6 +44,8 @@ export interface PlayCallbacks {
     finalY: number;
     reflectionClosedOptionId?: string;
     reflectionOpenText?: string;
+    /** Penilaian diri 0-3 per tahap (Assessment as Learning). */
+    selfAssessment?: SkorKlaim;
   }) => Promise<void>;
 }
 
@@ -51,6 +54,8 @@ export interface PlayContext {
   level: number;
   totalLevels: number;
   task: TaskDto;
+  /** Target belajar yang ditetapkan siswa sebelum level; null di tutorial. */
+  target?: TargetBelajar | null;
 }
 
 const OPERATOR = [
@@ -213,8 +218,26 @@ export class PlayScreen {
         ),
       ),
       this.meterBar,
+      this.bangunPlatTarget(),
       el('div', { class: 'plate plate-clock' }, el('span', { class: 'clock-ico' }, '⏱'), this.labelWaktu),
     );
+  }
+
+  /**
+   * Pengingat target belajar di HUD - pemantauan diri SELAMA mengerjakan,
+   * bukan hanya sebelum dan sesudahnya. Ketuk untuk membaca ulang strateginya.
+   */
+  private bangunPlatTarget(): HTMLElement | null {
+    const target = this.ctx.target;
+    if (!target) return null;
+    const plat = el(
+      'button',
+      { class: 'plate plate-goal', ariaLabel: `Targetmu: ${target.focusClaim} skor ${target.targetScore}. Ketuk untuk melihat strategi.` },
+      el('span', {}, '🎯'),
+      el('span', { class: 'goal-text' }, `${target.focusClaim}→${target.targetScore}`),
+    );
+    plat.addEventListener('click', () => this.toast(`Strategimu: ${target.strategyText}`, 'info', 5200));
+    return plat;
   }
 
   private bangunDokZona(): HTMLElement {
@@ -995,27 +1018,14 @@ export class PlayScreen {
     });
 
     const pesan = el('p', { class: 'form-error' });
-    const selesai = el('button', { class: 'btn btn-primary btn-block' }, 'Selesaikan level ini');
+    const selesai = el('button', { class: 'btn btn-primary btn-block' }, 'Lanjut: nilai pekerjaanku');
 
     selesai.addEventListener('click', () => {
       if (!opsiTerpilih && teksTerbuka.value.trim().length === 0) {
         pesan.textContent = 'Jawab minimal salah satu pertanyaan refleksi.';
         return;
       }
-      selesai.disabled = true;
-      selesai.textContent = 'Menghitung skor...';
-      void this.cb
-        .onFinish({
-          finalX: this.x,
-          finalY: this.y,
-          reflectionClosedOptionId: opsiTerpilih,
-          reflectionOpenText: teksTerbuka.value.trim() || undefined,
-        })
-        .catch((err: unknown) => {
-          pesan.textContent = err instanceof Error ? err.message : 'Gagal mengirim jawaban.';
-          selesai.disabled = false;
-          selesai.textContent = 'Selesaikan level ini';
-        });
+      this.bukaPenilaianDiri(opsiTerpilih, teksTerbuka.value.trim() || undefined);
     });
 
     const isi = el(
@@ -1043,6 +1053,38 @@ export class PlayScreen {
     // Lembar refleksi tidak boleh ditutup dengan menyentuh latar: siswa yang
     // tidak sengaja menutupnya akan kehilangan satu-satunya sumber bukti K4.
     this.lembar.classList.add('is-locked');
+  }
+
+  /**
+   * Langkah terakhir sebelum skor: siswa menilai pekerjaannya sendiri
+   * (Assessment as Learning). Refleksi dikirim bersama penilaian diri dalam
+   * satu submit, sehingga siswa tidak dapat melihat skor lebih dulu lalu
+   * menyesuaikan penilaiannya.
+   */
+  private bukaPenilaianDiri(closedOptionId: string | undefined, openText: string | undefined): void {
+    const isi = formPenilaianDiri(this.ctx.task, this.ctx.target ?? null, (skor) =>
+      this.cb.onFinish({
+        finalX: this.x,
+        finalY: this.y,
+        reflectionClosedOptionId: closedOptionId,
+        reflectionOpenText: openText,
+        selfAssessment: skor,
+      }),
+    );
+
+    this.laci.set('nilai-diri', {
+      id: 'nilai-diri',
+      ikon: '🪞',
+      label: 'Nilai diri',
+      judul: '6 · Nilai pekerjaanmu sendiri',
+      isi,
+      tombol: this.tombolKirim,
+      selesai: false,
+    });
+    this.bukaLaci('nilai-diri');
+    this.lembar.classList.add('is-locked');
+    // Panel refleksi tadi mungkin sudah digulir ke bawah; mulai dari tahap K1.
+    this.lembarIsi.scrollTop = 0;
   }
 
   destroy(): void {

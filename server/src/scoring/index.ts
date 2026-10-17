@@ -8,7 +8,7 @@
  * agar data penelitian dapat direproduksi.
  */
 
-import type { RawEvent } from '../domain/events.js';
+import { NON_EVIDENCE_EVENTS, type RawEvent } from '../domain/events.js';
 import type { TaskDefinition } from '../domain/types.js';
 import { deriveObservables, type Observables } from './observables.js';
 import { scoreK1 } from './k1.js';
@@ -45,7 +45,11 @@ export interface ScoreAttemptResult extends AttemptScore {
  * @param events  seluruh event log percobaan tersebut (urutan bebas, akan diurutkan)
  */
 export function scoreAttempt(task: TaskDefinition, events: RawEvent[]): ScoreAttemptResult {
-  const observables = deriveObservables(task, events);
+  // Event Assessment as Learning bukan bukti klaim - lihat NON_EVIDENCE_EVENTS.
+  const observables = deriveObservables(
+    task,
+    events.filter((e) => !NON_EVIDENCE_EVENTS.has(e.event_type)),
+  );
 
   const claims: ClaimResult[] = [
     scoreK1(task, observables),
@@ -88,3 +92,14 @@ export {
 export { SCORING_VERSION, THRESHOLDS, COMPOSITE_WEIGHTS } from './thresholds.js';
 export type { AttemptScore, ClaimResult, RubricScore, ScoringCriterion } from './types.js';
 export type { Observables } from './observables.js';
+export {
+  buildAssessmentAsLearning,
+  buildCalibration,
+  buildGoalReview,
+  suggestNextFocus,
+  parseGoal,
+  parseSelfAssessment,
+  type HasilAsesmenSebagaiBelajar,
+  type Kalibrasi,
+  type TinjauanTarget,
+} from './assessmentAsLearning.js';

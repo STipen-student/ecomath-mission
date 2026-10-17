@@ -9,6 +9,7 @@ import type {
   DistractorResponse,
   LogEvent,
   SessionResponse,
+  SkorKlaim,
   SubmitResponse,
   TaskResponse,
 } from './types.js';
@@ -112,6 +113,7 @@ export const api = {
     finalY: number;
     reflectionClosedOptionId?: string;
     reflectionOpenText?: string;
+    selfAssessment?: SkorKlaim;
     finishSession?: boolean;
   }): Promise<SubmitResponse> {
     return request<SubmitResponse>('/api/submit', { method: 'POST', body: JSON.stringify(input) });

@@ -88,7 +88,7 @@ const LANGKAH: Array<Omit<Langkah, 'selesai'>> = [
     id: 'kirim',
     judul: 'Kirim jawaban',
     instruksi:
-      'Tekan KIRIM di kanan bawah, isi pertanyaan refleksi seadanya, lalu tekan "Selesaikan level ini".',
+      'Tekan KIRIM di kanan bawah, isi refleksi seadanya, tekan "Lanjut: nilai pekerjaanku", lalu nilai dirimu pada keempat tahap dan tekan "Lihat hasil & bandingkan". Di level sungguhan, penilaian dirimu akan dibandingkan dengan bukti dari pekerjaanmu.',
   },
 ];
 

@@ -350,6 +350,88 @@ describe('POST /api/submit - alur lengkap', () => {
     expect(res.body.finalPositionValid).toBe(false);
   });
 
+  it('Assessment as Learning: target dan penilaian diri dibandingkan dengan skor, tanpa mengubahnya', async () => {
+    const sessionId = await buatSesi('UJI-AAL');
+
+    // Level 1 dikerjakan seadanya - menjadi pembanding target di Level 2.
+    await request(app).get('/api/task/1').query({ sessionId, taskId: 'L1-SDG11-A' });
+    const l1 = await request(app)
+      .post('/api/submit')
+      .send({ sessionId, taskId: 'L1-SDG11-A', finalX: 10, finalY: 20 });
+    expect(l1.body.scores.K2).toBe(0);
+    // Tanpa target dan penilaian diri, paket tetap ada tetapi kosong.
+    expect(l1.body.assessmentAsLearning.calibration).toBeNull();
+    expect(l1.body.assessmentAsLearning.goalReview).toBeNull();
+
+    await request(app).get('/api/task/2').query({ sessionId, taskId: 'L2-SDG11&13-A' });
+    await request(app)
+      .post('/api/log')
+      .send({
+        session_id: sessionId,
+        task_id: 'L2-SDG11&13-A',
+        timestamp_ms: 0,
+        event_type: 'goal_set',
+        payload: { focusClaim: 'K2', targetScore: 2, strategyId: 'k2-tujuan', strategyText: 'Pilih tujuan dulu', suggestedClaim: 'K1' },
+        is_valid_at_time: true,
+        duration_since_last_event_ms: 0,
+      });
+
+    const kirim = {
+      sessionId,
+      taskId: 'L2-SDG11&13-A',
+      finalX: 0,
+      finalY: 0,
+      selfAssessment: { K1: 3, K2: 3, K3: 3, K4: 3 },
+    };
+    const res = await request(app).post('/api/submit').send(kirim);
+    expect(res.status).toBe(200);
+
+    const aal = res.body.assessmentAsLearning;
+    expect(aal.calibration.perClaim).toHaveLength(4);
+    expect(aal.calibration.perClaim[0].self).toBe(3);
+    expect(aal.calibration.perClaim[0].actual).toBe(res.body.scores.K1);
+    expect(aal.goalReview.focusClaim).toBe('K2');
+    expect(aal.goalReview.previousScore).toBe(0);
+    expect(aal.goalReview.currentScore).toBe(res.body.scores.K2);
+
+    // Disimpan bersama umpan balik yang dilihat siswa, dan tidak digandakan saat submit ulang.
+    await request(app).post('/api/submit').send(kirim);
+    const tersimpan = await prisma.score.findFirst({ where: { sessionId, level: 2 } });
+    expect(JSON.parse(tersimpan!.feedback).assessmentAsLearning.goalReview.focusClaim).toBe('K2');
+    const baris = await prisma.eventLog.count({ where: { sessionId, eventType: 'self_assessment' } });
+    expect(baris).toBe(1);
+
+    // Refleksi belajar akhir sesi dikirim SETELAH submit terakhir lewat /api/log.
+    const refleksi = await request(app)
+      .post('/api/log')
+      .send({
+        session_id: sessionId,
+        task_id: 'L2-SDG11&13-A',
+        timestamp_ms: 999_000,
+        event_type: 'learning_reflection',
+        payload: { mostImprovedClaim: 'K2', openText: 'Aku belajar memilih tujuan dulu.' },
+        is_valid_at_time: true,
+        duration_since_last_event_ms: 0,
+      });
+    expect(refleksi.status).toBe(201);
+
+    // Laporan guru memuat kalibrasi per level dan refleksi akhir sesi.
+    const laporan = await request(app).get(`/api/admin/student/${sessionId}`).set('x-admin-key', ADMIN_KEY);
+    expect(laporan.status).toBe(200);
+    expect(laporan.body.refleksiBelajar).toEqual({ mostImprovedClaim: 'K2', openText: 'Aku belajar memilih tujuan dulu.' });
+    const level2 = laporan.body.perLevel.find((p: { level: number }) => p.level === 2);
+    expect(level2.assessmentAsLearning.calibration.exactCount).toBeGreaterThanOrEqual(0);
+  });
+
+  it('menolak penilaian diri di luar skala 0-3', async () => {
+    const sessionId = await buatSesi('UJI-AAL-2');
+    await request(app).get('/api/task/1').query({ sessionId, taskId: 'L1-SDG11-A' });
+    const res = await request(app)
+      .post('/api/submit')
+      .send({ sessionId, taskId: 'L1-SDG11-A', finalX: 10, finalY: 20, selfAssessment: { K1: 4, K2: 0, K3: 0, K4: 0 } });
+    expect(res.status).toBe(400);
+  });
+
   it('menolak submit untuk percobaan yang tidak ada', async () => {
     const res = await request(app)
       .post('/api/submit')

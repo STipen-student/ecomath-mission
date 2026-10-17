@@ -184,6 +184,36 @@ export function narrateEvent(taskId: string, eventType: string, payloadJson: str
       };
     }
 
+    case 'goal_set': {
+      const klaim = teks(p.focusClaim);
+      const strategi = teks(p.strategyText);
+      const saran = teks(p.suggestedClaim);
+      return {
+        ...KOSONG,
+        pilihan_teks: strategi,
+        catatan: saran ? `disarankan sistem: ${saran}` : '',
+        keterangan: `Menetapkan target belajar: ${klaim} skor ${angka(p.targetScore)}${strategi ? ` dengan strategi "${strategi}"` : ''}`,
+      };
+    }
+
+    case 'self_assessment': {
+      const nilai = ['K1', 'K2', 'K3', 'K4'].map((k) => `${k}=${angka(p[k])}`).join(', ');
+      return { ...KOSONG, catatan: nilai, keterangan: `Menilai diri sebelum melihat skor (${nilai})` };
+    }
+
+    case 'learning_reflection': {
+      const klaim = teks(p.mostImprovedClaim);
+      const terbuka = teks(p.openText);
+      const ringkas = terbuka.length > 80 ? `${terbuka.slice(0, 80)}...` : terbuka;
+      const bagian = [klaim && `tahap paling berkembang: ${klaim}`, ringkas && `tulisan: "${ringkas}"`].filter(Boolean);
+      return {
+        ...KOSONG,
+        pilihan_teks: klaim,
+        catatan: terbuka,
+        keterangan: bagian.length > 0 ? `Refleksi belajar akhir sesi - ${bagian.join(', ')}` : 'Tidak mengisi refleksi belajar akhir sesi',
+      };
+    }
+
     default:
       // Jenis event yang belum dikenal tetap muncul apa adanya, tidak disembunyikan.
       return { ...KOSONG, keterangan: eventType };

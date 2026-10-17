@@ -117,7 +117,7 @@ cd server
 npm test
 ```
 
-253 uji: rubrik K1–K4, umpan balik siswa, mesin matematis, integritas bank skenario, pemilihan soal adaptif, isolasi tutorial, dan alur HTTP
+263 uji: rubrik K1–K4, umpan balik siswa, asesmen diri, mesin matematis, integritas bank skenario, pemilihan soal adaptif, isolasi tutorial, dan alur HTTP
 penuh. Uji rubrik memakai log sintetis dari tiga arketipe siswa — "sempurna",
 "trial-error", dan "gagal total".
 
@@ -192,6 +192,28 @@ Kunci jawaban — titik optimum, nilai Z, opsi yang benar, dan isi event distrak
 
 ## Umpan balik
 
+### Assessment as Learning: siswa menilai pekerjaannya sendiri
+
+Siswa tidak hanya menerima umpan balik, tetapi ikut menilai dan mengarahkan
+belajarnya sendiri pada setiap level:
+
+1. **Tetapkan target** — sebelum level dimulai, siswa membaca kriteria sukses
+   tiap tahap (K1–K4, skor 0–3), memilih satu tahap yang ingin ditingkatkan,
+   target skornya, dan satu strategi. Mulai Level 2, sistem menyarankan tahap
+   terlemah dari level sebelumnya; siswa bebas menggantinya.
+2. **Pantau** — target tampil di HUD (`🎯 K2→3`) selama mengerjakan.
+3. **Nilai diri** — setelah refleksi dan *sebelum* skor muncul, siswa menilai
+   pekerjaannya 0–3 pada keempat tahap dengan kriteria yang sama.
+4. **Cermin diri** — layar hasil membandingkan penilaian diri dengan bukti
+   (tepat / terlalu tinggi / terlalu rendah) dan memeriksa apakah target tercapai.
+5. **Refleksi belajar** — di akhir sesi siswa melihat perjalanan ketepatan
+   penilaian dirinya lintas level dan menulis apa yang ia pelajari tentang
+   caranya memecahkan masalah.
+
+Seluruhnya **tidak memengaruhi skor K1–K4** — event asesmen diri disaring
+sebelum mesin skoring membaca log, dan hal ini dikunci uji. Rincian:
+`docs/SCORING_SPEC.md` §7.18.
+
 ### Untuk siswa
 
 Setiap kali menyelesaikan satu level, siswa menerima profil empat klaim beserta
@@ -227,6 +249,7 @@ Isinya:
 | **Laporan per siswa** | Pilih nama dari dropdown atau klik namanya di tabel — skor tiap level, profil K1–K4, dan **satu kalimat kesimpulan** |
 | Rincian per pekerjaan | Klik sel level atau tombol "Lihat rincian": jejak audit rubrik, jawaban refleksi siswa, pola kerja |
 | Peninjauan K4 | Baca tulisan siswa, koreksi skor K4, beri catatan |
+| Kemandirian belajar | Target yang ditetapkan siswa, penilaian diri vs skor rubrik (kalibrasi & bias), dan refleksi akhir sesi |
 | Unduh CSV | Skor dan log yang sudah diterjemahkan, langsung dari peramban |
 
 **Laporan per siswa** merangkum seluruh level yang dikerjakan satu siswa dalam

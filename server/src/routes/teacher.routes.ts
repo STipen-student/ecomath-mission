@@ -187,7 +187,7 @@ teacherRouter.get(
       .filter((a): a is typeof a & { score: NonNullable<(typeof a)['score']> } => a.score !== null)
       .map((a) => {
         const eff = effectiveScore(a.score);
-        const fb = parseJson(a.score.feedback) as { overallMessage?: unknown };
+        const fb = parseJson(a.score.feedback) as { overallMessage?: unknown; assessmentAsLearning?: unknown };
         return {
           level: a.level,
           taskId: a.taskId,
@@ -205,6 +205,9 @@ teacherRouter.get(
           // Kalimat penutup PER LEVEL, disimpan apa adanya saat submit - lihat
           // scoring/feedback.ts dan schema.prisma (Score.feedback).
           overallMessage: typeof fb.overallMessage === 'string' ? fb.overallMessage : '',
+          // Kalibrasi penilaian diri & tinjauan target (Assessment as Learning);
+          // null pada skor yang disimpan sebelum fitur ini ada.
+          assessmentAsLearning: fb.assessmentAsLearning ?? null,
         };
       });
 
@@ -220,6 +223,13 @@ teacherRouter.get(
         levelCount: nilai.length,
       };
     });
+
+    // Refleksi belajar akhir sesi (Assessment as Learning) - yang terakhir berlaku.
+    const refleksiBelajarRow = await prisma.eventLog.findFirst({
+      where: { sessionId: session.id, eventType: 'learning_reflection' },
+      orderBy: { receivedAt: 'desc' },
+    });
+    const refleksiBelajar = refleksiBelajarRow ? parseJson(refleksiBelajarRow.payload) : null;
 
     res.json({
       sessionId: session.id,
@@ -247,6 +257,12 @@ teacherRouter.get(
       perLevel,
       profilKlaim,
       kesimpulan: buildSessionConclusion(profilKlaim),
+      refleksiBelajar: refleksiBelajar
+        ? {
+            mostImprovedClaim: typeof refleksiBelajar.mostImprovedClaim === 'string' ? refleksiBelajar.mostImprovedClaim : null,
+            openText: typeof refleksiBelajar.openText === 'string' ? refleksiBelajar.openText : null,
+          }
+        : null,
     });
   }),
 );

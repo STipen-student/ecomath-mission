@@ -38,9 +38,31 @@ export const EVENT_TYPES = [
   'distractor_shown',
   'set_zone_center',
   'adaptive_selection',
+  'goal_set',
+  'self_assessment',
+  'learning_reflection',
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
+
+/**
+ * Event Assessment as Learning (docs/SCORING_SPEC.md §7.18).
+ *
+ * `goal_set`, `self_assessment`, dan `learning_reflection` mencatat siswa
+ * MEMANTAU BELAJARNYA SENDIRI: menetapkan target sebelum level, menilai diri
+ * sebelum melihat skor, dan merefleksikan caranya belajar di akhir sesi.
+ *
+ * Ketiganya BUKAN bukti atas klaim K1-K4 dan disaring sebelum mesin skoring
+ * membaca log (scoring/index.ts). Tanpa penyaringan ini, waktu yang dipakai
+ * mengisi asesmen diri akan ikut terhitung sebagai durasi pengerjaan, dan skor
+ * siswa yang rajin menilai diri bisa berbeda dari siswa lain pada pekerjaan
+ * matematis yang sama persis.
+ */
+export const NON_EVIDENCE_EVENTS: ReadonlySet<EventType> = new Set<EventType>([
+  'goal_set',
+  'self_assessment',
+  'learning_reflection',
+]);
 
 /** Satu baris log mentah sesuai Bagian 5.1. */
 export interface RawEvent {
@@ -149,6 +171,32 @@ export interface AdaptiveSelectionPayload {
   ranked: Array<{ taskId: string; surfaceLoad: number }>;
   /** True bila seluruh varian level ini berbeban sama (Level 1 dan 4). */
   tanpaRuangAdaptif: boolean;
+}
+
+/** goal_set: siswa menetapkan tahap yang ingin ditingkatkan sebelum mulai level. */
+export interface GoalSetPayload {
+  focusClaim: 'K1' | 'K2' | 'K3' | 'K4';
+  /** Skor 1-3 yang ditargetkan siswa sendiri pada tahap itu. */
+  targetScore: number;
+  strategyId: string;
+  /** Kalimat strategi persis seperti yang dibaca siswa saat memilih. */
+  strategyText: string;
+  /** Tahap yang disarankan sistem dari level sebelumnya; null pada Level 1. */
+  suggestedClaim: 'K1' | 'K2' | 'K3' | 'K4' | null;
+}
+
+/** self_assessment: penilaian diri 0-3 per tahap, diisi SEBELUM skor ditampilkan. */
+export interface SelfAssessmentPayload {
+  K1: number;
+  K2: number;
+  K3: number;
+  K4: number;
+}
+
+/** learning_reflection: refleksi metakognitif di akhir sesi. */
+export interface LearningReflectionPayload {
+  mostImprovedClaim?: 'K1' | 'K2' | 'K3' | 'K4';
+  openText?: string;
 }
 
 /** Ambil payload sebuah event dengan bentuk yang diharapkan (tanpa lempar). */

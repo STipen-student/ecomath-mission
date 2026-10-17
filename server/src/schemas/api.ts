@@ -61,6 +61,18 @@ export const SubmitSchema = z.object({
   /** Jawaban refleksi; boleh kosong bila siswa melewatinya. */
   reflectionClosedOptionId: z.string().trim().max(SHORT_TEXT).optional(),
   reflectionOpenText: z.string().trim().max(OPEN_TEXT).optional(),
+  /**
+   * Penilaian diri 0-3 per tahap, diisi siswa SEBELUM skor ditampilkan
+   * (Assessment as Learning, docs/SCORING_SPEC.md §7.18). Tidak memengaruhi skor.
+   */
+  selfAssessment: z
+    .object({
+      K1: z.number().int().min(0).max(3),
+      K2: z.number().int().min(0).max(3),
+      K3: z.number().int().min(0).max(3),
+      K4: z.number().int().min(0).max(3),
+    })
+    .optional(),
   /** Menandai sesi selesai seluruhnya (setelah level terakhir). */
   finishSession: z.boolean().optional(),
 });

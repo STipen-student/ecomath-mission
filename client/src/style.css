@@ -2057,3 +2057,266 @@ code {
 .zone-pin.is-picking {
   background: var(--yellow);
 }
+
+/* ================================================================ */
+/* Assessment as Learning: target, penilaian diri, cermin diri       */
+/* ================================================================ */
+
+.plate-goal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 11px;
+  flex: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--yellow);
+}
+
+.aal-claim-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.aal-claim {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 10px 11px;
+  text-align: left;
+  background: var(--paper-2);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+}
+
+.aal-claim.is-active {
+  background: #e7f4dd;
+  box-shadow: var(--sh-sm);
+  transform: translate(-1px, -1px);
+  border-color: var(--green-lo);
+}
+
+.aal-claim-key {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+
+.aal-claim-title {
+  font-family: var(--font-read);
+  font-size: 0.85rem;
+}
+
+.aal-claim-prev {
+  font-family: var(--font-pixel);
+  font-size: 0.58rem;
+  color: var(--ink-dim);
+}
+
+.aal-target-row {
+  display: flex;
+  gap: 8px;
+}
+
+.aal-seg {
+  flex: 1;
+  padding: 9px 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.aal-seg.is-active {
+  background: var(--green);
+  color: var(--paper);
+}
+
+.aal-criteria {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.aal-criterion {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-family: var(--font-read);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  padding: 6px 9px;
+  border: 2px dashed var(--ink-mute);
+  border-radius: 4px;
+}
+
+.aal-criterion.is-target {
+  border: 3px solid var(--ink);
+  background: var(--yellow);
+}
+
+.aal-crit-score {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  background: var(--paper-3);
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+}
+
+.aal-self {
+  margin: 0 0 14px;
+  padding: 10px;
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  min-width: 0;
+}
+
+.aal-self.is-focus {
+  border-color: var(--green-lo);
+  background: #f3f9ec;
+}
+
+.aal-self legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+}
+
+.aal-self-choice {
+  align-items: center;
+}
+
+.aal-mirror {
+  margin-bottom: 14px;
+}
+
+.aal-goal {
+  padding: 11px 13px;
+  margin-bottom: 12px;
+  border: 3px solid var(--ink);
+  border-left-width: 10px;
+  border-radius: 4px;
+  background: var(--paper-2);
+}
+
+.aal-goal.is-tercapai,
+.aal-goal.is-meningkat {
+  border-left-color: var(--green);
+}
+
+.aal-goal.is-tetap,
+.aal-goal.is-belum_tercapai {
+  border-left-color: var(--yellow);
+}
+
+.aal-goal.is-menurun {
+  border-left-color: var(--red);
+}
+
+.aal-status {
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  white-space: nowrap;
+}
+
+.aal-calibration h3 {
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.aal-cal-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aal-cal-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper-2);
+}
+
+.aal-cal-row.is-tepat .aal-status {
+  color: var(--green-lo);
+}
+
+.aal-cal-row.is-terlalu_tinggi .aal-status {
+  color: var(--red-lo);
+}
+
+.aal-cal-row.is-terlalu_rendah .aal-status {
+  color: #2f6f9a;
+}
+
+.aal-cal-name {
+  font-family: var(--font-read);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.aal-cal-num {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+}
+
+.aal-cal-msg {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-family: var(--font-read);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.aal-journey-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 7px 0;
+  border-bottom: 2px dashed var(--ink-mute);
+}
+
+.aal-journey-cell {
+  font-family: var(--font-read);
+  font-size: 0.85rem;
+}
+
+.aal-journey-cell.ok {
+  color: var(--green-lo);
+  font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  .aal-cal-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  .aal-cal-row .aal-status {
+    grid-column: 1 / -1;
+  }
+}
