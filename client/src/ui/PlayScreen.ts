@@ -804,7 +804,7 @@ export class PlayScreen {
           el(
             'span',
             { class: 'meter-body' },
-            el('span', { class: 'meter-label' }, `Kendala ke-${slot + 1}`),
+            el('span', { class: 'meter-label' }, `Perda ke-${slot + 1}`),
             el('span', { class: 'meter-expr is-locked' }, 'belum ditulis'),
           ),
         );

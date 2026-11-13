@@ -1160,3 +1160,15 @@ data. Formulir refleksi tidak muncul dua kali.
 pilihan. Nilai yang disimpan tetap skor asli. Angka skor masih ditampilkan.
 
 **Belum diterapkan dari draf:** U2, U5, R1, R3. Belum diuji di browser.
+
+## 7.28 Rambu perda (U2) dan indikator kota (U5)
+
+**U5.** Bacaan indikator di HUD sudah memakai nama tujuan dalam dunia
+permainan (`objective.label`, ditampilkan di `gambarBacaanZ`). Tidak ada
+persentase terhadap optimum, sesuai prinsip 4. Nama per task masih mengikuti
+data bank soal.
+
+**U2 (sebagian).** Meter kendala yang sudah ada diberi nama "Perda ke-N",
+sesuai bingkai draf. Informasinya tetap sama dengan meter sebelumnya. Penempatan
+rambu di tepi peta **belum** dikerjakan, karena membutuhkan perubahan tata letak
+pada peta isometrik.
