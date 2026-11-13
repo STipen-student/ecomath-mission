@@ -233,3 +233,70 @@ describe('skoring Level 1 - varian tanpa fungsi tujuan', () => {
     expect({ K1: r.K1, K2: r.K2, K3: r.K3, K4: r.K4 }).toEqual({ K1: 3, K2: 3, K3: 3, K4: 3 });
   });
 });
+
+describe('bukti translasi hanya dari penulisan sebelum event kebijakan (§7.24)', () => {
+  const refleksiLengkap =
+    'RTH minimal naik dari 36 menjadi 48 hektar sehingga perumahan turun dari 84 ke 72 hektar, akibatnya daya tampung berkurang 480 kepala keluarga karena kota harus mengorbankan hunian demi standar lingkungan.';
+
+  /** Bagian log sampai event muncul; `rthSebelumEvent` = apakah kendala RTH ditulis sebelum event. */
+  function sampaiEvent(rthSebelumEvent: boolean) {
+    const b = log(l4.id)
+      .identifyBothCorrect()
+      .selectObjective('g1')
+      .writeConstraint(0, ...L4_KEY.lahan)
+      .writeConstraint(1, ...L4_KEY.anggaran);
+    if (rthSebelumEvent) b.writeConstraint(2, ...L4_KEY.rth);
+    return b
+      .checkCorner(84, 36, 3360)
+      .checkCorner(0, 120, 0)
+      .moveSlider(84, 36)
+      .submit(84, 36)
+      .distractorShown('ev_rth_40');
+  }
+
+  it('memperbarui kendala yang berubah setelah event tidak menurunkan K1', () => {
+    const r = scoreAttempt(
+      l4,
+      sampaiEvent(true)
+        .writeConstraint(2, 0, 1, '>=', 48)
+        .checkCorner(72, 48, 2880)
+        .reviseAfterEvent(72, 48)
+        .submit(72, 48, 'post_event')
+        .reflection('r3', refleksiLengkap)
+        .build(),
+    );
+    expect({ K1: r.K1, K2: r.K2, K3: r.K3, K4: r.K4 }).toEqual({ K1: 3, K2: 3, K3: 3, K4: 3 });
+    expect(r.observables.postEventWriteCount).toBe(1);
+  });
+
+  it('kendala yang baru ditulis setelah event tidak dihitung sebagai bukti translasi', () => {
+    // Isi kendala yang berubah sudah diumumkan pada modal berita, sehingga
+    // menuliskannya sesudah event bukan bukti menerjemahkan narasi sendiri.
+    const r = scoreAttempt(
+      l4,
+      sampaiEvent(false)
+        .writeConstraint(2, ...L4_KEY.rth)
+        .checkCorner(72, 48, 2880)
+        .reviseAfterEvent(72, 48)
+        .submit(72, 48, 'post_event')
+        .reflection('r3', refleksiLengkap)
+        .build(),
+    );
+    expect(r.observables.constraintCountCorrect).toBe(2);
+    expect(r.K1).toBe(2);
+  });
+
+  it('task tanpa event tetap memakai seluruh penulisan', () => {
+    const r = scoreAttempt(
+      l1,
+      log(l1.id)
+        .identifyBothCorrect()
+        .selectObjective('g1')
+        .writeConstraint(0, ...L1_KEY.lahan)
+        .writeConstraint(1, ...L1_KEY.rasio)
+        .build(),
+    );
+    expect(r.observables.postEventWriteCount).toBe(0);
+    expect(r.observables.constraintCountWritten).toBe(2);
+  });
+});

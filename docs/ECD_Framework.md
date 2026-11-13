@@ -15,6 +15,8 @@ K4 | Memeriksa Kembali | Mampu mengevaluasi kewajaran solusi terhadap konteks ny
 [/TABLE]
 
 Catatan desain: K4 sengaja dibobot lebih besar pada Level 4 karena merupakan pembeda utama antara siswa yang menyelesaikan soal secara prosedural dan siswa yang benar-benar bernalar dalam konteks keberlanjutan (misalnya menyadari solusi matematis valid tetapi secara kontekstual tidak masuk akal, seperti luas RTH negatif atau melebihi luas kota).
+
+Catatan penafsiran K3 (revisi 13 November 2026): pada Level 3, sistem menggambar daerah irisan dari pertidaksamaan yang ditulis siswa sendiri pada bidang perencanaan mini (lihat Bagian 4.1, fitur Dukungan representasi grafik). Pada level itu, sebagian kerja "menentukan daerah penyelesaian" dikerjakan sistem, sehingga bukti K3 Level 3 terutama mencerminkan ketepatan memilih dan memverifikasi titik optimum di dalam daerah yang dibangun dari model siswa. Kebenaran model itu sendiri tetap dinilai pada K1. Pada Level 1, 2, dan 4 penafsiran K3 tidak berubah.
 # 3. Evidence Model
 Evidence Model menjembatani Student Model dan Task Model melalui dua komponen: (a) Observable Variables — variabel yang dapat diekstraksi langsung dari log interaksi siswa dengan sistem; (b) Scoring Rule — fungsi yang memetakan kombinasi observable variables menjadi skor 0-3 pada tiap klaim. Rincian skema log dan rubrik skor lengkap disajikan di Bagian 5. Ringkasan keterkaitan klaim-observasi disajikan berikut.
 [TABLE]
@@ -36,14 +38,18 @@ Jenis bilangan | Bilangan bulat sederhana / bilangan bulat besar / pecahan-desim
 Bentuk fungsi tujuan | Memaksimumkan 1 indikator / meminimumkan biaya / memaksimumkan indeks gabungan (2 indikator berbobot) | Mengontrol kompleksitas tahap K2-K3
 Distraktor/perubahan mendadak | Tidak ada / ada event kebijakan baru di tengah skenario (mis. subsidi berubah, kuota emisi diperketat) | Memicu munculnya bukti K4 (evaluasi ulang & revisi)
 Representasi awal | Cerita naratif murni / cerita + tabel data / cerita + grafik parsial | Mengontrol beban literasi vs beban translasi matematis
+Sumber umpan balik kelayakan (ditambahkan 13 November 2026) | Kunci jawaban / pertidaksamaan tulisan siswa | Menentukan dasar rona peta SEBELUM siswa menekan Kirim. Bila dari kunci jawaban, siswa dapat menemukan daerah layak dengan mengamati warna tanpa menulis model. Bila dari tulisan siswa, warna mengikuti hipotesisnya sendiri. Kelayakan saat Kirim selalu diperiksa terhadap kunci jawaban.
+Dukungan representasi grafik (ditambahkan 13 November 2026) | Tidak ada / bidang perencanaan mini dari tulisan siswa | Mengontrol seberapa besar kerja menggambar daerah penyelesaian dibebankan kepada siswa. Bidang hanya menggambar pertidaksamaan yang sudah ditulis siswa, sehingga kendala tersirat tidak pernah tampil kecuali siswa menuliskannya.
 [/TABLE]
+
+Kedua fitur terakhir ditetapkan per level, bukan per varian, agar seluruh varian dalam satu level menerima bantuan yang sama (lihat Bagian 4.2).
 
 ## 4.2 Aturan Kombinasi per Level (Assembly Rule)
 Sistem memilih task secara acak berstrata atau adaptif dari bank skenario dengan batasan berikut, sehingga tiap siswa dapat memperoleh permukaan soal berbeda tanpa mengubah tingkat kesulitan konstruknya:
-Level 1: 1 kendala, bilangan bulat sederhana, tanpa distraktor, representasi naratif murni. Fokus bukti: K1 dominan.
-Level 2: 2 kendala, bilangan bulat sederhana/besar, tanpa distraktor, boleh + tabel data. Fokus bukti: K1-K2.
-Level 3: 2-3 kendala, bilangan campuran, fungsi tujuan gabungan diperbolehkan, tanpa distraktor. Fokus bukti: K2-K3.
-Level 4: 3-4 kendala termasuk 1 implisit, WAJIB ada distraktor/event kebijakan, representasi naratif + grafik parsial. Fokus bukti: K3-K4, dengan bobot K4 diperbesar.
+Level 1: 1 kendala, bilangan bulat sederhana, tanpa distraktor, representasi naratif murni. Fokus bukti: K1 dominan. Umpan balik kelayakan dari kunci jawaban (sesuai Bagian 6); tanpa bidang perencanaan.
+Level 2: 2 kendala, bilangan bulat sederhana/besar, tanpa distraktor, boleh + tabel data. Fokus bukti: K1-K2. Umpan balik kelayakan dari tulisan siswa; tanpa bidang perencanaan.
+Level 3: 2-3 kendala, bilangan campuran, fungsi tujuan gabungan diperbolehkan, tanpa distraktor. Fokus bukti: K2-K3. Umpan balik kelayakan dari tulisan siswa; bidang perencanaan mini pada ketiga varian.
+Level 4: 3-4 kendala termasuk 1 implisit, WAJIB ada distraktor/event kebijakan, representasi naratif + grafik parsial. Fokus bukti: K3-K4, dengan bobot K4 diperbesar. Umpan balik kelayakan dari tulisan siswa; tanpa bidang perencanaan (keputusan untuk level ini masih terbuka karena berkaitan dengan representasi grafik parsial).
 Setiap kombinasi fitur pada satu level menghasilkan varian skenario berbeda (lihat Bagian 6-9) namun tetap disetarakan (equated) melalui expert judgment agar tingkat kesukaran antar-varian dalam level yang sama relatif setara — ini penting untuk validitas isi dan untuk analisis butir (item-total correlation) pada tahap uji coba instrumen.
 
 # 5. Log Rubrik
@@ -71,6 +77,8 @@ Skor | Deskriptor Berbasis Log
 2 | Variabel dan minimal satu kendala utama diterjemahkan benar, namun ada kekeliruan kecil (mis. lupa satuan/skala) yang terdeteksi dari revisi berikutnya
 3 | Seluruh variabel dan kendala pada narasi diterjemahkan tepat pada percobaan pertama tanpa revisi struktural
 [/TABLE]
+
+Catatan (revisi 13 November 2026, rubrik 1.1.0): pada task dengan event kebijakan, bukti K1 hanya diambil dari write_constraint SEBELUM event muncul. Penulisan ulang sesudah event menyesuaikan kendala yang isinya sudah diumumkan, sehingga dinilai sebagai bukti revisi (K4), bukan bukti translasi. Ketentuan yang sama berlaku untuk jumlah kendala tersusun pada K2.
 
 ### K2 - Merencanakan Penyelesaian
 [TABLE]
@@ -117,7 +125,7 @@ Model matematis inti: x + y ≤ 30; y ≥ x; x ≥ 0, y ≥ 0
 Tugas siswa dalam game: mengatur dua segmen jalan pada tampilan potongan melintang (cross-section) jalan kota
 Varian bilangan lain (bilangan bulat besar, mis. total lahan 400 hektar/skala kota besar) dapat digenerate otomatis oleh sistem dari template yang sama dengan mengganti konstanta tanpa mengubah struktur soal.
 # 7. Bank Skenario Level 2
-Karakteristik Level 2: 2 kendala eksplisit, bilangan bulat sederhana/besar, tanpa distraktor, representasi naratif + tabel data. Fokus bukti dominan: K1-K2.
+Karakteristik Level 2: 2 kendala eksplisit, bilangan bulat sederhana/besar, tanpa distraktor, representasi naratif + tabel data. Fokus bukti dominan: K1-K2. Sebelum siswa menekan Kirim, rona peta mengikuti pertidaksamaan yang ditulis siswa sendiri (Bagian 4.1).
 ### Varian L2-SDG11-A: Anggaran dan Lahan Perumahan Terjangkau
 Pemerintah kota Greenhaven berencana membangun rumah subsidi tipe A seluas x unit dan rumah subsidi tipe B seluas y unit pada lahan seluas 60 hektar. Anggaran yang tersedia adalah Rp 900 juta, dengan biaya pembangunan tiap unit tipe A Rp 30 juta dan tipe B Rp 20 juta. Setiap unit tipe A membutuhkan lahan 0,04 hektar dan tipe B membutuhkan 0,03 hektar. Tentukan sistem pertidaksamaan yang menggambarkan kendala anggaran dan kendala lahan.
 
@@ -138,7 +146,7 @@ Kota Greenhaven memiliki kawasan pengembangan seluas 50 hektar yang akan dibagi 
 Model matematis inti: x + y ≤ 50; 15x + 25y ≤ 900; y ≤ x; x ≥ 0, y ≥ 0 (catatan: pada varian ini kendala berjumlah 3 karena menggabungkan lahan+biaya+rasio — dapat digunakan sebagai varian transisi ke Level 3 bila diperlukan penyetaraan kesulitan)
 
 # 8. Bank Skenario Level 3
-Karakteristik Level 3: 2-3 kendala, bilangan campuran (termasuk desimal/persentase), fungsi tujuan eksplisit (maksimum/minimum), tanpa distraktor. Fokus bukti dominan: K2-K3.
+Karakteristik Level 3: 2-3 kendala, bilangan campuran (termasuk desimal/persentase), fungsi tujuan eksplisit (maksimum/minimum), tanpa distraktor. Fokus bukti dominan: K2-K3. Sebelum siswa menekan Kirim, rona peta mengikuti pertidaksamaan yang ditulis siswa sendiri, dan ketiga varian menampilkan bidang perencanaan mini dari tulisan siswa (Bagian 4.1).
 ### Varian L3-SDG11-A: Optimasi Indeks Kenyamanan Kota
 Distrik baru kota Meridian memiliki lahan pengembangan seluas 80 hektar untuk dibagi menjadi Taman Kota seluas x hektar dan Trotoar/Ruang Pejalan Kaki seluas y hektar. Anggaran pembangunan sebesar Rp 2,4 miliar, dengan biaya taman Rp 25 juta/hektar dan trotoar Rp 40 juta/hektar. Untuk memenuhi standar aksesibilitas, luas trotoar minimal 10 hektar. Setiap hektar taman memberi skor kenyamanan warga sebesar 8 poin dan setiap hektar trotoar memberi 5 poin. Tentukan kombinasi x dan y yang memaksimumkan total skor kenyamanan warga.
 Model matematis inti: x + y ≤ 80; 25x + 40y ≤ 2400; y ≥ 10; x ≥ 0
@@ -148,14 +156,14 @@ Tugas siswa dalam game: setelah menentukan alokasi lahan, sistem meminta siswa m
 Kota Meridian mengelola sampah melalui dua metode: pengomposan sebanyak x ton/hari dan daur ulang sebanyak y ton/hari, dengan total kapasitas pengolahan minimal 50 ton/hari untuk memenuhi kebutuhan kota. Emisi karbon dari pengomposan adalah 0,5 kg CO2/ton dan dari daur ulang 0,2 kg CO2/ton, dengan batas emisi total tidak lebih dari 20 kg CO2/hari. Biaya pengomposan Rp 150 ribu/ton dan daur ulang Rp 220 ribu/ton. Tentukan kombinasi x dan y yang meminimumkan biaya total.
 Model matematis inti: x + y ≥ 50; 0,5x + 0,2y ≤ 20; x ≥ 0, y ≥ 0
 Fungsi tujuan: Minimumkan Z = 150x + 220y (ribu rupiah)
-Tugas siswa dalam game: mengatur dua jalur konveyor fasilitas pengolahan sampah kota; sistem menampilkan grafik daerah penyelesaian yang otomatis ter-render dari input siswa sebagai overlay pada peta
+Tugas siswa dalam game: mengatur dua jalur konveyor fasilitas pengolahan sampah kota; sistem menampilkan grafik daerah penyelesaian yang otomatis ter-render dari input siswa sebagai overlay pada peta (diterapkan sebagai bidang perencanaan mini di samping peta, berlaku untuk ketiga varian Level 3 agar varian tetap setara; lihat Bagian 4.1)
 ### Varian L3-SDG11&13-A: Indeks Kota Berkelanjutan Gabungan
 Kota Meridian mengembangkan kawasan campuran seluas 100 hektar untuk Hunian Vertikal Hemat Energi seluas x hektar dan Koridor Hijau seluas y hektar. Total investasi tidak melebihi Rp 5 miliar, dengan biaya hunian vertikal Rp 60 juta/hektar dan koridor hijau Rp 20 juta/hektar. Untuk menjaga kualitas udara, luas koridor hijau tidak boleh kurang dari seperempat luas hunian vertikal. Indeks keberlanjutan kota dihitung dari kontribusi hunian vertikal (mengurangi urban sprawl) sebesar 6 poin/hektar dan koridor hijau (menyerap karbon) sebesar 9 poin/hektar. Tentukan kombinasi yang memaksimumkan indeks keberlanjutan.
 Model matematis inti: x + y ≤ 100; 60x + 20y ≤ 5000 (juta rupiah); y ≥ 0,25x; x ≥ 0, y ≥ 0
 Fungsi tujuan: Maksimumkan Z = 6x + 9y
 
 # 9. Bank Skenario Level 4
-Karakteristik Level 4: 3-4 kendala termasuk 1 kendala implisit (tidak dinyatakan langsung, harus disimpulkan siswa dari narasi), WAJIB terdapat event distraktor/perubahan kebijakan di tengah pengerjaan, representasi naratif + grafik parsial. Fokus bukti dominan: K3-K4 dengan bobot K4 diperbesar.
+Karakteristik Level 4: 3-4 kendala termasuk 1 kendala implisit (tidak dinyatakan langsung, harus disimpulkan siswa dari narasi), WAJIB terdapat event distraktor/perubahan kebijakan di tengah pengerjaan, representasi naratif + grafik parsial. Fokus bukti dominan: K3-K4 dengan bobot K4 diperbesar. Sebelum siswa menekan Kirim, rona peta mengikuti pertidaksamaan yang ditulis siswa sendiri, sehingga pelanggaran kendala implisit tidak lagi terlihat dari warna peta sebelum siswa menyimpulkannya (Bagian 4.1).
 ### Varian L4-SDG11-A: Krisis Lahan Kota Meridian Utara
 Distrik Meridian Utara memiliki lahan pengembangan 120 hektar untuk Perumahan Padat Terjangkau seluas x hektar dan Ruang Terbuka Hijau seluas y hektar. Anggaran tersedia Rp 3,6 miliar dengan biaya perumahan Rp 25 juta/hektar dan RTH Rp 18 juta/hektar. Standar kota sehat versi WHO yang diadopsi kota ini mensyaratkan RTH minimal 30% dari luas total kawasan (kendala implisit: y ≥ 0,3 × 120 = 36, harus disimpulkan siswa, tidak dituliskan sebagai angka eksplisit dalam kalimat soal). Tiap hektar perumahan menampung 40 kepala keluarga. Tentukan kombinasi yang memaksimumkan jumlah kepala keluarga tertampung.
 Model matematis inti (setelah kendala implisit diuraikan): x + y ≤ 120; 25x + 18y ≤ 3600; y ≥ 36; x ≥ 0
@@ -195,3 +203,6 @@ L4-SDG11&13-A | 4 | SDG 11 & 13 | 3 (1 implisit) + event | K3, K4
 
 *Varian L2-SDG11&13-A memiliki 3 kendala dan dapat difungsikan sebagai jangkar penyetaraan (anchor item) antara Level 2 dan Level 3 apabila hasil uji coba menunjukkan tingkat kesukaran yang lebih tinggi dari varian Level 2 lainnya.
 Sistem generatif dapat memperluas bank ini dengan menggandakan tiap kode task menjadi beberapa varian bilangan (mengganti konstanta numerik pada template yang sama) tanpa mengubah struktur kendala maupun klaim yang diukur, sehingga total pool item dapat diperbesar sesuai kebutuhan uji coba (misalnya untuk keperluan Rasch/IRT yang membutuhkan jumlah item memadai per level kesulitan).
+
+# 11. Riwayat Revisi Dokumen
+13 November 2026 (instrumen versi 1.1.0): (1) Bagian 4.1 ditambah dua fitur task, yaitu Sumber umpan balik kelayakan dan Dukungan representasi grafik. (2) Bagian 4.2 menetapkan nilai kedua fitur per level: Level 1 memakai kunci jawaban tanpa bidang perencanaan; Level 2 dan 4 memakai tulisan siswa tanpa bidang perencanaan; Level 3 memakai tulisan siswa dengan bidang perencanaan pada ketiga varian. (3) Bagian 2 ditambah catatan penafsiran K3 pada Level 3. (4) Deskripsi Bank Skenario Level 2-4 disesuaikan. (5) Bagian 5.2 ditambah catatan di bawah tabel K1: pada task dengan event kebijakan, bukti translasi hanya diambil dari penulisan sebelum event (versi rubrik 1.1.0). Deskriptor skor 0-3 tidak berubah. Rincian penerapan dan penyimpangannya dicatat pada docs/SCORING_SPEC.md §7.20-§7.22, dan dasar keputusannya pada docs/Draf_Perbaikan_Mekanik_Game.md. Berkas EcomathMission_ECD_Framework.docx belum diselaraskan dengan revisi ini.

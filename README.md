@@ -118,7 +118,7 @@ cd server
 npm test
 ```
 
-263 uji: rubrik K1–K4, umpan balik siswa, asesmen diri, mesin matematis, integritas bank skenario, pemilihan soal adaptif, isolasi tutorial, dan alur HTTP
+275 uji: rubrik K1–K4, umpan balik siswa, asesmen diri, mesin matematis, integritas bank skenario, pemilihan soal adaptif, isolasi tutorial, dan alur HTTP
 penuh. Uji rubrik memakai log sintetis dari tiga arketipe siswa — "sempurna",
 "trial-error", dan "gagal total".
 

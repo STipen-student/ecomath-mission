@@ -46,6 +46,24 @@ describe('POST /api/session', () => {
     expect(res.body.classCode).toBe('XI-IPA-1');
   });
 
+  it('menyimpan versi instrumen yang dikirim client (§7.22)', async () => {
+    const res = await request(app)
+      .post('/api/session')
+      .send({ studentName: 'Budi', classCode: 'XI-IPA-1', instrumentVersion: '1.1.0' });
+    expect(res.status).toBe(201);
+
+    const tersimpan = await prisma.session.findUnique({ where: { id: res.body.sessionId } });
+    expect(tersimpan?.instrumentVersion).toBe('1.1.0');
+  });
+
+  it('tetap menerima client lama tanpa versi instrumen', async () => {
+    const res = await request(app).post('/api/session').send({ studentName: 'Cici', classCode: 'XI-IPA-1' });
+    expect(res.status).toBe(201);
+
+    const tersimpan = await prisma.session.findUnique({ where: { id: res.body.sessionId } });
+    expect(tersimpan?.instrumentVersion).toBeNull();
+  });
+
   it('menolak nama siswa atau kode kelas yang kosong', async () => {
     const res = await request(app).post('/api/session').send({ studentName: '', classCode: '' });
     expect(res.status).toBe(400);
@@ -63,6 +81,20 @@ describe('GET /api/task/:level', () => {
     expect(res.status).toBe(200);
     expect(res.body.task.level).toBe(3);
     expect(res.body.task.constraints.length).toBeGreaterThan(0);
+  });
+
+  it('mengirim fitur umpan balik level, sama untuk semua varian (§7.20-§7.21)', async () => {
+    const harapan = {
+      1: { feasibilityFeedback: 'answer_key', graphSupport: false },
+      2: { feasibilityFeedback: 'student_hypothesis', graphSupport: false },
+      3: { feasibilityFeedback: 'student_hypothesis', graphSupport: true },
+      4: { feasibilityFeedback: 'student_hypothesis', graphSupport: false },
+    } as const;
+
+    for (const level of [1, 2, 3, 4] as const) {
+      const res = await request(app).get(`/api/task/${level}`);
+      expect(res.body.task.feedback, `level ${level}`).toEqual(harapan[level]);
+    }
   });
 
   it('menolak level di luar 1-4', async () => {

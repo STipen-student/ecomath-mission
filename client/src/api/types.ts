@@ -62,6 +62,15 @@ export interface TaskDto {
   expectedConstraintCount: number;
   gameInteraction: string;
   hasDistractor: boolean;
+  /**
+   * Fitur umpan balik level ini (docs/SCORING_SPEC.md §7.20-§7.21).
+   * Opsional agar client tetap berjalan dengan server lama: bila tidak ada,
+   * rona peta memakai kunci jawaban dan bidang perencanaan tidak ditampilkan.
+   */
+  feedback?: {
+    feasibilityFeedback: 'answer_key' | 'student_hypothesis';
+    graphSupport: boolean;
+  };
 }
 
 export interface TaskResponse {

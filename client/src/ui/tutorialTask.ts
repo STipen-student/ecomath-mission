@@ -98,6 +98,10 @@ export const TUTORIAL_TASK: TaskDto = {
   expectedConstraintCount: 1,
   gameInteraction: 'Latihan mengenal panel dan tombol.',
   hasDistractor: false,
+  // Tutorial memperkenalkan rona dari tulisan siswa (berlaku Level 2-4) dan
+  // bidang perencanaan (Level 3), agar keduanya tidak pertama kali dijumpai
+  // saat dinilai. Lihat docs/SCORING_SPEC.md §7.20-§7.21.
+  feedback: { feasibilityFeedback: 'student_hypothesis', graphSupport: true },
 };
 
 /** Opsi variabel yang benar untuk latihan — dipakai panduan langkah. */

@@ -24,6 +24,10 @@ sessionRouter.post(
         // User-Agent dicatat untuk mendeteksi masalah teknis per jenis perangkat
         // saat pengambilan data (mis. seluruh error berasal dari satu tipe HP).
         userAgent: req.header('user-agent')?.slice(0, 300) ?? null,
+        // Versi tampilan yang benar-benar dijalankan siswa - dibaca dari client,
+        // bukan dari server, karena client dapat tertinggal dari server saat
+        // peramban memakai berkas lama dari cache.
+        instrumentVersion: input.instrumentVersion ?? null,
       },
     });
 

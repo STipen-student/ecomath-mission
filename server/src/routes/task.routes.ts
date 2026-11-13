@@ -15,7 +15,7 @@ import { Router } from 'express';
 import { prisma } from '../db.js';
 import { TaskQuerySchema } from '../schemas/api.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
-import { ASSEMBLY_RULES, getTaskById, pickTaskForLevel } from '../tasks/index.js';
+import { ASSEMBLY_RULES, feedbackFeaturesFor, getTaskById, pickTaskForLevel } from '../tasks/index.js';
 import { selectAdaptiveTask, surfaceLoad, type PriorClaimScores } from '../tasks/adaptive.js';
 import { isAdaptiveEnabled } from '../tasks/adaptiveState.js';
 import type { AdaptiveSelectionPayload } from '../domain/events.js';
@@ -63,6 +63,11 @@ function toClientTask(task: TaskDefinition) {
     gameInteraction: task.gameInteraction,
     /** Ada tidaknya event distraktor; narasinya baru dikirim saat event dipicu. */
     hasDistractor: task.distractor !== null,
+    /**
+     * Fitur umpan balik level ini (sumber rona peta, bidang perencanaan).
+     * Bukan kunci jawaban: nilainya sama untuk seluruh varian satu level.
+     */
+    feedback: feedbackFeaturesFor(task.level),
   };
 }
 

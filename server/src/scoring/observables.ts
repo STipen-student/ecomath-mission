@@ -173,6 +173,12 @@ export interface Observables {
   reflectionAnswered: boolean;
   reflectionClosedQuality: 0 | 1 | 2 | 3 | null;
   reflectionOpenText: string | null;
+  /**
+   * Banyak write_constraint SESUDAH distractor_shown. Deskriptif saja - tidak
+   * dibaca rubrik mana pun. Penulisan sesudah event tidak lagi menjadi bukti
+   * translasi (§7.24), tetapi jejaknya tetap tersedia bagi peneliti.
+   */
+  postEventWriteCount: number;
 
   /* --- Konteks --- */
   /** Kendala yang berlaku pada saat submit terakhir (pasca-event bila ada). */
@@ -216,7 +222,24 @@ export function deriveObservables(task: TaskDefinition, rawLog: RawEvent[]): Obs
     firstIdentify !== undefined && (firstMove === undefined || firstIdentify.timestamp_ms <= firstMove.timestamp_ms);
 
   /* ---------- K1/K2: penyusunan kendala ---------- */
-  const writeEvents = allOf(events, 'write_constraint');
+  /**
+   * Bukti translasi hanya diambil dari penulisan SEBELUM event kebijakan
+   * (docs/SCORING_SPEC.md §7.24, rubrik 1.1.0).
+   *
+   * Sesudah distractor_shown, isi kendala yang berubah diumumkan pada modal
+   * berita, sehingga penulisan sesudahnya bukan lagi bukti bahwa siswa
+   * menerjemahkan narasi sendiri. Sebelum perbaikan ini, tulisan pasca-event
+   * dibandingkan dengan kunci PRA-event: siswa yang dengan benar memperbarui
+   * `y ≥ 36` menjadi `y ≥ 48` dinilai salah skala dan K1-nya turun dari 3
+   * ke 2. Penyesuaian sesudah event adalah bukti revisi, yang dinilai K4.
+   *
+   * Pada task tanpa event (Level 1-3, atau Level 4 sebelum event muncul)
+   * seluruh penulisan dipakai seperti sebelumnya.
+   */
+  const allWriteEvents = allOf(events, 'write_constraint');
+  const writeEvents =
+    distractorAtMs === null ? allWriteEvents : allWriteEvents.filter((e) => e.timestamp_ms < distractorAtMs);
+  const postEventWriteCount = allWriteEvents.length - writeEvents.length;
   const written = writeEvents.map((e) => {
     const p = payloadOf<WriteConstraintPayload>(e);
     const coeffs: Coeffs = {
@@ -398,6 +421,7 @@ export function deriveObservables(task: TaskDefinition, rawLog: RawEvent[]): Obs
     reflectionAnswered: reflectionEvent !== undefined && (closedOption !== undefined || openText !== null),
     reflectionClosedQuality: closedOption ? closedOption.quality : null,
     reflectionOpenText: openText,
+    postEventWriteCount,
 
     activeConstraints,
     totalDurationMs,

@@ -13,6 +13,7 @@ import type {
   SubmitResponse,
   TaskResponse,
 } from './types.js';
+import { INSTRUMENT_VERSION } from '../version.js';
 
 const API_URL: string = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000';
 
@@ -71,7 +72,12 @@ export const api = {
   baseUrl: API_URL,
 
   createSession(input: { studentName: string; studentId?: string; classCode: string }): Promise<SessionResponse> {
-    return request<SessionResponse>('/api/session', { method: 'POST', body: JSON.stringify(input) });
+    // Versi instrumen ikut dikirim agar setiap sesi dapat dipilah menurut
+    // tampilan yang benar-benar dijalankan siswa (docs/SCORING_SPEC.md §7.22).
+    return request<SessionResponse>('/api/session', {
+      method: 'POST',
+      body: JSON.stringify({ ...input, instrumentVersion: INSTRUMENT_VERSION }),
+    });
   },
 
   /**

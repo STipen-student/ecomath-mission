@@ -17,8 +17,14 @@
 /**
  * Versi rubrik. Disimpan bersama tiap baris Score.
  * Naikkan setiap kali ambang batas atau logika rubrik berubah.
+ *
+ * Riwayat:
+ *   1.0.0  rubrik awal
+ *   1.1.0  bukti translasi (K1, dan jumlah kendala tersusun untuk K2) hanya
+ *          diambil dari write_constraint SEBELUM distractor_shown
+ *          (docs/SCORING_SPEC.md §7.24)
  */
-export const SCORING_VERSION = '1.0.0';
+export const SCORING_VERSION = '1.1.0';
 
 export const THRESHOLDS = {
   /**

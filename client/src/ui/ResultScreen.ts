@@ -121,6 +121,17 @@ function kunciJawabanSection(task: TaskDto, hasil: SubmitResponse): HTMLElement 
   );
 }
 
+/** Bintang 1-3 dari skor mentah 0-12 (tampilan saja). */
+function bintangDari(rawSum: number): number {
+  if (rawSum >= 9) return 3;
+  if (rawSum >= 5) return 2;
+  return 1;
+}
+
+function judulKota(bintang: number): string {
+  return bintang === 3 ? 'Kota berkelanjutan!' : bintang === 2 ? 'Kota mulai tumbuh' : 'Kota perlu ditata ulang';
+}
+
 export function renderResultScreen(
   root: HTMLElement,
   data: {
@@ -163,6 +174,14 @@ export function renderResultScreen(
           { class: 'result-head' },
           el('span', { class: 'lvl-badge' }, `LV${data.level}`),
           el('h2', {}, 'LEVEL SELESAI'),
+        ),
+        // Bintang dihitung dari jumlah skor 0-12 dan hanya untuk tampilan:
+        // tidak dicatat sebagai event dan tidak memengaruhi skor.
+        el(
+          'div',
+          { class: 'stars', ariaLabel: `${bintangDari(hasil.rawSum)} dari 3 bintang` },
+          ...[1, 2, 3].map((i) => el('span', { class: `star${i <= bintangDari(hasil.rawSum) ? ' is-earned' : ''}` }, '★')),
+          el('span', { class: 'stars-label' }, judulKota(bintangDari(hasil.rawSum))),
         ),
         hasil.overallMessage ? el('p', { class: 'overall-msg' }, hasil.overallMessage) : null,
         el(

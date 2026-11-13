@@ -18,6 +18,8 @@ export const CreateSessionSchema = z.object({
   studentName: z.string().trim().min(1, 'Nama siswa wajib diisi').max(SHORT_TEXT),
   studentId: z.string().trim().max(SHORT_TEXT).optional(),
   classCode: z.string().trim().min(1, 'Kode kelas wajib diisi').max(SHORT_TEXT),
+  /** Versi instrumen yang dijalankan client (docs/SCORING_SPEC.md §7.22). */
+  instrumentVersion: z.string().trim().max(40).optional(),
 });
 export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
 

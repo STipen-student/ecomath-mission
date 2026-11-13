@@ -27,6 +27,7 @@ import { cornerCandidates, evaluate, objectiveValue } from '../game/geometry.js'
 import type { ConstraintDto, DistractorResponse, SkorKlaim, TargetBelajar, TaskDto } from '../api/types.js';
 import { clear, el, jam, num } from './dom.js';
 import { formPenilaianDiri } from './asesmenDiri.js';
+import { BidangPerencanaan } from './bidangPerencanaan.js';
 
 export interface PlayCallbacks {
   onIdentifyVariable: (variable: 'x' | 'y', optionId: string) => void;
@@ -111,8 +112,10 @@ export class PlayScreen {
    * yang sebenarnya. Ketidaksesuaian itu justru bukti K4 yang berharga.
    *
    * `this.constraints` (kunci jawaban) tetap dipakai apa adanya untuk
-   * kelayakan submit/reject, warna peta, dan revisi setelah event distraktor -
-   * seluruhnya tetap harus memakai kebenaran asli demi validitas skor.
+   * kelayakan submit/reject dan revisi setelah event distraktor - keduanya
+   * tetap harus memakai kebenaran asli demi validitas skor. Warna peta memakai
+   * kunci hanya bila fitur task `feedback.feasibilityFeedback` = 'answer_key'
+   * (Level 1); lihat kelayakanUntukRona() dan SCORING_SPEC §7.20.
    */
   private tulisanKendala: (TulisanKendala | null)[];
 
@@ -135,6 +138,9 @@ export class PlayScreen {
   private distractorSudahMuncul = false;
   private jumlahPenolakan = 0;
   private tahapRefleksi = false;
+
+  /** Bidang perencanaan mini (Level 3, §7.21); null bila task tidak memilikinya. */
+  private bidang: BidangPerencanaan | null = null;
 
   private readonly laci = new Map<string, Laci>();
 
@@ -291,9 +297,12 @@ export class PlayScreen {
       );
     };
 
+    if (t.feedback?.graphSupport) this.bidang = new BidangPerencanaan();
+
     return el(
       'div',
       { class: 'zone-dock' },
+      this.bidang?.root ?? null,
       kartu('x', this.sliderX, this.nilaiX),
       kartu('y', this.sliderY, this.nilaiY),
       this.bacaanZ,
@@ -532,7 +541,9 @@ export class PlayScreen {
       // itulah inti dari "uji titik pojok menyesuaikan dengan kendala yang
       // ditulis". Panel Titik Pojok cukup dihitung ulang saat dibuka
       // (lihat bukaLaci), karena kedua panel tidak pernah tampil bersamaan.
-      this.gambarMeter();
+      // perbarui() juga menggambar ulang rona peta dan bidang perencanaan,
+      // yang pada Level 2-4 ikut bergantung pada tulisan ini (§7.20-§7.21).
+      this.perbarui(false);
     });
 
     return el(
@@ -697,10 +708,27 @@ export class PlayScreen {
     }, 400);
   }
 
+  /**
+   * Kelayakan yang menentukan rona peta (langit dan bangunan) SEBELUM Kirim.
+   *
+   * Sumbernya fitur task `feedback.feasibilityFeedback` (SCORING_SPEC §7.20):
+   * - 'answer_key'         -> kunci jawaban, termasuk kendala tersirat (Level 1, ECD Bagian 6);
+   * - 'student_hypothesis' -> tulisan siswa, sama dengan meter HUD (Level 2-4).
+   *
+   * Task tanpa fitur ini (server lama) jatuh ke kunci jawaban - perilaku sebelum
+   * §7.20. Kelayakan saat Kirim TIDAK memakai fungsi ini: kirim() selalu
+   * menguji `this.constraints`, dan server menghitung ulang semuanya.
+   */
+  private kelayakanUntukRona(): { feasible: boolean } {
+    const sumber = this.ctx.task.feedback?.feasibilityFeedback ?? 'answer_key';
+    const kendala = sumber === 'student_hypothesis' ? this.tulisanUntukPerhitungan() : this.constraints;
+    return evaluate(kendala, this.x, this.y);
+  }
+
   /** Gambar ulang seluruh indikator yang bergantung pada (x, y). */
   private perbarui(gambarUlangPojok = false): void {
-    const hasil = evaluate(this.constraints, this.x, this.y);
     const t = this.ctx.task;
+    const hasil = this.kelayakanUntukRona();
 
     this.nilaiX.textContent = `${num(this.x)} ${t.variables.x.unit}`;
     this.nilaiY.textContent = `${num(this.y)} ${t.variables.y.unit}`;
@@ -709,6 +737,15 @@ export class PlayScreen {
     this.gambarBacaanZ();
 
     if (gambarUlangPojok && this.panelPojok) this.gambarTitikPojok();
+
+    this.bidang?.gambar({
+      kendala: this.tulisanUntukPerhitungan(),
+      jumlahTulisan: this.tulisanKendala.filter((k) => k !== null).length,
+      x: this.x,
+      y: this.y,
+      xMax: t.variables.x.max,
+      yMax: t.variables.y.max,
+    });
 
     this.kota?.render({
       x: this.x,
@@ -730,11 +767,15 @@ export class PlayScreen {
    * tampil netral (bukan hijau atau merah) dan mengarahkan siswa membuka panel
    * "Kendala". Lihat catatan panjang pada deklarasi `tulisanKendala` di atas.
    */
+  /** Status meter pada render sebelumnya; dipakai hanya untuk umpan balik visual. */
+  private meterSebelumnya: boolean[] = [];
+
   private gambarMeter(): void {
     clear(this.meterBar);
 
     const aktif = this.tulisanUntukPerhitungan();
     const hasil = evaluate(aktif, this.x, this.y);
+    const statusBaru: boolean[] = [];
 
     this.tulisanKendala.forEach((t, slot) => {
       if (!t) {
@@ -758,9 +799,14 @@ export class PlayScreen {
       const rusak = hasil.violated.has(fake.id);
       const kiri = t.a * this.x + t.b * this.y;
 
+      statusBaru[slot] = !rusak;
+      // Meter yang BARU menjadi hijau berkedip sekali. Ini hanya tampilan:
+      // tidak mencatat event dan tidak memengaruhi skor.
+      const baruHijau = !rusak && this.meterSebelumnya[slot] === false;
+
       const meter = el(
         'button',
-        { class: `meter ${rusak ? 'is-bad' : 'is-ok'}` },
+        { class: `meter ${rusak ? 'is-bad' : 'is-ok'}${baruHijau ? ' is-just-ok' : ''}` },
         el('span', { class: 'meter-mark' }, rusak ? '✕' : '✓'),
         el(
           'span',
@@ -774,6 +820,8 @@ export class PlayScreen {
       meter.addEventListener('click', () => this.bukaLaci('kendala'));
       this.meterBar.append(meter);
     });
+
+    this.meterSebelumnya = statusBaru;
   }
 
   private gambarBacaanZ(): void {

@@ -99,6 +99,8 @@ export async function runExport(opts: ExportOptions): Promise<void> {
       levels_completed: s.attempts.filter((a) => a.score !== null).length,
       session_composite: s.sessionComposite ?? '',
       user_agent: s.userAgent ?? '',
+      /** Kosong = sesi sebelum penanda versi ada (instrumen 1.0.0). */
+      instrument_version: s.instrumentVersion ?? '',
     })),
   );
 
@@ -120,6 +122,7 @@ export async function runExport(opts: ExportOptions): Promise<void> {
         student_name: s.attempt.session.studentName,
         student_id: s.attempt.session.studentId ?? '',
         class_code: s.attempt.session.classCode,
+        instrument_version: s.attempt.session.instrumentVersion ?? '',
         level: s.level,
         task_id: s.taskId,
         K1: s.k1,

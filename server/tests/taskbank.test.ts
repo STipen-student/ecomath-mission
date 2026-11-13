@@ -9,7 +9,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   ASSEMBLY_RULES,
+  FEEDBACK_FEATURES,
   TASK_BANK,
+  feedbackFeaturesFor,
   getTaskById,
   pickTaskForLevel,
   substantiveConstraintCount,
@@ -17,6 +19,31 @@ import {
 } from '../src/tasks/index.js';
 import { findOptimum } from '../src/domain/optimum.js';
 import { COMPOSITE_WEIGHTS } from '../src/scoring/thresholds.js';
+
+describe('fitur umpan balik per level (SCORING_SPEC §7.20-§7.21)', () => {
+  it('Level 1 memakai kunci jawaban untuk rona peta, Level 2-4 memakai tulisan siswa', () => {
+    expect(FEEDBACK_FEATURES[1].feasibilityFeedback).toBe('answer_key');
+    for (const level of [2, 3, 4] as const) {
+      expect(FEEDBACK_FEATURES[level].feasibilityFeedback, `level ${level}`).toBe('student_hypothesis');
+    }
+  });
+
+  it('bidang perencanaan hanya ada pada Level 3', () => {
+    expect(FEEDBACK_FEATURES[1].graphSupport).toBe(false);
+    expect(FEEDBACK_FEATURES[2].graphSupport).toBe(false);
+    expect(FEEDBACK_FEATURES[3].graphSupport).toBe(true);
+    expect(FEEDBACK_FEATURES[4].graphSupport).toBe(false);
+  });
+
+  it('seluruh varian satu level menerima fitur yang sama', () => {
+    // Fitur ditetapkan per level: bila suatu saat dipindah ke data per varian,
+    // uji ini memastikan varian dalam satu level tetap setara.
+    for (const level of [1, 2, 3, 4] as const) {
+      const fitur = TASK_BANK.filter((t) => t.level === level).map((t) => JSON.stringify(feedbackFeaturesFor(t.level)));
+      expect(new Set(fitur).size, `level ${level}`).toBe(1);
+    }
+  });
+});
 
 describe('kelengkapan bank skenario', () => {
   it('memuat 12 task: 3 varian konteks SDG untuk tiap level 1-4', () => {

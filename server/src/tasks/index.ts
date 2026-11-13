@@ -6,7 +6,7 @@
  * level yang sesuai - tidak ada kode endpoint maupun kode client yang berubah.
  */
 
-import type { SdgContext, TaskDefinition } from '../domain/types.js';
+import type { FeedbackFeatures, SdgContext, TaskDefinition } from '../domain/types.js';
 import { LEVEL_1_TASKS } from './level1.js';
 import { LEVEL_2_TASKS } from './level2.js';
 import { LEVEL_3_TASKS } from './level3.js';
@@ -46,6 +46,31 @@ export const ASSEMBLY_RULES: Record<number, LevelAssemblyRule> = {
   3: { level: 3, minConstraints: 2, maxConstraints: 3, requiresDistractor: false, requiresImplicitConstraint: false, evidenceFocus: 'K2-K3' },
   4: { level: 4, minConstraints: 3, maxConstraints: 4, requiresDistractor: true, requiresImplicitConstraint: true, evidenceFocus: 'K3-K4, bobot K4 diperbesar' },
 };
+
+/**
+ * Fitur umpan balik per level (docs/ECD_Framework.md Bagian 4.1-4.2,
+ * docs/SCORING_SPEC.md §7.20-§7.21).
+ *
+ * Ditetapkan per LEVEL, bukan per varian. Bila hanya satu varian Level 3 yang
+ * memiliki bidang perencanaan, siswa yang kebetulan menerima varian itu
+ * memperoleh bantuan representasi yang tidak diterima siswa lain pada level
+ * yang sama - varian tidak lagi setara, dan K3 mereka tidak sebanding.
+ *
+ * - Level 1 mempertahankan rona dari kunci jawaban sesuai ECD Bagian 6.
+ * - Level 2-4 memakai hipotesis siswa, sejalan dengan meter kendala (§7.13).
+ * - Bidang perencanaan hanya pada Level 3 (ECD Bagian 8, L3-SDG13-A, diperluas
+ *   ke ketiga varian). Level 4 belum diputuskan dan karena itu tidak memilikinya.
+ */
+export const FEEDBACK_FEATURES: Record<1 | 2 | 3 | 4, FeedbackFeatures> = {
+  1: { feasibilityFeedback: 'answer_key', graphSupport: false },
+  2: { feasibilityFeedback: 'student_hypothesis', graphSupport: false },
+  3: { feasibilityFeedback: 'student_hypothesis', graphSupport: true },
+  4: { feasibilityFeedback: 'student_hypothesis', graphSupport: false },
+};
+
+export function feedbackFeaturesFor(level: 1 | 2 | 3 | 4): FeedbackFeatures {
+  return FEEDBACK_FEATURES[level];
+}
 
 /**
  * Pengacakan berstrata: satu varian dipilih acak dari level yang diminta.

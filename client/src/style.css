@@ -818,6 +818,83 @@ code {
   display: none;
 }
 
+/* ---------------- Bidang perencanaan (Level 3, SCORING_SPEC §7.21) ---------------- */
+
+.plate-graph {
+  padding: 6px 10px 8px;
+}
+
+.graph-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-pixel);
+  font-size: 0.66rem;
+  color: var(--ink);
+  background: none;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.plate-graph.is-collapsed .graph-body {
+  display: none;
+}
+
+.graph-svg {
+  display: block;
+  width: 100%;
+  max-height: 168px;
+  margin-top: 4px;
+}
+
+.graph-box {
+  fill: var(--paper-2);
+  stroke: var(--ink-mute);
+  stroke-width: 1;
+}
+
+.graph-region {
+  fill: var(--green-hi);
+  fill-opacity: 0.45;
+  stroke: none;
+}
+
+.graph-line {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.graph-line.is-strict {
+  stroke-dasharray: 4 3;
+}
+
+.graph-tick {
+  font-family: var(--font-read);
+  font-size: 9px;
+  fill: var(--ink-2);
+}
+
+.graph-point {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.graph-point.is-ok {
+  fill: var(--green);
+}
+
+.graph-point.is-bad {
+  fill: var(--red);
+}
+
+.graph-note {
+  margin: 4px 0 0;
+  font-family: var(--font-read);
+  font-size: 0.72rem;
+  color: var(--ink-2);
+}
+
 .score-label {
   font-family: var(--font-pixel);
   font-size: 0.62rem;
@@ -2325,6 +2402,92 @@ code {
   }
 }
 
+/* ---------------- Kartu zona di ponsel ---------------- */
+
+/*
+ * Dua kartu zona semula setinggi 140 px masing-masing dan menutup hampir separuh
+ * peta. Di ponsel kartunya dipadatkan: tombol "Atur pusat" pindah sejajar
+ * dengan nama dan nilai, sehingga tiap kartu cukup tinggi untuk penggeser.
+ */
+@media (max-width: 420px) {
+  .zone-dock {
+    gap: 6px;
+  }
+
+  .zone-card {
+    padding: 6px 10px 8px;
+  }
+
+  .zone-head {
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    margin-bottom: 4px;
+  }
+
+  .zone-head .zone-name {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 0.6rem;
+  }
+
+  .zone-foot {
+    margin-top: 0;
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .zone-pin {
+    min-height: 30px;
+    padding: 4px 8px;
+  }
+
+  .zone-card .pixel-range {
+    height: 22px;
+  }
+}
+
+/* ---------------- Bilah alat di ponsel ---------------- */
+
+/*
+ * Lima alat ditambah KIRIM tidak muat dalam 375 px dengan lebar tetap. Pada
+ * layar sempit setiap alat berbagi lebar secara merata, dan KIRIM mendapat
+ * lebar tetap di kanan. Tombol sticky dilepas karena tidak lagi diperlukan.
+ */
+@media (max-width: 420px) {
+  .toolbar {
+    gap: 5px;
+    padding-left: 6px;
+    padding-right: 6px;
+    overflow-x: hidden;
+  }
+
+  .toolbar .tool:not(.tool-go) {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 5px 2px;
+  }
+
+  .tool-ico {
+    font-size: 1.05rem;
+  }
+
+  .tool-label {
+    font-size: 0.5rem;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  .tool-go {
+    position: static;
+    box-shadow: var(--sh-sm);
+    flex: 0 0 64px;
+    min-width: 0;
+    margin-left: 2px;
+  }
+}
+
 /* ---------------- AaL: penyesuaian ponsel & tablet ---------------- */
 
 .aal-self-step {
@@ -2433,4 +2596,52 @@ code {
   .screen-center .card {
     max-width: 620px;
   }
+}
+
+/* Umpan balik kecil saat sebuah kendala baru terpenuhi (tampilan saja). */
+.meter.is-just-ok {
+  animation: meter-just-ok 0.6s ease-out 1;
+}
+
+@keyframes meter-just-ok {
+  0% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 0 rgba(74, 167, 78, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(74, 167, 78, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter.is-just-ok {
+    animation: none;
+  }
+}
+
+/* Bintang hasil level (tampilan saja). */
+.stars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 4px 0 12px;
+}
+
+.star {
+  font-size: 1.6rem;
+  color: var(--paper-3);
+  -webkit-text-stroke: 2px var(--ink);
+}
+
+.star.is-earned {
+  color: var(--yellow);
+}
+
+.stars-label {
+  margin-left: 6px;
+  font-family: var(--font-pixel);
+  font-size: 0.66rem;
+  color: var(--ink-2);
 }

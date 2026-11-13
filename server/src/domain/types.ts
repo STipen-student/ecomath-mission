@@ -30,6 +30,27 @@ export type NumberStyle = 'simple_integer' | 'large_integer' | 'decimal_mixed';
 export type Representation = 'narrative' | 'narrative_table' | 'narrative_partial_graph';
 
 /**
+ * Sumber umpan balik kelayakan SEBELUM Kirim - task feature (Bagian 4.1).
+ *
+ * - answer_key         : rona peta dihitung dari kunci jawaban (Level 1, ECD Bagian 6)
+ * - student_hypothesis : rona peta dihitung dari pertidaksamaan yang ditulis siswa
+ *
+ * Kelayakan SAAT KIRIM (attempt_submit / reject_by_system) selalu dihitung dari
+ * kunci jawaban, apa pun nilai fitur ini. Lihat docs/SCORING_SPEC.md §7.20.
+ */
+export type FeasibilityFeedbackSource = 'answer_key' | 'student_hypothesis';
+
+/**
+ * Fitur umpan balik yang ditetapkan per LEVEL (Bagian 4.1-4.2), bukan per
+ * varian, agar varian dalam satu level menerima bantuan yang sama.
+ */
+export interface FeedbackFeatures {
+  feasibilityFeedback: FeasibilityFeedbackSource;
+  /** Bidang perencanaan mini dari tulisan siswa (docs/SCORING_SPEC.md §7.21). */
+  graphSupport: boolean;
+}
+
+/**
  * Peran sebuah kendala dalam struktur task.
  * - explicit       : dinyatakan langsung pada narasi
  * - implicit       : harus disimpulkan siswa (wajib ada 1 pada Level 4)

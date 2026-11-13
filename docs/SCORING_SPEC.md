@@ -10,7 +10,7 @@ perilaku siswa dan ke baris kode yang menghasilkannya.** Dokumen ini dimaksudkan
 untuk dilampirkan atau dikutip pada BAB III skripsi sebagai definisi operasional
 instrumen.
 
-**Versi rubrik: `1.0.0`** — tersimpan pada kolom `Score.scoring_version` di setiap
+**Versi rubrik: `1.1.0`** (sejak 13 November 2026; perubahan dari `1.0.0` dicatat pada §7.24) — tersimpan pada kolom `Score.scoring_version` di setiap
 baris skor. Naikkan versi ini setiap kali ambang batas atau logika rubrik berubah,
 dan **jangan gabungkan data dari dua versi rubrik yang berbeda** dalam satu analisis.
 
@@ -496,6 +496,11 @@ Bagian 2). Perubahan pada bagian ini murni MENGURANGI bantuan visual yang
 sebelumnya bocor lewat UI — tidak mengubah satu baris pun logika skoring, dan
 karena itu tidak menuntut migrasi `SCORING_VERSION`.
 
+**Diperbarui oleh §7.20 (instrumen 1.1.0).** Warna rona peta kini memakai kunci
+jawaban hanya pada Level 1. Pada Level 2–4 rona dihitung dari tulisan siswa,
+sama seperti meter. Kelayakan saat `kirim()` dan isi `terapkanDistractor()`
+tetap memakai kunci jawaban.
+
 Non-negativitas (x ≥ 0, y ≥ 0) tetap diambil dari kunci jawaban meski tidak
 ditulis siswa — bukan kebocoran, karena nilainya universal dan identik di
 seluruh dua belas task (bukan bagian dari `expectedConstraintCount`, sehingga
@@ -823,7 +828,7 @@ Tidak ada kolom database baru: seluruhnya memakai `EventLog` dan
 
 ## 8. Cakupan pengujian
 
-`cd server && npm test` — 263 uji, seluruhnya lolos.
+`cd server && npm test` — 275 uji, seluruhnya lolos.
 
 | Berkas | Jumlah | Cakupan |
 |---|---|---|
@@ -858,3 +863,237 @@ pengambilan data ulang:
    memanggil `scoreAttempt()` atas seluruh baris `EventLog` dan mem-`upsert` `Score`.
 5. Ekspor ulang, dan **pisahkan** data lama dari data baru berdasarkan kolom
    `scoring_version`.
+
+## 7.19 Lapisan permainan: bintang hasil dan umpan balik visual (tampilan saja)
+
+Untuk memenuhi unsur game (tujuan, tantangan, hasil terlihat, umpan balik
+segera), layar hasil menampilkan **1–3 bintang** dan judul kota
+(`ResultScreen.ts` → `bintangDari()`): 9–12 = 3 bintang, 5–8 = 2, 0–4 = 1.
+Meter kendala yang baru terpenuhi berkedip sekali (`PlayScreen.ts`,
+`is-just-ok`).
+
+**Keduanya hanya tampilan.** Tidak mencatat event baru, tidak mengubah skor
+K1–K4, komposit, maupun `SCORING_VERSION`. Pengambilan data tidak perlu diulang
+karena perubahan ini.
+
+Perubahan yang **mengubah instrumen** (urutan refleksi, tutorial, konsekuensi
+di peta, pilihan urutan level) belum diterapkan dan memerlukan revisi di
+`docs/ECD_Framework.md` serta persetujuan tertulis pembimbing.
+
+Sebagian perubahan itu kini diterapkan sebagai instrumen versi 1.1.0 dan
+dicatat pada §7.20–§7.23. Sisanya masih berstatus usulan pada
+`docs/Draf_Perbaikan_Mekanik_Game.md`.
+
+---
+
+## 7.20 Sumber rona peta ditetapkan per level (instrumen 1.1.0)
+
+Dasar: usulan U0 pada `docs/Draf_Perbaikan_Mekanik_Game.md`; fitur task baru
+"Sumber umpan balik kelayakan" pada `docs/ECD_Framework.md` Bagian 4.1–4.2.
+
+**Masalah.** §7.13 memindahkan meter kendala ke tulisan siswa, tetapi rona peta
+(langit merah dan bangunan bernuansa merah) tetap dihitung dari kunci jawaban,
+termasuk kendala tersirat Level 4. Siswa dapat menemukan daerah layak dengan
+mengamati warna tanpa menulis pertidaksamaan, sehingga `boundary_violation_count`
+(K3) dapat rendah karena membaca warna, bukan karena penalaran. Pada Level 4,
+warna memberi tanda pelanggaran kendala tersirat sebelum siswa menyimpulkannya.
+
+**Keputusan.**
+
+| Level | Rona peta sebelum Kirim | Dasar |
+|---|---|---|
+| 1 | Kunci jawaban | ECD Bagian 6: "sistem menandai merah bila kombinasi melanggar salah satu kendala" |
+| 2–4 | Tulisan siswa (`tulisanUntukPerhitungan()`) | Konsisten dengan meter §7.13 |
+
+Penerapan: `server/src/tasks/index.ts` → `FEEDBACK_FEATURES` (per level, bukan
+per varian), dikirim ke client sebagai `task.feedback` oleh `toClientTask()`,
+dan dibaca `PlayScreen.kelayakanUntukRona()`.
+
+**Yang tidak berubah.** Kelayakan saat `kirim()` (`attempt_submit`,
+`reject_by_system`), `is_valid_at_time` pada `move_slider`, isi
+`terapkanDistractor()`, dan seluruh mesin skoring. §7.20 sendiri tidak
+mengubah `SCORING_VERSION`; kenaikan ke `1.1.0` berasal dari §7.24.
+
+**Penyimpangan dan perilaku yang perlu diketahui saat menafsirkan data:**
+
+1. Pada Level 2–4, sebelum satu pun kendala ditulis, rona selalu normal karena
+   hanya non-negativitas yang diuji. Peta tidak memberi peringatan sampai siswa
+   menulis model. Ini disengaja.
+2. Setelah event kebijakan Level 4, rona tetap mengikuti tulisan lama siswa
+   sampai ia menulis ulang kendala yang berubah. Isi kendala baru sudah
+   diumumkan pada modal berita.
+3. Client yang menerima task tanpa `feedback` (server lama) memakai kunci
+   jawaban, sama dengan perilaku instrumen 1.0.0.
+4. Dampak yang diperkirakan, **belum diuji**: `boundary_violation_count` pada
+   Level 2–4 dapat naik. Ambang `violationThresholdFor(n)` sengaja tidak diubah.
+   Peninjauan ambang hanya dilakukan setelah ada data uji coba, sebagai revisi
+   terpisah dengan kenaikan `SCORING_VERSION`.
+5. K3 Level 1 tetap dikumpulkan dalam kondisi berbantuan warna dan perlu
+   ditafsirkan dengan catatan itu.
+
+**Masalah skoring yang ditemukan saat menerapkan perubahan ini (sudah
+diperbaiki pada §7.24, rubrik `1.1.0`).** Pada Level 4, siswa yang dengan
+benar menulis ulang kendala yang berubah setelah event (misalnya `y ≥ 36`
+menjadi `y ≥ 48` pada L4-SDG11-A) turun K1-nya dari 3 menjadi 2. Penyebabnya,
+`deriveObservables()` membandingkan tulisan TERAKHIR tiap slot dengan kendala
+SEBELUM event (`substantive` diambil dari `task.constraints`), sehingga tulisan
+baru yang benar diklasifikasikan sebagai salah skala dan `constraintCountCorrect`
+berkurang. Diverifikasi dengan log arketipe "siswa sempurna" pada
+`scoring.test.ts` yang ditambah satu `write_constraint` pasca-event: profil
+berubah dari 3-3-3-3 menjadi 2-3-3-3.
+
+Masalah ini sudah ada sejak §7.13, karena meter yang mengikuti tulisan siswa
+mendorong penulisan ulang. Rona dari tulisan siswa (§7.20) dapat menambah
+dorongan itu. Perbaikan yang wajar adalah menilai K1 hanya dari `write_constraint`
+SEBELUM `distractor_shown`, karena penulisan ulang sesudahnya adalah bukti
+revisi (K4), bukan bukti translasi awal. Perbaikan itu mengubah logika rubrik,
+sehingga menuntut kenaikan `SCORING_VERSION`, uji baru, dan persetujuan
+pembimbing. Perbaikannya diterapkan pada §7.24 atas persetujuan peneliti;
+persetujuan pembimbing masih perlu dimintakan.
+
+Uji: `taskbank.test.ts` → "fitur umpan balik per level";
+`api.integration.test.ts` → "mengirim fitur umpan balik level".
+
+---
+
+## 7.21 Bidang perencanaan mini pada Level 3 (instrumen 1.1.0)
+
+Dasar: usulan U3; ECD Bagian 8 (L3-SDG13-A: "grafik daerah penyelesaian yang
+otomatis ter-render dari input siswa"); fitur task baru "Dukungan representasi
+grafik" pada ECD Bagian 4.1.
+
+`client/src/ui/bidangPerencanaan.ts` menggambar grafik Kartesius kecil berisi
+garis batas setiap pertidaksamaan **tulisan siswa** (putus-putus untuk `<` dan
+`>`), daerah irisannya di dalam kotak batas slider, dan titik (x, y) saat ini
+yang berwarna hijau bila memenuhi tulisan siswa dan merah bila tidak. Sumbernya
+sama dengan meter dan panel Titik Pojok, sehingga kendala tersirat Level 4 tidak
+pernah tergambar kecuali siswa menuliskannya. Bidang ini tidak dapat diketuk,
+tidak mengubah keadaan task, dan tidak memancarkan event.
+
+**Penyimpangan dari ECD dan dari draf:**
+
+1. ECD menyebut grafik "sebagai overlay pada peta" untuk satu varian
+   (L3-SDG13-A). Diterapkan sebagai panel kecil di dok zona, bukan di atas peta
+   isometrik yang memang tidak memakai sumbu Kartesius (§7.2), dan berlaku untuk
+   **ketiga** varian Level 3 agar varian dalam satu level tetap setara.
+2. Level 4 tidak mendapat bidang ini. Keputusannya masih terbuka karena ECD
+   Bagian 4.2 menetapkan representasi "grafik parsial" untuk Level 4.
+3. Tutorial menampilkan bidang ini dan rona dari tulisan siswa, agar keduanya
+   tidak pertama kali dijumpai saat dinilai. Tutorial tetap terisolasi dari data
+   penelitian (§7.17).
+4. Siswa dapat menutup bidang ini. Membuka dan menutupnya tidak dicatat sebagai
+   event, sehingga data tidak dapat membedakan siswa yang memakai bidang dari
+   yang menutupnya. Bidang selalu dimulai terbuka di semua perangkat agar
+   kondisi awal setara antara ponsel dan laptop.
+5. **Konstruk K3 Level 3 bergeser.** Sebagian kerja "menentukan daerah
+   penyelesaian" kini dikerjakan sistem. K3 Level 3 terutama mencerminkan
+   ketepatan memilih dan memverifikasi titik optimum di dalam daerah yang
+   dibangun dari model siswa. Catatan ini sudah ditambahkan pada ECD Bagian 2.
+   Draf menandai usulan ini (a+), dan penafsiran ulang K3 masih memerlukan
+   persetujuan validator.
+
+Mesin skoring tidak berubah. Fungsi geometri bidang (`daerahIrisan`,
+`ruasGaris`) diperiksa manual pada ketiga task Level 3 dengan kunci jawaban
+sebagai masukan; daerah yang dihasilkan cocok dengan titik pojok acuan.
+Belum ada uji otomatis untuk client karena project client tidak memiliki
+kerangka uji.
+
+---
+
+## 7.22 Penanda versi instrumen
+
+Perubahan tampilan yang tidak menyentuh rubrik tidak menaikkan
+`SCORING_VERSION`, padahal dapat mengubah kondisi munculnya bukti (§7.20,
+§7.21). Karena itu ditambahkan penanda terpisah:
+
+- `client/src/version.ts` → `INSTRUMENT_VERSION = '1.1.0'`, dikirim saat sesi
+  dibuat (`POST /api/session`, field opsional `instrumentVersion`).
+- Disimpan pada kolom baru `Session.instrumentVersion` (nullable).
+- Diekspor sebagai kolom `instrument_version` pada `sessions.csv` dan
+  `scores_long.csv`. Sel kosong berarti sesi dari sebelum penanda ini ada
+  (instrumen 1.0.0).
+
+Versi dibaca dari client, bukan dari server, karena peramban dapat menjalankan
+berkas lama dari cache. Naikkan `INSTRUMENT_VERSION` setiap kali yang dilihat
+atau dapat dilakukan siswa berubah, dan jangan gabungkan data dari dua versi
+instrumen tanpa dicek, sama seperti aturan untuk `scoring_version`.
+
+**Penyimpangan prosedur basis data.** Kolom baru ditambahkan tanpa berkas
+migrasi, mengikuti cara kolom tutorial (§7.17) ditambahkan; berkas di
+`prisma/migrations/` memang sudah tidak mencerminkan skema penuh sejak itu.
+Basis data lokal perlu diperbarui dengan `npx prisma db push` sebelum
+`npm run dev`. Di produksi, `npm run start:prod` sudah menjalankan
+`prisma db push` secara otomatis.
+
+Uji: `api.integration.test.ts` → "menyimpan versi instrumen yang dikirim
+client" dan "tetap menerima client lama tanpa versi instrumen".
+
+---
+
+## 7.23 Status pengujian revisi instrumen 1.1.0 (13 November 2026)
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Uji unit server (12 berkas, 275 uji, termasuk uji baru dari §7.20 dan §7.24) | Lolos |
+| Typecheck server dan client (`tsc --noEmit`) | Lolos |
+| Build client (`vite build`) | Berhasil |
+| `api.integration.test.ts`, termasuk 3 uji baru | **Belum dijalankan.** Lingkungan pengujian tidak dapat mengunduh engine Prisma. Wajib dijalankan dengan `cd server && npm test` di komputer pengembang sebelum pengambilan data. |
+| Tampilan rona dan bidang perencanaan di peramban dan ponsel | **Belum diperiksa langsung.** |
+
+Angka pada tabel §8 belum diperbarui; jumlah uji di sana mencerminkan keadaan
+sebelum revisi ini.
+
+---
+
+## 7.24 Bukti translasi hanya dari penulisan sebelum event kebijakan (rubrik 1.1.0)
+
+**Ini perubahan logika rubrik.** `SCORING_VERSION` naik dari `1.0.0` ke `1.1.0`.
+
+**Masalah** (ditemukan saat menerapkan §7.20). `deriveObservables()`
+membandingkan seluruh `write_constraint`, termasuk yang ditulis SESUDAH
+`distractor_shown`, dengan kunci jawaban SEBELUM event. Siswa Level 4 yang
+dengan benar memperbarui kendala yang berubah (`y ≥ 36` menjadi `y ≥ 48`)
+dinilai salah skala, dan K1-nya turun dari 3 ke 2. Sebaliknya, siswa yang baru
+menuliskan kendala setelah event dapat memperoleh bukti translasi dari kendala
+yang isinya sudah diumumkan modal berita.
+
+**Perbaikan** (`scoring/observables.ts`). Bila `distractor_shown` tercatat,
+hanya `write_constraint` dengan `timestamp_ms` lebih kecil dari waktu event
+yang dipakai untuk observable penyusunan kendala:
+`firstConstraintMisconception`, `structuralRevisionCount`,
+`minorRevisionCount`, `allConstraintsCorrectFirstTry`,
+`constraintCountCorrect`, dan `constraintCountWritten`. Penulisan sesudah
+event tetap tersimpan utuh di `EventLog` dan dihitung pada observable
+deskriptif baru `postEventWriteCount`, yang tidak dibaca rubrik mana pun.
+
+**Dasar.** Sesudah event, isi kendala yang berubah ditampilkan pada modal
+berita, sehingga penulisan sesudahnya bukan lagi bukti bahwa siswa
+menerjemahkan narasi sendiri (konstruk K1). Penyesuaian sesudah event adalah
+bukti revisi, yang dinilai K4 lewat `revise_after_event` dan submit pasca-event.
+
+**Cakupan.** Hanya percobaan dengan `distractor_shown`, yaitu Level 4. Level
+1–3 dan Level 4 tanpa event dinilai persis seperti rubrik `1.0.0`.
+
+**Dampak pada K2 (penyimpangan yang perlu dicatat).** `constraintCountWritten`
+dipakai bersama oleh K1 (skor 1 bila nol) dan K2 (skor 1 bila kurang dari
+`expectedConstraintCount`). Karena observable ini kini juga dihitung dari
+penulisan sebelum event, siswa Level 4 yang baru melengkapi kendalanya setelah
+event dapat memperoleh K2 lebih rendah daripada pada rubrik `1.0.0`. Ini
+sejalan dengan ECD Bagian 3 ("jumlah kendala yang dituliskan/dipilih siswa
+sebelum mulai membangun"), tetapi tetap merupakan perubahan skor.
+
+**Data lama.** Skor yang dihitung dengan rubrik `1.0.0` tidak otomatis
+berubah. Karena skor selalu dapat dihitung ulang dari `EventLog` (§9), data
+uji coba yang sudah ada dapat diskor ulang dengan `1.1.0`. Jangan gabungkan
+skor kedua versi dalam satu analisis.
+
+Uji (`scoring.test.ts` → "bukti translasi hanya dari penulisan sebelum event
+kebijakan"):
+
+- memperbarui kendala yang berubah setelah event tidak menurunkan K1
+  (profil tetap 3-3-3-3, `postEventWriteCount` = 1);
+- kendala yang baru ditulis setelah event tidak dihitung sebagai bukti
+  translasi (`constraintCountCorrect` = 2, K1 = 2);
+- task tanpa event tetap memakai seluruh penulisan.
+
+Persetujuan pembimbing atas perubahan rubrik ini masih perlu dimintakan.
