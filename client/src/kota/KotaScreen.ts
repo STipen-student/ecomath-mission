@@ -1,9 +1,11 @@
 /**
- * Layar Kota (eksperimen TheoTown, branch theotown-ui).
+ * Layar Kota (eksperimen, branch theotown-ui).
  *
- * TIDAK memancarkan event, TIDAK memanggil API, dan TIDAK mencatat skor.
- * Hanya untuk mencoba mekanik penempatan bangunan dan ekonomi di browser.
- * Dibuka lewat ?mode=kota. Lihat docs/DRAF_INSTRUMEN_2_THEOTOWN.md.
+ * Tampilan mengikuti layar utama (HUD, panel, bilah alat, huruf pixel), tetapi
+ * mekaniknya baru: pemain menaruh bangunan di peta dengan dana terbatas.
+ *
+ * Data hanya dikirim saat permainan selesai, ke /api/kota/submit, dan dipisah
+ * dari instrumen 1.1.0 (kode kelas DRAF2-). Lihat docs/DRAF_INSTRUMEN_2_THEOTOWN.md.
  */
 
 import { BANGUNAN, bisaMembangun, danaSehari, hitungKeadaan, type Bangunan } from './ekonomi.js';
@@ -50,74 +52,92 @@ export function mountKotaScreen(root: HTMLElement): void {
   const namaSiswa = parameter.get('nama') ?? 'Siswa uji';
   const kodeKelas = `DRAF2-${parameter.get('kelas') ?? 'LOKAL'}`;
 
+  // Kerangka layar: sama dengan layar utama (app-shell, HUD di atas, bilah di bawah).
   root.replaceChildren();
-  root.style.cssText = 'padding:12px;max-width:720px;margin:0 auto;font-family:system-ui,sans-serif;';
+  const shell = document.createElement('div');
+  shell.className = 'app-shell kota-shell';
 
-  const hud = document.createElement('div');
-  hud.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;';
+  const hud = document.createElement('header');
+  hud.className = 'hud kota-hud';
+
   const peta = document.createElement('div');
-  peta.style.cssText = `display:grid;grid-template-columns:repeat(${UKURAN},1fr);gap:4px;margin-bottom:10px;`;
-  const palet = document.createElement('div');
-  palet.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px;';
-  const kontrol = document.createElement('div');
-  kontrol.style.cssText = 'display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;';
-  const log = document.createElement('p');
-  log.style.cssText = 'background:#fff;border:3px solid #1d3b4a;border-radius:10px;padding:8px;min-height:3em;';
-  root.append(hud, peta, palet, kontrol, log);
+  peta.className = 'kota-peta';
 
-  const tombol = (teks: string, aksi: () => void, aktif = false): HTMLButtonElement => {
-    const b = document.createElement('button');
-    b.textContent = teks;
-    b.style.cssText = `min-height:44px;padding:8px;border:3px solid #1d3b4a;border-radius:12px;background:${aktif ? '#2fb36b' : '#fff'};color:${aktif ? '#fff' : '#1d3b4a'};cursor:pointer;font:inherit;`;
-    b.addEventListener('click', aksi);
-    return b;
-  };
+  const panel = document.createElement('div');
+  panel.className = 'plate kota-panel';
+
+  const bilah = document.createElement('nav');
+  bilah.className = 'toolbar kota-bilah';
+
+  shell.append(hud, peta, panel, bilah);
+  root.append(shell);
 
   function keadaan() {
     return hitungKeadaan(petak, tetangga);
   }
 
+  /** Satu kotak HUD bergaya plate, sama dengan lencana level di layar utama. */
+  function plat(judul: string, nilai: string): HTMLElement {
+    const p = document.createElement('div');
+    p.className = 'plate kota-stat';
+    p.innerHTML = `<span class="kota-stat-judul">${judul}</span><span class="kota-stat-nilai">${nilai}</span>`;
+    return p;
+  }
+
+  function tool(ikon: string, label: string, aksiKlik: () => void, aktif = false, kelas = ''): HTMLButtonElement {
+    const b = document.createElement('button');
+    b.className = `tool ${kelas}${aktif ? ' is-active' : ''}`.trim();
+    b.innerHTML = `<span class="tool-ico">${ikon}</span><span class="tool-label">${label}</span>`;
+    b.addEventListener('click', aksiKlik);
+    return b;
+  }
+
   function gambar(): void {
     const k = keadaan();
+
     hud.replaceChildren(
-      statistik('Dana', String(dana)),
-      statistik('Warga', `${k.warga} / ${TARGET_WARGA}`),
-      statistik('Pekerjaan', `${k.pekerja} / ${k.lapanganKerja}`),
-      statistik('Kebahagiaan', `${k.bahagia}%`),
-      statistik('Hari', `${hari} / ${HARI_MAKS}`),
+      (() => {
+        const id = document.createElement('div');
+        id.className = 'plate plate-identity';
+        id.innerHTML = `<span class="lvl-badge">HARI</span><span class="identity-text"><span class="identity-city">Kota ${namaSiswa}</span><span class="identity-who">${hari} / ${HARI_MAKS}</span></span>`;
+        return id;
+      })(),
+      plat('Dana', String(dana)),
+      plat('Warga', `${k.warga} / ${TARGET_WARGA}`),
+      plat('Pekerjaan', `${k.pekerja} / ${k.lapanganKerja}`),
+      plat('Bahagia', `${k.bahagia}%`),
     );
 
     peta.replaceChildren(...petak.map((b, i) => {
       const sel = document.createElement('button');
+      sel.className = `kota-tile${b ? ' is-built' : ''}`;
       sel.textContent = b ? IKON[b] : '';
-      sel.setAttribute('aria-label', b ? LABEL[b] : 'Kosong');
-      sel.style.cssText = 'aspect-ratio:1;font-size:22px;border:2px solid #1d3b4a;border-radius:8px;background:#c7e8c0;cursor:pointer;';
+      sel.setAttribute('aria-label', b ? LABEL[b] : 'Petak kosong');
       sel.addEventListener('click', () => klik(i));
       return sel;
     }));
 
-    palet.replaceChildren(...(Object.keys(BANGUNAN) as Bangunan[]).map((jenis) => {
-      const d = BANGUNAN[jenis];
-      return tombol(`${IKON[jenis]} ${LABEL[jenis]} (${d.biaya})`, () => {
-        pilihan = jenis;
-        hapus = false;
-        aksi.push({ tipe: 'pilih', jenis, hari });
-        gambar();
-      }, !hapus && pilihan === jenis);
-    }));
-
-    kontrol.replaceChildren(
-      tombol(hapus ? '🗑 Hapus (aktif)' : '🗑 Hapus', () => { hapus = !hapus; gambar(); }, hapus),
-      tombol('↺ Mulai ulang', mulaiUlang),
+    panel.replaceChildren(
+      (() => {
+        const p = document.createElement('p');
+        p.className = 'kota-pesan';
+        p.textContent = pesan;
+        return p;
+      })(),
     );
-    log.textContent = pesan;
-  }
 
-  function statistik(judul: string, nilai: string): HTMLElement {
-    const s = document.createElement('div');
-    s.style.cssText = 'background:#fff8e6;border:3px solid #1d3b4a;border-radius:10px;padding:6px 8px;';
-    s.innerHTML = `<small>${judul}</small><br><b style="font-size:18px">${nilai}</b>`;
-    return s;
+    bilah.replaceChildren(
+      ...(Object.keys(BANGUNAN) as Bangunan[]).map((jenis) =>
+        tool(IKON[jenis], `${LABEL[jenis]} ${BANGUNAN[jenis].biaya}`, () => {
+          pilihan = jenis;
+          hapus = false;
+          aksi.push({ tipe: 'pilih', jenis, hari });
+          gambar();
+        }, !hapus && pilihan === jenis),
+      ),
+      tool('🗑', hapus ? 'Hapus (aktif)' : 'Hapus', () => { hapus = !hapus; gambar(); }, hapus),
+      tool('↺', 'Ulang', mulaiUlang, false, 'tool-go'),
+    );
   }
 
   function klik(i: number): void {
@@ -172,7 +192,7 @@ export function mountKotaScreen(root: HTMLElement): void {
           akhir: { warga: k.warga, bahagia: k.bahagia, bangkrut: dana < 0, hariSelesai: hari },
         }),
       });
-      pesan = res.ok ? `${pesan} Tersimpan untuk eksperimen (draf 2).` : `${pesan} Gagal menyimpan (${res.status}).`;
+      pesan = `${pesan} ${res.ok ? 'Tersimpan untuk eksperimen (draf 2).' : `Gagal menyimpan (${res.status}).`}`;
     } catch {
       pesan = `${pesan} Tidak bisa terhubung ke server.`;
     }
