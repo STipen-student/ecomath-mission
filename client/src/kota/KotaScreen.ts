@@ -8,6 +8,14 @@
 
 import { BANGUNAN, bisaMembangun, danaSehari, hitungKeadaan, type Bangunan } from './ekonomi.js';
 
+const API_URL: string = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000';
+
+/** Aksi yang dicatat untuk dikirim ke /api/kota/submit (draf 2). */
+type AksiKirim =
+  | { tipe: 'pilih'; jenis: Bangunan; hari: number }
+  | { tipe: 'tempatkan'; jenis: Bangunan; petak: number; hari: number; melanggar: boolean }
+  | { tipe: 'bongkar'; jenis: Bangunan; petak: number; hari: number; bahagiaSebelum: number; bahagiaSesudah: number };
+
 const UKURAN = 8;
 const DANA_AWAL = 600;
 const HARI_MAKS = 40;
@@ -37,6 +45,10 @@ export function mountKotaScreen(root: HTMLElement): void {
   let hapus = false;
   let selesai = false;
   let pesan = 'Bangun rumah dan toko, lalu jaga kebahagiaan di atas 60%.';
+  const aksi: AksiKirim[] = [];
+  const parameter = new URLSearchParams(window.location.search);
+  const namaSiswa = parameter.get('nama') ?? 'Siswa uji';
+  const kodeKelas = `DRAF2-${parameter.get('kelas') ?? 'LOKAL'}`;
 
   root.replaceChildren();
   root.style.cssText = 'padding:12px;max-width:720px;margin:0 auto;font-family:system-ui,sans-serif;';
@@ -86,7 +98,12 @@ export function mountKotaScreen(root: HTMLElement): void {
 
     palet.replaceChildren(...(Object.keys(BANGUNAN) as Bangunan[]).map((jenis) => {
       const d = BANGUNAN[jenis];
-      return tombol(`${IKON[jenis]} ${LABEL[jenis]} (${d.biaya})`, () => { pilihan = jenis; hapus = false; gambar(); }, !hapus && pilihan === jenis);
+      return tombol(`${IKON[jenis]} ${LABEL[jenis]} (${d.biaya})`, () => {
+        pilihan = jenis;
+        hapus = false;
+        aksi.push({ tipe: 'pilih', jenis, hari });
+        gambar();
+      }, !hapus && pilihan === jenis);
     }));
 
     kontrol.replaceChildren(
@@ -108,14 +125,18 @@ export function mountKotaScreen(root: HTMLElement): void {
     if (hapus) {
       const b = petak[i];
       if (!b) return;
+      const sebelum = keadaan().bahagia;
       dana += Math.floor(BANGUNAN[b].biaya / 2);
       petak[i] = null;
+      aksi.push({ tipe: 'bongkar', jenis: b, petak: i, hari, bahagiaSebelum: sebelum, bahagiaSesudah: keadaan().bahagia });
       pesan = `${LABEL[b]} dibongkar.`;
       return gambar();
     }
     if (petak[i]) { pesan = 'Petak ini sudah terisi. Pilih Hapus untuk membongkarnya.'; return gambar(); }
     if (!bisaMembangun(dana, pilihan)) { pesan = `Dana kurang: ${LABEL[pilihan]} butuh ${BANGUNAN[pilihan].biaya}.`; return gambar(); }
     dana -= BANGUNAN[pilihan].biaya;
+    const melanggar = pilihan === 'pabrik' && tetangga(i).some((j) => petak[j] === 'rumah');
+    aksi.push({ tipe: 'tempatkan', jenis: pilihan, petak: i, hari, melanggar });
     petak[i] = pilihan;
     pesan = `${LABEL[pilihan]} dibangun.`;
     gambar();
@@ -133,12 +154,35 @@ export function mountKotaScreen(root: HTMLElement): void {
         ? 'Kota berkelanjutan tercapai!'
         : `Belum cukup: butuh ${TARGET_WARGA} warga dan kebahagiaan 60%.`;
     }
+    if (selesai) void kirimHasil();
+    gambar();
+  }
+
+  /** Kirim sesi ke /api/kota/submit. Gagal kirim tidak menghentikan permainan. */
+  async function kirimHasil(): Promise<void> {
+    const k = keadaan();
+    try {
+      const res = await fetch(`${API_URL}/api/kota/submit`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          studentName: namaSiswa,
+          classCode: kodeKelas,
+          aksi,
+          akhir: { warga: k.warga, bahagia: k.bahagia, bangkrut: dana < 0, hariSelesai: hari },
+        }),
+      });
+      pesan = res.ok ? `${pesan} Tersimpan untuk eksperimen (draf 2).` : `${pesan} Gagal menyimpan (${res.status}).`;
+    } catch {
+      pesan = `${pesan} Tidak bisa terhubung ke server.`;
+    }
     gambar();
   }
 
   function mulaiUlang(): void {
     petak = Array(UKURAN * UKURAN).fill(null);
     dana = DANA_AWAL; hari = 1; selesai = false; hapus = false; pilihan = 'rumah';
+    aksi.length = 0;
     pesan = 'Mulai ulang.';
     gambar();
   }

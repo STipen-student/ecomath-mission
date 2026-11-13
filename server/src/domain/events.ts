@@ -41,6 +41,7 @@ export const EVENT_TYPES = [
   'goal_set',
   'self_assessment',
   'learning_reflection',
+  'kota_aksi',
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];

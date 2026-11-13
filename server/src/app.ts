@@ -16,6 +16,7 @@ import { logRouter } from './routes/log.routes.js';
 import { submitRouter } from './routes/submit.routes.js';
 import { adminRouter } from './routes/admin.routes.js';
 import { teacherRouter } from './routes/teacher.routes.js';
+import { kotaRouter } from './routes/kota.routes.js';
 import { errorHandler, HttpError, notFoundHandler } from './middleware/errorHandler.js';
 import { SCORING_VERSION } from './scoring/thresholds.js';
 
@@ -66,6 +67,8 @@ export function createApp() {
   app.use('/api/submit', submitRouter);
   app.use('/api/admin', adminRouter);
   app.use('/api/admin', teacherRouter);
+  // Eksperimen draf 2 (branch theotown-ui): data dipisah dari instrumen 1.1.0.
+  app.use('/api/kota', kotaRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
