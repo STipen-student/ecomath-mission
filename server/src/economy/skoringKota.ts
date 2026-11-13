@@ -8,7 +8,7 @@
 
 import type { Bangunan } from './ekonomi.js';
 
-export const SKORING_KOTA_VERSI = '2.0.0-draf';
+export const SKORING_KOTA_VERSI = '2.0.1-draf';
 
 export type AksiKota =
   | { tipe: 'pilih'; jenis: Bangunan; hari: number }
@@ -75,7 +75,7 @@ export function skorK4(aksi: AksiKota[]): SkorKota['K4'] {
   return membaik >= 2 ? 3 : 2;
 }
 
-export function skorKota(aksi: AksiKota[], akhir: KeadaanAkhir, tujuanWarga = 120, tujuanBahagia = 60): SkorKota {
+export function skorKota(aksi: AksiKota[], akhir: KeadaanAkhir, tujuanWarga = 35, tujuanBahagia = 60): SkorKota {
   return {
     K1: skorK1(aksi),
     K2: skorK2(aksi),

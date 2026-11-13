@@ -22,7 +22,7 @@ type AksiKirim =
 
 const DANA_AWAL = 600;
 const HARI_MAKS = 40;
-const TARGET_WARGA = 120;
+const TARGET_WARGA = 35;
 
 const LABEL: Record<Bangunan, string> = {
   rumah: 'Rumah', toko: 'Toko', pabrik: 'Pabrik', taman: 'Taman', surya: 'Panel surya',
