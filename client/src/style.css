@@ -2645,3 +2645,31 @@ code {
   font-size: 0.66rem;
   color: var(--ink-2);
 }
+
+/* Sidang Dewan Kota (U4) */
+.dewan-akibat li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dewan .alert-panel {
+  animation: dewan-masuk 0.35s ease-out 1;
+}
+
+@keyframes dewan-masuk {
+  from {
+    transform: translateY(14px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dewan .alert-panel {
+    animation: none;
+  }
+}

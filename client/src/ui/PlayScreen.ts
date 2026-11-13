@@ -27,6 +27,7 @@ import { cornerCandidates, evaluate, objectiveValue } from '../game/geometry.js'
 import type { ConstraintDto, DistractorResponse, SkorKlaim, TargetBelajar, TaskDto } from '../api/types.js';
 import { clear, el, jam, num } from './dom.js';
 import { formPenilaianDiri } from './asesmenDiri.js';
+import { KONSEKUENSI_DITERIMA, KONSEKUENSI_TERSIRAT, konsekuensiKendala } from '../game/konsekuensi.js';
 import { BidangPerencanaan } from './bidangPerencanaan.js';
 
 export interface PlayCallbacks {
@@ -311,7 +312,7 @@ export class PlayScreen {
 
   private bangunBilahAlat(): HTMLElement {
     this.bilahAlat = el('nav', { class: 'toolbar' });
-    this.tombolKirim = el('button', { class: 'tool tool-go' }, el('span', { class: 'tool-ico' }, '▶'), el('span', { class: 'tool-label' }, 'Kirim'));
+    this.tombolKirim = el('button', { class: 'tool tool-go' }, el('span', { class: 'tool-ico' }, '▶'), el('span', { class: 'tool-label' }, 'Ajukan'));
     this.tombolKirim.addEventListener('click', () => void this.kirim());
     return this.bilahAlat;
   }
@@ -354,10 +355,10 @@ export class PlayScreen {
   private daftarkanLaci(): void {
     const daftar: Array<{ id: string; ikon: string; label: string; judul: string; isi: HTMLElement }> = [
       { id: 'misi', ikon: '\u{1f4dc}', label: 'Misi', judul: 'Misi kota', isi: this.isiMisi() },
-      { id: 'variabel', ikon: '\u{1f50e}', label: 'Variabel', judul: '1 · Pahami masalah', isi: this.isiVariabel() },
-      { id: 'tujuan', ikon: '\u{1f3af}', label: 'Tujuan', judul: '2 · Tentukan tujuan', isi: this.isiTujuan() },
-      { id: 'kendala', ikon: '\u{1f4d0}', label: 'Kendala', judul: '3 · Susun pertidaksamaan', isi: this.isiPenyusun() },
-      { id: 'pojok', ikon: '\u{1f4cd}', label: 'Titik pojok', judul: '4 · Uji titik pojok', isi: this.isiTitikPojok() },
+      { id: 'variabel', ikon: '\u{1f50e}', label: 'Kenali zona', judul: '1 · Kenali zona', isi: this.isiVariabel() },
+      { id: 'tujuan', ikon: '\u{1f3af}', label: 'Mandat', judul: '2 · Mandat Wali Kota', isi: this.isiTujuan() },
+      { id: 'kendala', ikon: '\u{1f4d0}', label: 'Perda', judul: '3 · Rancangan perda', isi: this.isiPenyusun() },
+      { id: 'pojok', ikon: '\u{1f4cd}', label: 'Simulasi', judul: '4 · Ruang simulasi', isi: this.isiTitikPojok() },
     ];
 
     for (const d of daftar) {
@@ -394,6 +395,23 @@ export class PlayScreen {
     this.lembar.classList.add('is-hidden');
     for (const l of this.laci.values()) l.tombol.classList.remove('is-active');
   }
+
+  /**
+   * Rekor simulasi (U7): nilai Z terbaik dari titik pojok yang DIHITUNG SISWA
+   * sendiri. Tidak mengetahui titik optimum, sehingga tidak membocorkan jawaban.
+   * Hanya tampilan; event check_corner_point tetap dicatat seperti biasa.
+   */
+  private rekorZ: number | null = null;
+
+  private catatRekor(z: number | null): void {
+    if (z === null || this.objective.type === 'none') return;
+    const lebihBaik =
+      this.rekorZ === null || (this.objective.type === 'max' ? z > this.rekorZ : z < this.rekorZ);
+    if (lebihBaik) this.rekorZ = z;
+    this.labelRekor.textContent = `Rekor simulasimu: Z = ${num(this.rekorZ!)}`;
+  }
+
+  private labelRekor: HTMLElement = el('p', { class: 'hint rekor-simulasi' }, '');
 
   private tandaiSelesai(id: string): void {
     const l = this.laci.get(id);
@@ -868,6 +886,8 @@ export class PlayScreen {
       return;
     }
 
+    if (this.objective.type !== 'none') this.panelPojok.append(this.labelRekor);
+
     for (const p of kandidat) {
       const hasilZ = el('span', { class: 'corner-z' }, '—');
 
@@ -878,6 +898,7 @@ export class PlayScreen {
         hasilZ.className = 'corner-z is-computed';
         this.cb.onCheckCorner(p.x, p.y, z);
         this.tandaiSelesai('pojok');
+        this.catatRekor(z);
       });
 
       const pakai = el('button', { class: 'btn btn-tiny btn-ghost' }, 'Bangun');
@@ -968,12 +989,9 @@ export class PlayScreen {
       this.cb.onRejectBySystem(this.x, this.y, [...hasil.violated]);
       this.kota?.shake();
 
-      const namaDilanggar = this.constraints
-        .filter((k) => hasil.violated.has(k.id))
-        .map((k) => (this.disembunyikan(k) ? 'kendala tersirat' : k.label))
-        .join(', ');
-
-      this.toast(`Rencana ditolak — melanggar: ${namaDilanggar}`, 'bad', 4200);
+      // U4: penolakan tampil sebagai sidang Dewan Kota dengan akibat di kota.
+      // Kendala yang dilanggar tetap dicatat lewat onRejectBySystem di atas.
+      this.tampilkanDewan(this.constraints.filter((k) => hasil.violated.has(k.id)));
 
       // Setelah dua penolakan, siswa diberi jalan keluar. Tanpa ini, siswa yang
       // benar-benar tidak menemukan solusi akan terjebak dan sesinya hilang -
@@ -996,7 +1014,41 @@ export class PlayScreen {
       }
     }
 
+    // U4: rancangan diterima, warga pindah dan lampu kota menyala (tampilan saja).
+    this.toast(KONSEKUENSI_DITERIMA, 'good', 3200);
     this.bukaRefleksi();
+  }
+
+  /**
+   * Sidang Dewan Kota (U4). Hanya tampilan: tidak memancarkan event.
+   * Kendala tersirat tidak disebut jenisnya (prinsip 3 di draf perbaikan mekanik).
+   */
+  private tampilkanDewan(dilanggar: ConstraintDto[]): void {
+    const baris = dilanggar.map((k) =>
+      el(
+        'li',
+        {},
+        el('span', { class: 'chg-label' }, this.disembunyikan(k) ? 'Inspeksi' : k.label),
+        el('span', {}, this.disembunyikan(k) ? KONSEKUENSI_TERSIRAT : konsekuensiKendala(k.id)),
+      ),
+    );
+
+    const tutup = el('button', { class: 'btn btn-primary btn-block' }, 'Revisi rancangan');
+    const modal = el(
+      'div',
+      { class: 'alert-backdrop dewan' },
+      el(
+        'div',
+        { class: 'plate alert-panel' },
+        el('div', { class: 'alert-ticker' }, el('span', { class: 'alert-tag' }, 'DEWAN'), 'SIDANG KOTA'),
+        el('h3', { class: 'alert-title' }, 'Rancangan ditolak'),
+        el('p', { class: 'prose' }, 'Dewan Kota menilai rancanganmu. Akibatnya terjadi di kota:'),
+        el('ul', { class: 'alert-changes dewan-akibat' }, ...baris),
+        tutup,
+      ),
+    );
+    tutup.addEventListener('click', () => modal.remove());
+    this.root.querySelector('.app-shell')?.append(modal);
   }
 
   /** Terapkan perubahan kebijakan: kendala baru + narasi + instruksi revisi. */
@@ -1079,6 +1131,9 @@ export class PlayScreen {
     const isi = el(
       'div',
       { class: 'reflection' },
+      // U10: refleksi disajikan sebagai laporan wali kota kepada Dewan.
+      // Teks butir TIDAK diubah; hanya bingkainya.
+      el('p', { class: 'reflect-prompt laporan-judul' }, 'Laporan wali kota kepada Dewan'),
       el('p', { class: 'reflect-prompt' }, t.reflection.closed.prompt),
       wadahOpsi,
       el('p', { class: 'reflect-prompt' }, t.reflection.openPrompt),

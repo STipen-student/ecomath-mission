@@ -140,6 +140,8 @@ export function renderResultScreen(
     level: number;
     totalLevels: number;
     adaLevelBerikutnya: boolean;
+    /** U8: jumlah pemindahan pusat zona; hanya untuk catatan tata kota. */
+    jumlahPusatDipindah?: number;
   },
   onLanjut: () => void,
 ): void {
@@ -184,6 +186,14 @@ export function renderResultScreen(
           el('span', { class: 'stars-label' }, judulKota(bintangDari(hasil.rawSum))),
         ),
         hasil.overallMessage ? el('p', { class: 'overall-msg' }, hasil.overallMessage) : null,
+        // U8: catatan tata kota. Tidak memengaruhi skor maupun bintang.
+        (data.jumlahPusatDipindah ?? 0) > 0
+          ? el(
+              'p',
+              { class: 'hint tata-kota' },
+              `Catatan tata kota: kamu menata ulang pusat zona ${data.jumlahPusatDipindah} kali. Penataan ini tidak memengaruhi skor maupun bintang.`,
+            )
+          : null,
         el(
           'div',
           { class: 'result-summary' },

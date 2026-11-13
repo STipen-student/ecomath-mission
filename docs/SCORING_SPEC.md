@@ -1097,3 +1097,49 @@ kebijakan"):
 - task tanpa event tetap memakai seluruh penulisan.
 
 Persetujuan pembimbing atas perubahan rubrik ini masih perlu dimintakan.
+
+## 7.25 Mekanik permainan sesuai draf perbaikan (tampilan dan alur, tanpa mengubah skor)
+
+Diterapkan sesuai `docs/Draf_Perbaikan_Mekanik_Game.md` yang sudah dinilai
+validator. Semuanya **tidak menambah atau mengubah event** dan **tidak
+mengubah rumus rubrik**, sehingga skor K1–K4 dan `SCORING_VERSION` tidak
+berubah. Dikunci dengan typecheck dan seluruh uji server yang tetap lolos.
+
+| Kode | Perubahan | Berkas |
+| --- | --- | --- |
+| U1 | Nama panel dalam bingkai fiksi: Kenali zona, Mandat, Perda, Simulasi, Ajukan. Tutorial disesuaikan. | `PlayScreen.ts`, `TutorialScreen.ts` |
+| U4 | Penolakan tampil sebagai sidang Dewan Kota dengan akibat per kendala eksplisit. Kendala tersirat hanya disebut "inspeksi tidak lolos". Diterima: "warga pindah dan lampu kota menyala". | `game/konsekuensi.ts`, `PlayScreen.ts` |
+| U6 | Berkas rencana: empat alat (Kenali zona, Mandat, Perda, Simulasi) ditandai centang saat langkahnya dikerjakan, dalam urutan apa pun. Sudah ada sebelumnya. | — |
+| U7 | Rekor simulasi: Z terbaik dari titik pojok yang dihitung siswa sendiri. Tidak mengetahui titik optimum. | `PlayScreen.ts` |
+| U8 | Catatan tata kota di layar hasil bila pusat zona dipindah. Tidak memengaruhi skor maupun bintang. | `app.ts`, `ResultScreen.ts` |
+| U10 | Refleksi diberi bingkai "Laporan wali kota kepada Dewan". Teks butir tidak diubah. | `PlayScreen.ts` |
+| R2 | Refleksi lalu penilaian diri sudah berupa satu alur berurutan. Tidak diubah. | — |
+
+**Belum diterapkan** (perlu pekerjaan lebih besar, dicatat untuk putaran berikutnya):
+U2 (rambu perda di tepi peta), U5 (indikator kota di HUD), U9 (mode Kota Bebas,
+yang menambah event dan perlu penyaringan), R1 (target berikutnya di layar hasil),
+dan R3 (peta wilayah antarlevel).
+
+## 7.26 Keterbatasan mekanik (untuk bab keterbatasan skripsi)
+
+Berikut keterbatasan yang sengaja diakui, sesuai catatan di
+`docs/Draf_Perbaikan_Mekanik_Game.md` §3.2:
+
+1. **Keterlibatan tidak sepenuhnya sukarela.** Tutorial, refleksi, penilaian
+   diri, dan penetapan target wajib diisi agar bukti K1–K4 lengkap. Ini
+   membuat instrumen lebih mudah dibandingkan antarsiswa, tetapi mengurangi
+   kesan bermain bebas.
+2. **Pilihan yang bermakna terbatas.** Siswa memilih nilai penggeser dan titik
+   yang diuji. Penataan letak zona tidak berpengaruh pada skor atau bintang
+   (U8), karena pengaruhnya terhadap bukti akan mengubah konstruk.
+3. **Konsekuensi di kota bersifat tekstual.** Sidang Dewan (U4) menjelaskan
+   akibat, tetapi kota tidak berubah secara permanen. Perubahan permanen akan
+   menambah keadaan yang harus dicatat sebagai bukti.
+4. **Tidak ada mode bermain bebas (U9) dan peta antarlevel (R3)** pada
+   putaran ini. Keduanya ditunda dan dicatat sebagai pekerjaan lanjutan.
+5. **Verifikasi terbatas.** Typecheck dan 275 uji otomatis lolos. Alur utama
+   sudah diperiksa di browser (sidang Dewan dan nama panel), tetapi belum
+   dilakukan uji pengguna pada perangkat sungguhan.
+
+Keterbatasan 1–3 tidak mengubah rubrik K1–K4. Keterbatasan 5 perlu dilaporkan
+sebagai status uji, bukan sebagai bukti validitas.

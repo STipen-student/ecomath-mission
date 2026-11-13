@@ -30,6 +30,8 @@ export class App {
   private play: PlayScreen | null = null;
   private landing: LandingHandle | null = null;
   private riwayat: RiwayatLevel[] = [];
+  /** Berapa kali siswa memindahkan pusat zona pada level ini (U8, tampilan saja). */
+  private jumlahPusatDipindah = 0;
   private sessionComposite: number | null = null;
   /** Target belajar yang ditetapkan siswa untuk level yang sedang berjalan. */
   private target: TargetBelajar | null = null;
@@ -134,6 +136,7 @@ export class App {
    */
   private mulaiBermain(task: TaskDto, target: TargetBelajar, disarankan: Klaim | null): void {
     this.target = target;
+    this.jumlahPusatDipindah = 0;
     logger.start(this.sessionId, task.id);
     logger.record('goal_set', { ...target, suggestedClaim: disarankan }, true);
 
@@ -198,6 +201,7 @@ export class App {
        */
       onSetZoneCenter: (variable: 'x' | 'y', col: number, row: number): void => {
         logger.record('set_zone_center', { variable, col, row }, true);
+        this.jumlahPusatDipindah++;
       },
 
       /**
@@ -277,7 +281,7 @@ export class App {
 
     renderResultScreen(
       this.root,
-      { hasil, task, level: this.levelSaatIni, totalLevels: LEVELS.length, adaLevelBerikutnya },
+      { hasil, task, level: this.levelSaatIni, totalLevels: LEVELS.length, adaLevelBerikutnya, jumlahPusatDipindah: this.jumlahPusatDipindah },
       () => {
         if (adaLevelBerikutnya) {
           this.levelIndex++;

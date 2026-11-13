@@ -64,31 +64,31 @@ const LANGKAH: Array<Omit<Langkah, 'selesai'>> = [
   },
   {
     id: 'variabel',
-    judul: 'Buka panel VARIABEL',
+    judul: 'Buka panel KENALI ZONA',
     instruksi:
-      'Tekan tombol VARIABEL di bilah bawah. Pilih "Banyaknya pot bunga" untuk x, dan "Banyaknya bangku taman" untuk y.',
+      'Tekan tombol KENALI ZONA di bilah bawah. Pilih "Banyaknya pot bunga" untuk x, dan "Banyaknya bangku taman" untuk y.',
   },
   {
     id: 'tujuan',
-    judul: 'Buka panel TUJUAN',
-    instruksi: 'Tekan TUJUAN, lalu pilih "Memaksimumkan skor keasrian taman".',
+    judul: 'Buka panel MANDAT',
+    instruksi: 'Tekan MANDAT, lalu pilih "Memaksimumkan skor keasrian taman".',
   },
   {
     id: 'kendala',
-    judul: 'Buka panel KENDALA',
+    judul: 'Buka panel PERDA',
     instruksi:
-      'Tekan KENDALA. Isi kotaknya persis seperti ini: angka 1, lalu 1, tanda ≤, lalu 10. Tekan SIMPAN. (Pada level sungguhan, angka inilah yang harus kamu susun sendiri dari cerita.)',
+      'Tekan PERDA. Isi kotaknya persis seperti ini: angka 1, lalu 1, tanda ≤, lalu 10. Tekan SIMPAN. (Pada level sungguhan, angka inilah yang harus kamu susun sendiri dari cerita.)',
   },
   {
     id: 'pojok',
-    judul: 'Buka panel TITIK POJOK',
-    instruksi: 'Tekan TITIK POJOK, lalu tekan HITUNG pada salah satu titik untuk melihat nilai Z-nya.',
+    judul: 'Buka panel RUANG SIMULASI',
+    instruksi: 'Tekan RUANG SIMULASI, lalu tekan HITUNG pada salah satu titik untuk melihat nilai Z-nya.',
   },
   {
     id: 'kirim',
-    judul: 'Kirim jawaban',
+    judul: 'Ajukan rancangan',
     instruksi:
-      'Tekan KIRIM di kanan bawah, isi refleksi seadanya, tekan "Lanjut: nilai pekerjaanku", lalu nilai dirimu pada keempat tahap dan tekan "Lihat hasil & bandingkan". Di level sungguhan, penilaian dirimu akan dibandingkan dengan bukti dari pekerjaanmu.',
+      'Tekan AJUKAN di kanan bawah, isi refleksi seadanya, tekan "Lanjut: nilai pekerjaanku", lalu nilai dirimu pada keempat tahap dan tekan "Lihat hasil & bandingkan". Di level sungguhan, penilaian dirimu akan dibandingkan dengan bukti dari pekerjaanmu.',
   },
 ];
 
