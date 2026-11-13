@@ -355,7 +355,43 @@ export class CityScene extends Phaser.Scene {
   guncang(): void {
     if (this.siap) this.kamera.shake(220, 0.006);
   }
+
+  /**
+   * Mode kota (eksperimen TheoTown): bangunan digambar sesuai jenis yang
+   * DITARUH pemain pada tiap petak, bukan dari penggeser alokasi.
+   * `petak` memetakan seed petak (row * GRID + col) ke jenis bangunan.
+   */
+  tampilkanKota(petak: Map<number, string>): void {
+    if (!this.siap) return;
+    for (const [seed, sprite] of this.bangunan) {
+      const bayang = this.bayangan.get(seed);
+      const jenis = petak.get(seed);
+      if (!jenis) {
+        sprite.setVisible(false);
+        bayang?.setVisible(false);
+        continue;
+      }
+      const kunci = SPRITE_KOTA[jenis] ?? 'bgn_housing_1';
+      if (sprite.texture.key !== kunci) sprite.setTexture(kunci);
+      if (!sprite.visible) {
+        sprite.setVisible(true);
+        bayang?.setVisible(true);
+        sprite.setScale(1, 0.4);
+        this.tweens.add({ targets: sprite, scaleY: 1, duration: 160, ease: 'Back.easeOut' });
+      }
+    }
+    this.kamera.setBackgroundColor(PALET.langit);
+  }
 }
+
+/** Sprite per jenis bangunan kota. Toko dan panel surya memakai palet terdekat. */
+const SPRITE_KOTA: Record<string, string> = {
+  rumah: 'bgn_housing_1',
+  toko: 'bgn_clean_1',
+  pabrik: 'bgn_neutral_3',
+  taman: 'pohon_besar',
+  surya: 'bgn_clean_0',
+};
 
 /** Warna zona per identitas visual, agar antarmuka HTML konsisten dengan peta. */
 export const WARNA_VISUAL: Record<VariableVisual, string> = {

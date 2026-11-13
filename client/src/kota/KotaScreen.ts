@@ -9,6 +9,8 @@
  */
 
 import { BANGUNAN, bisaMembangun, danaSehari, hitungKeadaan, type Bangunan } from './ekonomi.js';
+import { mountCity, type CityHandle } from '../game/mountCity.js';
+import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 
 const API_URL: string = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000';
 
@@ -18,7 +20,6 @@ type AksiKirim =
   | { tipe: 'tempatkan'; jenis: Bangunan; petak: number; hari: number; melanggar: boolean }
   | { tipe: 'bongkar'; jenis: Bangunan; petak: number; hari: number; bahagiaSebelum: number; bahagiaSesudah: number };
 
-const UKURAN = 8;
 const DANA_AWAL = 600;
 const HARI_MAKS = 40;
 const TARGET_WARGA = 120;
@@ -30,17 +31,26 @@ const IKON: Record<Bangunan, string> = {
   rumah: '🏠', toko: '🏪', pabrik: '🏭', taman: '🌳', surya: '☀️',
 };
 
+/** Petak kota = seed kisi (row * GRID + col). Hanya petak 'plot' yang bisa dibangun. */
+const PETAK_BANGUN = new Set(plotTiles().map((t) => t.seed));
+
+/** Tetangga sisi (4 arah) yang juga petak bangun, pada kisi isometrik. */
 function tetangga(i: number): number[] {
-  const x = i % UKURAN, y = Math.floor(i / UKURAN), hasil: number[] = [];
-  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-    const nx = x + dx, ny = y + dy;
-    if (nx >= 0 && ny >= 0 && nx < UKURAN && ny < UKURAN) hasil.push(ny * UKURAN + nx);
+  const col = i % GRID, row = Math.floor(i / GRID), hasil: number[] = [];
+  for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+    const seed = (row + dr) * GRID + (col + dc);
+    if (PETAK_BANGUN.has(seed)) hasil.push(seed);
   }
   return hasil;
 }
 
+/** Kode jenis bangunan untuk CityScene (kunci sama dengan SPRITE_KOTA). */
+function kodeJenis(b: Bangunan): string {
+  return b;
+}
+
 export function mountKotaScreen(root: HTMLElement): void {
-  let petak: Array<Bangunan | null> = Array(UKURAN * UKURAN).fill(null);
+  let petak: Array<Bangunan | null> = Array(GRID * GRID).fill(null);
   let dana = DANA_AWAL;
   let hari = 1;
   let pilihan: Bangunan = 'rumah';
@@ -62,6 +72,8 @@ export function mountKotaScreen(root: HTMLElement): void {
 
   const peta = document.createElement('div');
   peta.className = 'kota-peta';
+  // Peta isometrik dari layar utama (CityScene), dalam mode kota.
+  const kota: CityHandle = mountCity(peta);
 
   const panel = document.createElement('div');
   panel.className = 'plate kota-panel';
@@ -108,14 +120,9 @@ export function mountKotaScreen(root: HTMLElement): void {
       plat('Bahagia', `${k.bahagia}%`),
     );
 
-    peta.replaceChildren(...petak.map((b, i) => {
-      const sel = document.createElement('button');
-      sel.className = `kota-tile${b ? ' is-built' : ''}`;
-      sel.textContent = b ? IKON[b] : '';
-      sel.setAttribute('aria-label', b ? LABEL[b] : 'Petak kosong');
-      sel.addEventListener('click', () => klik(i));
-      return sel;
-    }));
+    const peton = new Map<number, string>();
+    petak.forEach((b, i) => { if (b) peton.set(i, kodeJenis(b)); });
+    kota.tampilkanKota(peton);
 
     panel.replaceChildren(
       (() => {
@@ -139,6 +146,9 @@ export function mountKotaScreen(root: HTMLElement): void {
       tool('↺', 'Ulang', mulaiUlang, false, 'tool-go'),
     );
   }
+
+  // Ketukan pada peta: ubah koordinat kisi menjadi seed petak.
+  kota.setPickMode((titik) => klik(titik.row * GRID + titik.col));
 
   function klik(i: number): void {
     if (selesai) return;
@@ -200,7 +210,7 @@ export function mountKotaScreen(root: HTMLElement): void {
   }
 
   function mulaiUlang(): void {
-    petak = Array(UKURAN * UKURAN).fill(null);
+    petak = Array(GRID * GRID).fill(null);
     dana = DANA_AWAL; hari = 1; selesai = false; hapus = false; pilihan = 'rumah';
     aksi.length = 0;
     pesan = 'Mulai ulang.';
