@@ -2673,3 +2673,98 @@ code {
     animation: none;
   }
 }
+
+/* ================================================================== */
+/* TEMA THEOTOWN (branch theotown-ui)                                  */
+/* Hanya lapisan tampilan. Event, skor, dan alur tidak berubah.        */
+/* ================================================================== */
+
+:root {
+  --to-langit: #8fd3f4;
+  --to-rumput: #7fcf6a;
+  --to-kartu: #ffffff;
+  --to-tepi: #1d3b4a;
+  --to-aksen: #2fb36b;
+  --to-kuning: #ffd23f;
+}
+
+body {
+  background: linear-gradient(180deg, var(--to-langit) 0%, #bfe9ff 100%) !important;
+}
+
+/* Bilah atas: angka kota seperti HUD TheoTown */
+.hud .plate,
+.plate-identity,
+.plate-clock,
+.plate-goal {
+  background: var(--to-kartu) !important;
+  border: 3px solid var(--to-tepi) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 0 var(--to-tepi) !important;
+}
+
+.meter {
+  border-radius: 10px !important;
+}
+
+/* Kartu zona seperti panel pembangunan */
+.zone-card,
+.zone-dock .plate {
+  background: var(--to-kartu) !important;
+  border: 3px solid var(--to-tepi) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 0 var(--to-tepi) !important;
+}
+
+/* Bilah bawah: palet ala TheoTown, dengan ikon besar dan tombol bulat */
+.toolbar {
+  background: var(--to-rumput) !important;
+  border-top: 3px solid var(--to-tepi);
+}
+
+.tool {
+  background: var(--to-kartu) !important;
+  border: 3px solid var(--to-tepi) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 3px 0 var(--to-tepi) !important;
+}
+
+.tool-go {
+  background: var(--to-aksen) !important;
+  color: #fff !important;
+}
+
+.tool-label {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  font-weight: 700;
+  font-size: 0.62rem !important;
+}
+
+/* Tombol dan kartu umum */
+.btn-primary,
+.btn {
+  border-radius: 12px !important;
+  border: 3px solid var(--to-tepi) !important;
+  box-shadow: 0 4px 0 var(--to-tepi) !important;
+}
+
+.btn-primary {
+  background: var(--to-aksen) !important;
+}
+
+/* Panel lembar geser */
+.sheet-panel,
+.sheet .plate {
+  background: var(--to-kartu) !important;
+  border: 3px solid var(--to-tepi) !important;
+  border-radius: 18px !important;
+}
+
+/* Keterbacaan: judul lembar pakai huruf tebal sans, bukan pixel */
+.sheet-title,
+.brand-title,
+.plate h2 {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
