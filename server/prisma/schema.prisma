@@ -33,6 +33,14 @@ model Session {
   finishedAt  DateTime?
   userAgent   String?
 
+  /// Versi tampilan dan mekanik instrumen (client) yang dipakai pada sesi ini.
+  /// Berbeda dari Score.scoringVersion: perubahan tampilan yang tidak menyentuh
+  /// rubrik tidak menaikkan versi rubrik, tetapi dapat mengubah kondisi
+  /// munculnya bukti (docs/SCORING_SPEC.md §7.22). Data dari dua versi
+  /// instrumen tidak digabung tanpa dicek.
+  /// NULL = sesi dibuat sebelum penanda ini ada (instrumen versi 1.0.0).
+  instrumentVersion String?
+
   /// Rata-rata komposit berbobot seluruh percobaan pada sesi ini.
   sessionComposite Float?
 
