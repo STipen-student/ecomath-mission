@@ -180,6 +180,31 @@ export interface ReflectionSpec {
   expectedTerms: string[];
 }
 
+/**
+ * Jenjang kognitif Taksonomi Bloom revisi (Anderson & Krathwohl, 2001):
+ * C1 mengingat, C2 memahami, C3 menerapkan, C4 menganalisis, C5 mengevaluasi,
+ * C6 mencipta. Lihat docs/TAKSONOMI_BLOOM.md.
+ */
+export type BloomLevel = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6';
+
+/**
+ * Klasifikasi Bloom satu task - METADATA kisi-kisi, tidak dibaca rubrik.
+ *
+ * Dipisah menjadi dua karena perintah utama soal dan pertanyaan refleksinya
+ * menuntut proses kognitif yang berbeda: menyusun model (C3) tidak sama dengan
+ * menimbang trade-off antarkendala (C4/C5).
+ */
+export interface BloomSpec {
+  /** Jenjang yang dituntut perintah utama soal (menyusun model / mengoptimasi). */
+  tugasUtama: BloomLevel;
+  /** Jenjang yang dituntut pertanyaan refleksi terbuka (sumber bukti K4). */
+  refleksi: BloomLevel;
+  /** Kata kerja operasional yang dipakai menurunkan jenjang di atas. */
+  kko: string[];
+  /** Indikator soal, satu kalimat, dalam format kisi-kisi. */
+  indikator: string;
+}
+
 /** Definisi lengkap satu skenario/task. */
 export interface TaskDefinition {
   /** Kode task sesuai Bagian 10, mis. "L1-SDG11-A". */
@@ -211,6 +236,8 @@ export interface TaskDefinition {
    */
   blueprintConstraintCount: number;
   dominantClaims: ClaimKey[];
+  /** Klasifikasi Taksonomi Bloom - docs/TAKSONOMI_BLOOM.md. */
+  bloom: BloomSpec;
   /** Deskripsi interaksi game sesuai bank skenario. */
   gameInteraction: string;
   /** Varian L2-SDG11&13-A ditandai sebagai anchor item penyetaraan L2<->L3 (Bagian 10). */

@@ -82,6 +82,13 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
     dominantClaims: ['K2', 'K3'],
+    bloom: {
+      tugasUtama: 'C4',
+      refleksi: 'C4',
+      kko: ['menentukan nilai optimum', 'membandingkan titik pojok', 'menganalisis'],
+      indikator:
+        'Disajikan masalah alokasi taman dan trotoar dengan fungsi tujuan, siswa dapat menentukan kombinasi yang memaksimumkan skor kenyamanan dengan membandingkan nilai Z di titik pojok.',
+    },
     gameInteraction:
       'Setelah menentukan alokasi lahan, sistem menyorot beberapa titik pojok pada peta sebagai kandidat solusi optimum; siswa memverifikasi dengan menghitung nilai Z pada tiap kandidat.',
   },
@@ -155,6 +162,13 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 2,
     blueprintConstraintCount: 2,
     dominantClaims: ['K2', 'K3'],
+    bloom: {
+      tugasUtama: 'C4',
+      refleksi: 'C4',
+      kko: ['menentukan nilai optimum', 'membandingkan titik pojok', 'menganalisis'],
+      indikator:
+        'Disajikan masalah pengolahan sampah dengan batas emisi, siswa dapat menentukan kombinasi yang meminimumkan biaya dan menjelaskan kendala yang mencegah solusi termurah.',
+    },
     gameInteraction:
       'Mengatur dua jalur konveyor fasilitas pengolahan sampah kota; sistem menampilkan grafik daerah penyelesaian yang ter-render otomatis sebagai overlay pada peta.',
   },
@@ -229,6 +243,13 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
     dominantClaims: ['K2', 'K3'],
+    bloom: {
+      tugasUtama: 'C4',
+      refleksi: 'C4',
+      kko: ['menentukan nilai optimum', 'membandingkan titik pojok', 'menganalisis'],
+      indikator:
+        'Disajikan masalah kawasan campuran dengan kendala rasio, siswa dapat menentukan kombinasi yang memaksimumkan indeks keberlanjutan dan menganalisis konsekuensinya bagi daya tampung.',
+    },
     gameInteraction:
       'Mengatur dua zona pada viewport isometrik; sistem menyorot titik pojok kandidat dan menampilkan nilai indeks Z secara live.',
   },

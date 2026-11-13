@@ -25,6 +25,7 @@ Penyelesaian, **K3** Melaksanakan Rencana, **K4** Memeriksa Kembali.
 │   ├── Panduan_Deployment_EcomathMission.docx panduan deployment (sumber)
 │   ├── ECD_Framework.md                       versi teks dokumen ECD
 │   ├── SCORING_SPEC.md      ← pemetaan rubrik → kode, seluruh ambang batas
+│   ├── TAKSONOMI_BLOOM.md   ← jenjang kognitif (C1–C6) tiap soal + temuan
 │   ├── DEPLOY.md            ← langkah deploy, dapat diikuti sambil mengerjakan
 │   └── EXPORT/
 │       └── export_to_csv.ts  ekspor data ke CSV untuk SPSS/R/Jamovi

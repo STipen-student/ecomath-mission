@@ -70,6 +70,13 @@ export const LEVEL_1_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 2,
     blueprintConstraintCount: 1,
     dominantClaims: ['K1'],
+    bloom: {
+      tugasUtama: 'C3',
+      refleksi: 'C4',
+      kko: ['menuliskan', 'menyusun model', 'mengidentifikasi'],
+      indikator:
+        'Disajikan masalah pembagian lahan RTH dan permukiman, siswa dapat menyusun dua pertidaksamaan (kendala total lahan dan rasio RTH) dari narasi.',
+    },
     gameInteraction:
       'Menggeser dua slider zona (RTH dan permukiman) pada peta kota; sistem menandai merah bila kombinasi melanggar salah satu kendala.',
   },
@@ -129,6 +136,13 @@ export const LEVEL_1_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 2,
     blueprintConstraintCount: 1,
     dominantClaims: ['K1'],
+    bloom: {
+      tugasUtama: 'C3',
+      refleksi: 'C4',
+      kko: ['menuliskan', 'menyusun model', 'mengidentifikasi'],
+      indikator:
+        'Disajikan masalah penambahan armada bus, siswa dapat menyusun pertidaksamaan kapasitas garasi dan syarat bus listrik lebih banyak dari bus konvensional.',
+    },
     gameInteraction:
       'Menempatkan unit bus di depo melalui dua tumpukan counter; sistem menampilkan sisa kapasitas garasi secara real-time.',
   },
@@ -188,6 +202,13 @@ export const LEVEL_1_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 2,
     blueprintConstraintCount: 1,
     dominantClaims: ['K1'],
+    bloom: {
+      tugasUtama: 'C3',
+      refleksi: 'C4',
+      kko: ['menuliskan', 'menyusun model', 'mengidentifikasi'],
+      indikator:
+        'Disajikan masalah pembagian lebar jalan, siswa dapat menyusun pertidaksamaan lebar efektif dan syarat jalur sepeda minimal selebar lahan parkir.',
+    },
     gameInteraction: 'Mengatur dua segmen jalan pada tampilan potongan melintang (cross-section) jalan kota.',
   },
 ];

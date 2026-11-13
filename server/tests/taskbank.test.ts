@@ -219,3 +219,32 @@ describe('bobot komposit', () => {
     expect(w1.K1).toBeGreaterThan(Math.max(w1.K2, w1.K3, w1.K4));
   });
 });
+
+describe('klasifikasi Taksonomi Bloom (docs/TAKSONOMI_BLOOM.md)', () => {
+  const urutan = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
+  const jenjang = (c: string): number => urutan.indexOf(c);
+
+  it('setiap task memiliki jenjang, kata kerja operasional, dan indikator', () => {
+    for (const t of TASK_BANK) {
+      expect(urutan, t.id).toContain(t.bloom.tugasUtama);
+      expect(urutan, t.id).toContain(t.bloom.refleksi);
+      expect(t.bloom.kko.length, t.id).toBeGreaterThan(0);
+      expect(t.bloom.indikator.length, t.id).toBeGreaterThan(30);
+    }
+  });
+
+  it('jenjang tugas utama tidak turun dari level ke level', () => {
+    for (let level = 2; level <= 4; level++) {
+      const sebelum = Math.max(...TASK_BANK.filter((t) => t.level === level - 1).map((t) => jenjang(t.bloom.tugasUtama)));
+      for (const t of TASK_BANK.filter((x) => x.level === level)) {
+        expect(jenjang(t.bloom.tugasUtama), t.id).toBeGreaterThanOrEqual(sebelum);
+      }
+    }
+  });
+
+  it('task dengan fungsi tujuan menuntut minimal menganalisis (C4)', () => {
+    for (const t of TASK_BANK.filter((x) => x.objective.type !== 'none')) {
+      expect(jenjang(t.bloom.tugasUtama), t.id).toBeGreaterThanOrEqual(jenjang('C4'));
+    }
+  });
+});

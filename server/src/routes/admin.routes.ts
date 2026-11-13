@@ -196,6 +196,12 @@ adminRouter.get(
       ada_event_distraktor: t.distractor !== null,
       fungsi_tujuan: t.objective.type === 'none' ? '-' : t.objective.display,
       klaim_dominan: t.dominantClaims.join(', '),
+      // Taksonomi Bloom - docs/TAKSONOMI_BLOOM.md.
+      bloom_tugas_utama: t.bloom.tugasUtama,
+      bloom_refleksi: t.bloom.refleksi,
+      bloom_tertinggi: t.bloom.tugasUtama > t.bloom.refleksi ? t.bloom.tugasUtama : t.bloom.refleksi,
+      kata_kerja_operasional: t.bloom.kko.join(', '),
+      indikator_soal: t.bloom.indikator,
       anchor_item: t.isAnchorItem === true,
       representasi: t.representation,
       jenis_bilangan: t.numberStyle,

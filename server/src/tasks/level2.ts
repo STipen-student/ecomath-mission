@@ -75,6 +75,13 @@ export const LEVEL_2_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 2,
     blueprintConstraintCount: 2,
     dominantClaims: ['K1', 'K2'],
+    bloom: {
+      tugasUtama: 'C3',
+      refleksi: 'C4',
+      kko: ['menyusun', 'mengubah satuan', 'membandingkan'],
+      indikator:
+        'Disajikan narasi dan tabel biaya serta kebutuhan lahan rumah subsidi, siswa dapat menyusun sistem pertidaksamaan anggaran dan lahan, lalu menentukan kendala yang lebih dulu membatasi.',
+    },
     gameInteraction:
       'Mengalokasikan dua tipe rumah pada blok perumahan; dashboard menampilkan sisa anggaran dan sisa lahan secara live sebagai dua progress bar.',
   },
@@ -140,6 +147,13 @@ export const LEVEL_2_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 2,
     blueprintConstraintCount: 2,
     dominantClaims: ['K1', 'K2'],
+    bloom: {
+      tugasUtama: 'C3',
+      refleksi: 'C4',
+      kko: ['menyusun', 'menerjemahkan data tabel', 'membandingkan'],
+      indikator:
+        'Disajikan narasi dan tabel biaya serta kebutuhan ruang pembangkit, siswa dapat menyusun sistem pertidaksamaan dana dan ruang, lalu menentukan kendala yang lebih dulu habis.',
+    },
     gameInteraction:
       'Menempatkan ikon panel surya/turbin pada atap gedung kota dan lahan kosong yang telah disediakan dalam viewport isometrik.',
   },
@@ -150,7 +164,7 @@ export const LEVEL_2_TASKS: TaskDefinition[] = [
     sdgContext: 'SDG11&13',
     title: 'Ruang Hijau vs Zona Industri Rendah Emisi',
     narrative:
-      'Kota Greenhaven memiliki kawasan pengembangan seluas 50 hektar yang akan dibagi menjadi Ruang Terbuka Hijau seluas x hektar dan Zona Industri Rendah Emisi seluas y hektar. Setiap hektar RTH membutuhkan biaya perawatan Rp 15 juta per tahun dan setiap hektar zona industri menghasilkan retribusi Rp 25 juta per tahun, dengan biaya operasional kota tidak melebihi Rp 900 juta per tahun untuk kedua area ini. Selain itu, luas zona industri tidak boleh melebihi luas RTH. Tentukan sistem pertidaksamaannya.',
+      'Kota Greenhaven memiliki kawasan pengembangan seluas 50 hektar yang akan dibagi menjadi Ruang Terbuka Hijau seluas x hektar dan Zona Industri Rendah Emisi seluas y hektar. Setiap hektar RTH membutuhkan biaya perawatan Rp 15 juta per tahun dan setiap hektar zona industri membutuhkan biaya operasional Rp 25 juta per tahun, dengan biaya operasional kota tidak melebihi Rp 900 juta per tahun untuk kedua area ini. Selain itu, luas zona industri tidak boleh melebihi luas RTH. Tentukan sistem pertidaksamaannya.',
     dataTable: {
       headers: ['Zona', 'Biaya operasional per hektar/tahun', 'Batas'],
       rows: [
@@ -206,6 +220,13 @@ export const LEVEL_2_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
     dominantClaims: ['K1', 'K2'],
+    bloom: {
+      tugasUtama: 'C3',
+      refleksi: 'C4',
+      kko: ['menyusun', 'menerjemahkan data tabel', 'membandingkan'],
+      indikator:
+        'Disajikan narasi dan tabel biaya operasional kawasan, siswa dapat menyusun sistem tiga pertidaksamaan dan menentukan kendala yang paling membatasi luas zona industri.',
+    },
     isAnchorItem: true,
     gameInteraction:
       'Membagi kawasan pengembangan menjadi dua zona pada viewport isometrik; sistem menampilkan sisa biaya operasional dan status rasio secara live.',

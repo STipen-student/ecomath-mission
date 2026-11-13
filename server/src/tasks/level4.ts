@@ -102,12 +102,19 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
         ],
       },
       openPrompt:
-        'Jelaskan dengan kalimatmu sendiri: berapa kepala keluarga yang harus dikorbankan akibat kebijakan baru ini, dan mengapa hal itu terjadi?',
+        'Hitung berapa kepala keluarga yang dikorbankan akibat kebijakan baru ini. Menurutmu, apakah kenaikan standar RTH itu sepadan? Berikan alasan berdasarkan hasil perhitunganmu.',
       expectedTerms: ['rth', 'ruang terbuka hijau', 'hijau', 'perumahan', 'hunian', 'kepala keluarga', 'kk', 'daya tampung', 'hektar', 'anggaran'],
     },
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
     dominantClaims: ['K3', 'K4'],
+    bloom: {
+      tugasUtama: 'C4',
+      refleksi: 'C5',
+      kko: ['menyimpulkan kendala tersirat', 'merevisi', 'menghitung dampak', 'menilai'],
+      indikator:
+        'Disajikan masalah lahan dengan standar RTH dalam persen, siswa dapat menyimpulkan kendala tersirat, menentukan solusi optimum, merevisinya setelah kebijakan berubah, dan menilai apakah kenaikan standar RTH sepadan dengan jumlah KK yang dikorbankan.',
+    },
     gameInteraction:
       'Mengalokasikan dua zona pada peta distrik dengan grafik parsial daerah penyelesaian; setelah submit valid pertama, sistem memunculkan event kebijakan dan meminta revisi.',
   },
@@ -196,12 +203,19 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
         ],
       },
       openPrompt:
-        'Jelaskan dengan kalimatmu sendiri: mengapa kebijakan tarif karbon dapat mengubah jawaban yang tadinya sudah paling optimal?',
+        'Jelaskan mengapa tarif karbon mengubah komposisi mesin termurah. Apakah kota sebaiknya tetap memberlakukan tarif itu walaupun biaya operasional naik? Nilai keputusan itu berdasarkan perubahan biaya dan emisi pada hasilmu.',
       expectedTerms: ['fosil', 'listrik', 'emisi', 'co2', 'biaya', 'tarif karbon', 'karbon', 'anggaran', 'mesin', 'unit'],
     },
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
     dominantClaims: ['K3', 'K4'],
+    bloom: {
+      tugasUtama: 'C4',
+      refleksi: 'C5',
+      kko: ['menyimpulkan kendala tersirat', 'merevisi', 'menganalisis', 'menilai'],
+      indikator:
+        'Disajikan masalah mesin industri dengan batas emisi tersirat, siswa dapat menentukan biaya minimum, merevisinya setelah tarif karbon berlaku, menjelaskan pergeseran titik optimum, dan menilai apakah tarif karbon layak dipertahankan.',
+    },
     gameInteraction:
       'Mengatur jumlah dua jenis mesin pada denah kawasan industri dengan grafik parsial daerah penyelesaian; setelah submit valid pertama, sistem memunculkan event tarif karbon.',
   },
@@ -291,6 +305,13 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
     dominantClaims: ['K3', 'K4'],
+    bloom: {
+      tugasUtama: 'C4',
+      refleksi: 'C5',
+      kko: ['menyimpulkan kendala tersirat', 'merevisi', 'menilai', 'menjustifikasi'],
+      indikator:
+        'Disajikan rencana induk kota dengan standar resapan tersirat, siswa dapat menentukan solusi optimum, merevisinya setelah proyeksi iklim berubah, dan menilai kebijakan mana yang lebih penting berdasarkan hasilnya.',
+    },
     gameInteraction:
       'Menyusun rencana induk dua zona pada viewport isometrik kota baru dengan grafik parsial daerah penyelesaian; event proyeksi iklim muncul setelah submit valid pertama.',
   },
