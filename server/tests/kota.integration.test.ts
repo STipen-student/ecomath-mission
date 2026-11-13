@@ -41,4 +41,13 @@ describe('POST /api/kota/submit', () => {
     expect(drafDua).toBeGreaterThan(0);
     expect(lama).toBeGreaterThanOrEqual(0);
   });
+
+  it('tidak muncul di rekap admin penelitian', async () => {
+    await request(app).post('/api/kota/submit').send(kirim('DRAF2-TERSEMBUNYI'));
+    const res = await request(app).get('/api/admin/results').set('x-admin-key', 'kunci-admin-untuk-pengujian-1234');
+    expect(res.status).toBe(200);
+    const baris: Array<{ class_code?: string }> = res.body.results ?? [];
+    const bocor = baris.some((r) => r.class_code?.startsWith('DRAF2-'));
+    expect(bocor).toBe(false);
+  });
 });

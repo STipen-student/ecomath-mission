@@ -17,6 +17,7 @@
 
 import { Router } from 'express';
 import { prisma } from '../db.js';
+import { KECUALI_DRAF2 } from '../lib/kelasPenelitian.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { AdminResultsQuerySchema } from '../schemas/api.js';
@@ -52,13 +53,13 @@ teacherRouter.get(
     const query = AdminResultsQuerySchema.parse(req.query);
 
     const scores = await prisma.score.findMany({
-      where: query.classCode ? { attempt: { session: { classCode: query.classCode } } } : {},
+      where: { attempt: { session: { ...KECUALI_DRAF2, ...(query.classCode ? { classCode: query.classCode } : {}) } } },
       include: { attempt: { include: { session: true } } },
       orderBy: [{ sessionId: 'asc' }, { level: 'asc' }],
     });
 
     const sesi = await prisma.session.findMany({
-      where: query.classCode ? { classCode: query.classCode } : {},
+      where: { ...KECUALI_DRAF2, ...(query.classCode ? { classCode: query.classCode } : {}) },
       orderBy: [{ classCode: 'asc' }, { startedAt: 'asc' }],
     });
 
@@ -140,7 +141,7 @@ teacherRouter.get(
       };
     });
 
-    const semuaKelas = await prisma.session.findMany({ select: { classCode: true }, distinct: ['classCode'] });
+    const semuaKelas = await prisma.session.findMany({ select: { classCode: true }, distinct: ['classCode'], where: KECUALI_DRAF2 });
 
     res.json({
       scoringVersion: SCORING_VERSION,

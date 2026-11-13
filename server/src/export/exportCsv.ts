@@ -25,6 +25,7 @@ import { toCsv, type CsvRow } from '../lib/csv.js';
 import { effectiveScore } from '../lib/scoreView.js';
 import { narrateEvent } from '../lib/eventNarrator.js';
 import { SCORING_VERSION } from '../scoring/thresholds.js';
+import { KECUALI_DRAF2 } from '../lib/kelasPenelitian.js';
 import type { Kalibrasi, TinjauanTarget } from '../scoring/assessmentAsLearning.js';
 
 const prisma = new PrismaClient();
@@ -77,7 +78,7 @@ export async function runExport(opts: ExportOptions): Promise<void> {
 
   /* ---------------- sessions.csv ---------------- */
   const sessions = await prisma.session.findMany({
-    where: filterKelas,
+    where: { ...KECUALI_DRAF2, ...filterKelas },
     orderBy: [{ classCode: 'asc' }, { startedAt: 'asc' }],
     include: { attempts: { include: { score: true } } },
   });
@@ -106,7 +107,7 @@ export async function runExport(opts: ExportOptions): Promise<void> {
 
   /* ---------------- scores_long.csv ---------------- */
   const scores = await prisma.score.findMany({
-    where: opts.classCode ? { attempt: { session: { classCode: opts.classCode } } } : {},
+    where: { attempt: { session: { ...KECUALI_DRAF2, ...(opts.classCode ? { classCode: opts.classCode } : {}) } } },
     include: { attempt: { include: { session: true } } },
     orderBy: [{ sessionId: 'asc' }, { level: 'asc' }],
   });
