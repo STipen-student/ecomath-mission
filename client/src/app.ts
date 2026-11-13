@@ -17,6 +17,7 @@ import { renderLoginScreen } from './ui/LoginScreen.js';
 import { PlayScreen } from './ui/PlayScreen.js';
 import { renderFinishScreen, renderResultScreen, type RiwayatLevel } from './ui/ResultScreen.js';
 import { TutorialScreen, type HasilTutorial } from './ui/TutorialScreen.js';
+import { TUTORIAL_TASK } from './ui/tutorialTask.js';
 
 /** Level yang dikerjakan berurutan dalam satu sesi. */
 const LEVELS = [1, 2, 3, 4] as const;
@@ -30,6 +31,8 @@ export class App {
   private play: PlayScreen | null = null;
   private landing: LandingHandle | null = null;
   private riwayat: RiwayatLevel[] = [];
+  /** Refleksi akhir sesi sudah tercatat; formulirnya tidak ditampilkan dua kali. */
+  private refleksiTercatat = false;
   /** Berapa kali siswa memindahkan pusat zona pada level ini (U8, tampilan saja). */
   private jumlahPusatDipindah = 0;
   private sessionComposite: number | null = null;
@@ -300,10 +303,63 @@ export class App {
               logger.record('learning_reflection', { ...refleksi }, true);
               await logger.flush();
               logger.stop();
+              this.refleksiTercatat = true;
             },
+            () => this.mulaiKotaBebas(),
           );
         }
       },
+    );
+  }
+
+  /**
+   * Kota Bebas (U9): eksperimen tanpa skor setelah sesi selesai.
+   *
+   * Memakai PlayScreen dengan task latihan dan SEMUA callback kosong, sehingga
+   * tidak ada event yang dicatat, tidak ada permintaan ke server, dan tidak ada
+   * skor. Ini sengaja tidak menambah jenis event baru agar instrumen tidak berubah.
+   */
+  private mulaiKotaBebas(): void {
+    this.play?.destroy();
+    this.root.replaceChildren();
+
+    const kosong = (): void => undefined;
+    this.play = new PlayScreen(
+      this.root,
+      { studentName: this.studentName, level: 4, totalLevels: LEVELS.length, task: TUTORIAL_TASK },
+      {
+        onIdentifyVariable: kosong,
+        onSelectObjective: kosong,
+        onWriteConstraint: kosong,
+        onMoveSlider: kosong,
+        onCheckCorner: kosong,
+        onAttemptSubmit: kosong,
+        onRejectBySystem: kosong,
+        onReviseAfterEvent: kosong,
+        onSetZoneCenter: kosong,
+        onRequestDistractor: async () => null,
+        onFinish: async () => undefined,
+      },
+    );
+    this.play.render();
+
+    const keluar = el('button', { class: 'btn btn-small kota-bebas-keluar', ariaLabel: 'Keluar dari Kota Bebas' }, '✕ KELUAR');
+    keluar.addEventListener('click', () => {
+      this.play?.destroy();
+      this.play = null;
+      this.tampilkanSelesai();
+    });
+    this.root.append(keluar);
+  }
+
+  /** Kembali ke layar ringkasan akhir sesi (dipakai setelah Kota Bebas). */
+  private tampilkanSelesai(): void {
+    renderFinishScreen(
+      this.root,
+      { studentName: this.studentName, sessionComposite: this.sessionComposite, riwayat: this.riwayat },
+      async () => undefined,
+      () => this.mulaiKotaBebas(),
+      this.refleksiTercatat,
     );
   }
 

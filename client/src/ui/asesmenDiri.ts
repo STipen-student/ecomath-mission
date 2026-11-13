@@ -287,6 +287,16 @@ export function renderLayarTarget(
 /* 2. Formulir penilaian diri - sebelum skor ditampilkan               */
 /* ================================================================== */
 
+/** Acak urutan elemen (Fisher-Yates). Hanya untuk tampilan pilihan. */
+function acakUrutan<T>(daftar: T[]): T[] {
+  const hasil = [...daftar];
+  for (let i = hasil.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [hasil[i], hasil[j]] = [hasil[j]!, hasil[i]!];
+  }
+  return hasil;
+}
+
 /**
  * Formulir menilai diri 0-3 pada keempat tahap, memakai kriteria yang sama
  * dengan layar target. Keempat tahap wajib diisi: penilaian diri yang bolong
@@ -315,7 +325,9 @@ export function formPenilaianDiri(
   };
 
   KLAIM.forEach((k, i) => {
-    const opsi = kriteria(k, task).map((teks, skor) => {
+    // Urutan pilihan diacak per tahap agar posisi pilihan tidak menjadi petunjuk
+    // skor. Nilai yang disimpan tetap skor asli (skor), hanya urutan tampilannya yang berubah.
+    const opsi = acakUrutan(kriteria(k, task).map((teks, skor) => ({ teks, skor }))).map(({ teks, skor }) => {
       const radio = el('input', { type: 'radio', name: `aal-diri-${k}` });
       radio.addEventListener('change', () => {
         if (!radio.checked) return;

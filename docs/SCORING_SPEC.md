@@ -1143,3 +1143,20 @@ Berikut keterbatasan yang sengaja diakui, sesuai catatan di
 
 Keterbatasan 1–3 tidak mengubah rubrik K1–K4. Keterbatasan 5 perlu dilaporkan
 sebagai status uji, bukan sebagai bukti validitas.
+
+## 7.27 Kota Bebas (U9) dan acak urutan penilaian diri
+
+**Kota Bebas.** Setelah refleksi akhir sesi, pemain boleh membuka mode
+eksperimen (`app.ts` → `mulaiKotaBebas()`). Mode ini memakai `PlayScreen`
+dengan task latihan dan **semua callback kosong**: tidak ada event yang dicatat,
+tidak ada permintaan ke server, dan tidak ada skor. Ini menyimpang dari draf
+U9, yang meminta event `free_play_started` dan `free_play_ended`. Penyimpangan
+itu dipilih agar instrumen tidak bertambah jenis event. Akibatnya, penggunaan
+mode ini tidak tercatat, sehingga keterlibatan sukarela tidak bisa diukur dari
+data. Formulir refleksi tidak muncul dua kali.
+
+**Acak urutan penilaian diri.** Pilihan 0–3 pada setiap tahap diacak
+(`asesmenDiri.ts` → `acakUrutan()`) untuk mengurangi petunjuk dari posisi
+pilihan. Nilai yang disimpan tetap skor asli. Angka skor masih ditampilkan.
+
+**Belum diterapkan dari draf:** U2, U5, R1, R3. Belum diuji di browser.

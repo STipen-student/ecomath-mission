@@ -285,6 +285,8 @@ export function renderFinishScreen(
     riwayat: RiwayatLevel[];
   },
   onRefleksi: (r: RefleksiBelajar) => Promise<void>,
+  onKotaBebas?: () => void,
+  sudahRefleksi = false,
 ): void {
   const klaim = ['K1', 'K2', 'K3', 'K4'] as const;
 
@@ -368,7 +370,18 @@ export function renderFinishScreen(
           : null,
 
         perjalananBelajar(data.riwayat),
-        formRefleksiBelajar(onRefleksi),
+        // Setelah refleksi tercatat, formulir tidak ditampilkan lagi agar tidak
+        // ada event learning_reflection kedua saat kembali dari Kota Bebas.
+        sudahRefleksi ? null : formRefleksiBelajar(onRefleksi),
+        // U9: Kota Bebas. Setelah sesi selesai, pemain boleh bereksperimen tanpa skor.
+        // Tidak memancarkan event dan tidak menyentuh log penelitian.
+        onKotaBebas
+          ? (() => {
+              const tombolBebas = el('button', { class: 'btn btn-block' }, '🏙  MAINKAN KOTA BEBAS (TANPA SKOR)');
+              tombolBebas.addEventListener('click', onKotaBebas);
+              return el('section', { class: 'profile-block' }, el('h3', {}, 'KOTA BEBAS'), el('p', { class: 'hint' }, 'Eksperimen tanpa skor dan tanpa dicatat untuk penelitian. Pilihan ini sepenuhnya sukarela.'), tombolBebas);
+            })()
+          : null,
       ),
     ),
   );
