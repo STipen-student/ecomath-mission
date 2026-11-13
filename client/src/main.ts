@@ -17,4 +17,9 @@ if (!root) {
   throw new Error('Elemen #app tidak ditemukan pada index.html');
 }
 
-new App(root).start();
+// Eksperimen TheoTown (tidak mencatat data): ?mode=kota
+if (new URLSearchParams(window.location.search).get('mode') === 'kota') {
+  void import('./kota/KotaScreen.js').then((m) => m.mountKotaScreen(root));
+} else {
+  new App(root).start();
+}
