@@ -22,7 +22,7 @@
  */
 
 import { mountCity, type CityHandle } from '../game/mountCity.js';
-import { defaultCenters } from '../game/iso/isoGrid.js';
+import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { cornerCandidates, evaluate, objectiveValue } from '../game/geometry.js';
 import type { ConstraintDto, DistractorResponse, SkorKlaim, TargetBelajar, TaskDto } from '../api/types.js';
 import { clear, el, jam, num } from './dom.js';
@@ -67,8 +67,10 @@ const OPERATOR = [
   { nilai: '>', label: '>' },
 ] as const;
 
-const LABEL_PUSAT = '\u{1f4cd} Atur pusat';
-const LABEL_BATAL = '\u2715 Batal';
+const LABEL_KUAS = 'Pasang ubin';
+
+/** Petak bangun pada kisi, urut seed: dipakai menyinkronkan ubin dengan nilai x dan y. */
+const PETAK_BANGUN: number[] = plotTiles().map((t) => t.seed);
 
 /** Satu pertidaksamaan yang ditulis siswa sendiri di panel "Kendala". */
 interface TulisanKendala {
@@ -127,14 +129,15 @@ export class PlayScreen {
   private moveDebounce: number | null = null;
 
   /**
-   * Titik pusat pembangunan tiap zona.
-   *
-   * Menentukan DI MANA zona tumbuh, bukan BERAPA banyak - jumlahnya tetap
-   * ditentukan slider. Pemisahan ini menjaga agar nilai x dan y tidak terkunci
-   * pada kelipatan satu petak; lihat catatan pada game/iso/isoGrid.ts.
+   * Mekanik 2B (docs/DRAF_INSTRUMEN_2B_MATEMATIKA_KOTA.md): siswa memasang ubin
+   * zona di peta. JUMLAH ubin tiap zona x langkah variabel = nilai x dan y.
+   * Letak ubin tidak memengaruhi nilai, sama seperti pusat zona pada versi 1.1.0.
+   * Event yang dicatat tetap move_slider / revise_after_event dengan x dan y.
    */
-  private pusat = defaultCenters();
-  private modePilih: 'x' | 'y' | null = null;
+  private readonly petakZona = new Map<number, 'x' | 'y'>();
+  private kuas: 'x' | 'y' = 'x';
+  /** Aksi yang ditetapkan saat ketukan pertama, dipertahankan selama menyeret. */
+  private aksiSeret: 'pasang' | 'cabut' = 'pasang';
 
   private distractorSudahMuncul = false;
   private jumlahPenolakan = 0;
@@ -276,9 +279,9 @@ export class PlayScreen {
       const tombolPusat = el(
         'button',
         { class: 'btn btn-tiny zone-pin', ariaLabel: `Atur pusat zona ${v.toUpperCase()} di peta` },
-        LABEL_PUSAT,
+        LABEL_KUAS,
       );
-      tombolPusat.addEventListener('click', () => this.mulaiPilihPusat(v, tombolPusat));
+      tombolPusat.addEventListener('click', () => this.pilihKuas(v));
       this.tombolPusat[v] = tombolPusat;
 
       return el(
@@ -657,6 +660,7 @@ export class PlayScreen {
   /** Nyalakan mesin render peta; penanganan ukuran ada di game/mountCity.ts. */
   private mulaiPhaser(mount: HTMLElement): void {
     this.kota = mountCity(mount);
+    this.kota.setPickMode((petak, seret) => this.ketukPetak(petak.row * GRID + petak.col, seret));
   }
 
   private mulaiTimer(): void {
@@ -666,43 +670,75 @@ export class PlayScreen {
     }, 1000);
   }
 
-  /**
-   * Masuk mode pilih pusat zona.
-   *
-   * Peta hanya dapat disentuh selama mode ini aktif. Di luar mode itu, sentuhan
-   * pada peta diabaikan - setiap perubahan keadaan harus melewati kendali yang
-   * tercatat sebagai event, dan sentuhan liar tidak meninggalkan bukti apa pun.
-   */
-  private mulaiPilihPusat(variabel: 'x' | 'y', tombol: HTMLButtonElement): void {
-    if (this.modePilih === variabel) {
-      this.batalPilihPusat();
-      return;
-    }
-
-    this.modePilih = variabel;
+  /** Pilih zona yang dipasang saat peta diketuk. */
+  private pilihKuas(variabel: 'x' | 'y'): void {
+    this.kuas = variabel;
     for (const [kunci, b] of Object.entries(this.tombolPusat)) {
       b?.classList.toggle('is-picking', kunci === variabel);
     }
-
-    const label = this.ctx.task.variables[variabel].label;
-    this.toast(`Ketuk peta untuk menentukan pusat ${label}.`, 'info', 5200);
-    tombol.textContent = LABEL_BATAL;
-
-    this.kota?.setPickMode((petak) => {
-      this.pusat = { ...this.pusat, [variabel]: petak };
-      this.cb.onSetZoneCenter(variabel, petak.col, petak.row);
-      this.batalPilihPusat();
-      this.perbarui(false);
-      this.toast(`Pusat ${label} dipindahkan.`, 'good', 2600);
-    });
+    this.toast(`Ketuk atau seret di peta untuk memasang ${this.ctx.task.variables[variabel].label}. Ketuk ubinnya lagi untuk mencabut.`, 'info', 4200);
   }
 
-  private batalPilihPusat(): void {
-    this.modePilih = null;
-    this.kota?.setPickMode(null);
-    for (const b of Object.values(this.tombolPusat)) {
-      b?.classList.remove('is-picking');
-      if (b) b.textContent = LABEL_PUSAT;
+  private jumlahUbin(variabel: 'x' | 'y'): number {
+    let n = 0;
+    for (const z of this.petakZona.values()) if (z === variabel) n++;
+    return n;
+  }
+
+  /**
+   * Ketukan atau seretan pada peta (2B).
+   *
+   * Ketuk petak kosong: pasang ubin zona terpilih. Ketuk ubin sendiri: cabut.
+   * Hasilnya ditulis ke penggeser lalu melewati geser(), sehingga event yang
+   * tercatat sama persis dengan menggeser penggeser ke nilai itu.
+   */
+  private ketukPetak(seed: number, seret: boolean): void {
+    if (this.tahapRefleksi) return;
+    const isi = this.petakZona.get(seed);
+    if (!seret) this.aksiSeret = isi === this.kuas ? 'cabut' : 'pasang';
+
+    const spec = this.ctx.task.variables[this.kuas];
+    if (this.aksiSeret === 'cabut') {
+      if (isi !== this.kuas) return;
+      this.petakZona.delete(seed);
+    } else {
+      if (isi === this.kuas) return;
+      // Batas atas sama dengan batas penggeser.
+      if ((this.jumlahUbin(this.kuas) + 1) * spec.step > spec.max) return;
+      this.petakZona.set(seed, this.kuas);
+    }
+
+    this.sliderX.value = String(this.jumlahUbin('x') * this.ctx.task.variables.x.step);
+    this.sliderY.value = String(this.jumlahUbin('y') * this.ctx.task.variables.y.step);
+    this.geser();
+  }
+
+  /**
+   * Samakan jumlah ubin dengan nilai x dan y saat nilainya berubah lewat jalur
+   * lain (penggeser, tombol "Bangun" di panel simulasi). Ubin baru mengisi petak
+   * kosong pertama; ubin berlebih dicabut dari yang terakhir dipasang.
+   */
+  private sinkronPetak(): void {
+    for (const v of ['x', 'y'] as const) {
+      const spec = this.ctx.task.variables[v];
+      const target = Math.round((v === 'x' ? this.x : this.y) / spec.step);
+      let ada = this.jumlahUbin(v);
+      if (ada > target) {
+        for (const seed of [...this.petakZona.keys()].reverse()) {
+          if (ada <= target) break;
+          if (this.petakZona.get(seed) === v) {
+            this.petakZona.delete(seed);
+            ada--;
+          }
+        }
+      }
+      for (const seed of PETAK_BANGUN) {
+        if (ada >= target) break;
+        if (!this.petakZona.has(seed)) {
+          this.petakZona.set(seed, v);
+          ada++;
+        }
+      }
     }
   }
 
@@ -765,16 +801,10 @@ export class PlayScreen {
       yMax: t.variables.y.max,
     });
 
-    this.kota?.render({
-      x: this.x,
-      y: this.y,
-      xMax: t.variables.x.max,
-      yMax: t.variables.y.max,
-      feasible: hasil.feasible,
-      visualX: t.variables.x.visual,
-      visualY: t.variables.y.visual,
-      pusat: this.pusat,
-    });
+    this.sinkronPetak();
+    const ubin = new Map<number, string>();
+    for (const [seed, v] of this.petakZona) ubin.set(seed, `v:${t.variables[v].visual}`);
+    this.kota?.tampilkanKota(ubin, hasil.feasible);
   }
 
   /**

@@ -63,3 +63,33 @@ Konsekuensi yang harus diuji sebelum dipakai:
 - Performa di HP perlu diuji, karena peta lebih besar dan jumlah sprite naik.
 - `GRID` pada `isoGrid.ts` dan `CityScene.ts` diubah **hanya di branch
   `theotown-ui`**. Branch `main` dan instrumen 1.1.0 tidak boleh terpengaruh.
+
+## Status penerapan (14 Nov 2026)
+
+Diterapkan di `client/src/ui/PlayScreen.ts` pada branch `theotown-ui`:
+
+- Ketuk atau seret di peta memasang ubin zona terpilih; ketuk ubin sendiri
+  mencabutnya. Jumlah ubin x langkah variabel = nilai x atau y.
+- Nilai ditulis ke penggeser lalu melewati `geser()`, sehingga event tetap
+  `move_slider` (atau `revise_after_event` setelah event kebijakan) dengan
+  x dan y. Mesin skoring tidak diubah.
+- Penggeser tetap ada dan sinkron dua arah. Ini disengaja: memasang 84 ubin
+  satu per satu tidak praktis, jadi penggeser menjadi jalur cepat.
+- Rona kelayakan peta tetap mengikuti sumber per level (§7.20).
+
+Penyimpangan dan batasan yang belum diselesaikan:
+
+1. **Langkah 0,5.** Pada dua variabel dengan langkah 0,5, satu ubin bernilai
+   0,5 satuan, bukan 1.
+2. **Batas petak.** Peta punya 256 petak. Pada L4-SDG11&13-A batas penggeser
+   210 + 210, sehingga kombinasi di atas 256 ubin tidak bisa dibuat lewat peta.
+   Kombinasi itu memang tidak layak, tetapi ruang coba-coba siswa jadi berbeda
+   dari versi 1.1.0.
+3. **Pusat zona dihapus.** Tombol "Atur pusat" diganti "Pasang ubin", jadi
+   event `set_zone_center` tidak lagi muncul di versi ini.
+4. **Jumlah event `move_slider` dapat naik**, karena setiap ketukan memicu satu
+   perubahan nilai (di-debounce 400 ms). Observable yang menghitung perpindahan
+   penggeser perlu diperiksa sebelum skor dibandingkan dengan 1.1.0.
+5. **Belum diuji**: sinkron dari penggeser ke ubin, kuas zona Y, Level 2–4,
+   tutorial, dan HP sungguhan. Yang sudah dicek di browser hanya memasang ubin
+   zona X di Level 1.

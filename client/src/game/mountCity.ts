@@ -25,9 +25,9 @@ export interface CityHandle {
   /** Getaran singkat saat sistem menolak konfigurasi. */
   shake(): void;
   /** Nyalakan mode pilih pusat zona; null mematikannya. */
-  setPickMode(handler: ((petak: ZoneCenter) => void) | null): void;
+  setPickMode(handler: ((petak: ZoneCenter, seret: boolean) => void) | null): void;
   /** Mode kota: gambar bangunan per petak (seed -> jenis). */
-  tampilkanKota(petak: Map<number, string>): void;
+  tampilkanKota(petak: Map<number, string>, feasible?: boolean): void;
   destroy(): void;
 }
 
@@ -35,8 +35,9 @@ export function mountCity(mount: HTMLElement): CityHandle {
   let game: Phaser.Game | null = null;
   let scene: CityScene | null = null;
   let terakhir: AllocationView | null = null;
-  let modePilih: ((petak: ZoneCenter) => void) | null = null;
+  let modePilih: ((petak: ZoneCenter, seret: boolean) => void) | null = null;
   let kotaTerakhir: Map<number, string> | null = null;
+  let kotaLayak = true;
 
   const buat = (lebar: number, tinggi: number): void => {
     game = new Phaser.Game({
@@ -53,7 +54,7 @@ export function mountCity(mount: HTMLElement): CityHandle {
       scene = (game?.scene.getScene('CityScene') as CityScene | undefined) ?? null;
       if (terakhir) scene?.render(terakhir);
       if (modePilih) scene?.aturModePilih(modePilih);
-      if (kotaTerakhir) scene?.tampilkanKota(kotaTerakhir);
+      if (kotaTerakhir) scene?.tampilkanKota(kotaTerakhir, kotaLayak);
     });
   };
 
@@ -88,9 +89,10 @@ export function mountCity(mount: HTMLElement): CityHandle {
       modePilih = handler;
       scene?.aturModePilih(handler);
     },
-    tampilkanKota(petak): void {
+    tampilkanKota(petak, feasible = true): void {
       kotaTerakhir = petak;
-      scene?.tampilkanKota(petak);
+      kotaLayak = feasible;
+      scene?.tampilkanKota(petak, feasible);
     },
     destroy(): void {
       pengamat.disconnect();

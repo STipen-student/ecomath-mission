@@ -103,7 +103,9 @@ export class CityScene extends Phaser.Scene {
   private siap = false;
 
   /** Dipanggil saat siswa mengetuk peta; null berarti mode pilih sedang mati. */
-  private onPilihPetak: ((petak: ZoneCenter) => void) | null = null;
+  private onPilihPetak: ((petak: ZoneCenter, seret: boolean) => void) | null = null;
+  /** Petak terakhir yang dilewati saat menyeret, agar satu petak tidak dipicu berulang. */
+  private petakSeret = -1;
 
   constructor() {
     super({ key: 'CityScene' });
@@ -247,12 +249,23 @@ export class CityScene extends Phaser.Scene {
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (!this.onPilihPetak) return;
       const petak = worldToPlot(p.worldX, p.worldY);
-      if (petak) this.onPilihPetak(petak);
+      this.petakSeret = petak ? petak.row * GRID + petak.col : -1;
+      if (petak) this.onPilihPetak(petak, false);
+    });
+    // Menyeret melewati petak lain memicu handler sekali per petak (mode 2B).
+    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+      if (!this.onPilihPetak || !p.isDown) return;
+      const petak = worldToPlot(p.worldX, p.worldY);
+      if (!petak) return;
+      const seed = petak.row * GRID + petak.col;
+      if (seed === this.petakSeret) return;
+      this.petakSeret = seed;
+      this.onPilihPetak(petak, true);
     });
   }
 
   /** Nyalakan atau matikan mode pilih pusat zona. */
-  aturModePilih(handler: ((petak: ZoneCenter) => void) | null): void {
+  aturModePilih(handler: ((petak: ZoneCenter, seret: boolean) => void) | null): void {
     this.onPilihPetak = handler;
     this.input.setDefaultCursor(handler ? 'crosshair' : 'default');
   }
@@ -361,8 +374,9 @@ export class CityScene extends Phaser.Scene {
    * DITARUH pemain pada tiap petak, bukan dari penggeser alokasi.
    * `petak` memetakan seed petak (row * GRID + col) ke jenis bangunan.
    */
-  tampilkanKota(petak: Map<number, string>): void {
+  tampilkanKota(petak: Map<number, string>, feasible = true): void {
     if (!this.siap) return;
+    for (const penanda of [this.penandaX, this.penandaY]) penanda.setVisible(false);
     for (const [seed, sprite] of this.bangunan) {
       const bayang = this.bayangan.get(seed);
       const jenis = petak.get(seed);
@@ -371,7 +385,10 @@ export class CityScene extends Phaser.Scene {
         bayang?.setVisible(false);
         continue;
       }
-      const kunci = SPRITE_KOTA[jenis] ?? 'bgn_housing_1';
+      // 'v:<visual>' = zona soal SPtLDV (2B); selain itu jenis bangunan draf 2.
+      const kunci = jenis.startsWith('v:')
+        ? this.varian(seed, jenis.slice(2) as VariableVisual)
+        : (SPRITE_KOTA[jenis] ?? 'bgn_housing_1');
       if (sprite.texture.key !== kunci) sprite.setTexture(kunci);
       if (!sprite.visible) {
         sprite.setVisible(true);
@@ -380,7 +397,15 @@ export class CityScene extends Phaser.Scene {
         this.tweens.add({ targets: sprite, scaleY: 1, duration: 160, ease: 'Back.easeOut' });
       }
     }
-    this.kamera.setBackgroundColor(PALET.langit);
+    // Rona kelayakan sama dengan render(): sumbernya tetap ditentukan pemanggil (§7.20).
+    this.kamera.setBackgroundColor(feasible ? PALET.langit : PALET.langitBahaya);
+    const rona = feasible ? 0xffffff : 0xffc9bd;
+    for (const lapisan of [this.lapisanDasar, this.lapisanBangunan]) {
+      lapisan.iterate((anak: Phaser.GameObjects.GameObject) => {
+        (anak as Phaser.GameObjects.Image).setTint(rona);
+        return true;
+      });
+    }
   }
 }
 

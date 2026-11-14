@@ -2839,3 +2839,59 @@ body {
 .kota-bilah .tool {
   min-width: 70px;
 }
+
+/* ---------------- 2B: peta harus bisa diketuk ---------------- */
+
+/*
+ * Pada mekanik 2B siswa memasang ubin di peta, jadi peta tidak boleh tertutup
+ * kartu zona. Di layar sempit kedua kartu dijajarkan dan dipendekkan.
+ */
+@media (max-width: 900px) {
+  .zone-dock {
+    flex-direction: row;
+    flex-wrap: wrap;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    gap: 6px;
+  }
+
+  .zone-dock .zone-card {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 8px;
+  }
+
+  .zone-dock .zone-head {
+    flex-wrap: wrap;
+    gap: 2px 6px;
+    margin-bottom: 2px;
+  }
+
+  .zone-dock .zone-name {
+    font-size: 0.56rem;
+    flex: 1 1 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .zone-dock .zone-foot {
+    margin-top: 2px;
+    justify-content: stretch;
+  }
+
+  .zone-dock .zone-pin {
+    width: 100%;
+    min-height: 34px;
+  }
+
+  .zone-dock .plate-score {
+    flex: 1 1 100%;
+  }
+}
+
+.zone-pin.is-picking {
+  background: var(--green);
+  color: #fff;
+}
