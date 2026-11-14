@@ -26,6 +26,8 @@ export interface CityHandle {
   shake(): void;
   /** Nyalakan mode pilih pusat zona; null mematikannya. */
   setPickMode(handler: ((petak: ZoneCenter, seret: boolean) => void) | null): void;
+  /** Perayaan singkat setelah rancangan disahkan (tanpa event). */
+  rayakan(): void;
   /** Mode kota: gambar bangunan per petak (seed -> jenis). */
   tampilkanKota(petak: Map<number, string>, feasible?: boolean): void;
   destroy(): void;
@@ -88,6 +90,9 @@ export function mountCity(mount: HTMLElement): CityHandle {
     setPickMode(handler): void {
       modePilih = handler;
       scene?.aturModePilih(handler);
+    },
+    rayakan(): void {
+      scene?.rayakan();
     },
     tampilkanKota(petak, feasible = true): void {
       kotaTerakhir = petak;

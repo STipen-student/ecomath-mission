@@ -49,7 +49,15 @@ function kodeJenis(b: Bangunan): string {
   return b;
 }
 
-export function mountKotaScreen(root: HTMLElement): void {
+export interface OpsiKota {
+  /** false = Kota Bebas: tidak ada data yang dikirim ke server. */
+  simpan?: boolean;
+  /** Bila diisi, bilah alat menampilkan tombol Keluar. */
+  onKeluar?: () => void;
+}
+
+export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
+  const simpan = opsi.simpan ?? true;
   let petak: Array<Bangunan | null> = Array(GRID * GRID).fill(null);
   let dana = DANA_AWAL;
   let hari = 1;
@@ -143,7 +151,14 @@ export function mountKotaScreen(root: HTMLElement): void {
         }, !hapus && pilihan === jenis),
       ),
       tool('🗑', hapus ? 'Hapus (aktif)' : 'Hapus', () => { hapus = !hapus; gambar(); }, hapus),
-      tool('↺', 'Ulang', mulaiUlang, false, 'tool-go'),
+      tool('↺', 'Ulang', mulaiUlang, false, opsi.onKeluar ? '' : 'tool-go'),
+      ...(opsi.onKeluar
+        ? [tool('✕', 'Keluar', () => {
+            window.clearInterval(pewaktu);
+            kota.destroy();
+            opsi.onKeluar?.();
+          }, false, 'tool-go')]
+        : []),
     );
   }
 
@@ -184,7 +199,7 @@ export function mountKotaScreen(root: HTMLElement): void {
         ? 'Kota berkelanjutan tercapai!'
         : `Belum cukup: butuh ${TARGET_WARGA} warga dan kebahagiaan 60%.`;
     }
-    if (selesai) void kirimHasil();
+    if (selesai && simpan) void kirimHasil();
     gambar();
   }
 
@@ -218,5 +233,5 @@ export function mountKotaScreen(root: HTMLElement): void {
   }
 
   gambar();
-  window.setInterval(berhari, 2000);
+  const pewaktu = window.setInterval(berhari, 2000);
 }

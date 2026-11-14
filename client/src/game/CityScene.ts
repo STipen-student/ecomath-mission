@@ -370,6 +370,57 @@ export class CityScene extends Phaser.Scene {
   }
 
   /**
+   * Perayaan setelah rancangan disahkan (hiburan, tanpa event).
+   *
+   * Bangunan memantul bergiliran, kota diberi cahaya hangat sebentar, dan
+   * beberapa warga berjalan di jalan. Semua objek perayaan dihapus sendiri.
+   */
+  rayakan(): void {
+    if (!this.siap) return;
+
+    let urutan = 0;
+    for (const sprite of this.bangunan.values()) {
+      if (!sprite.visible) continue;
+      this.tweens.add({
+        targets: sprite,
+        scaleY: { from: 1, to: 1.18 },
+        duration: 140,
+        yoyo: true,
+        delay: Math.min(urutan * 12, 900),
+        ease: 'Sine.easeOut',
+      });
+      urutan++;
+    }
+
+    this.kamera.flash(400, 255, 236, 170);
+
+    const jalan: Array<{ x: number; y: number }> = [];
+    for (let row = 0; row < GRID; row++) {
+      for (let col = 0; col < GRID; col++) {
+        if (tileKind(col, row) === 'road') jalan.push(toIso(col, row));
+      }
+    }
+    if (jalan.length < 2) return;
+
+    for (let i = 0; i < 14; i++) {
+      const awal = jalan[Math.floor(Math.random() * jalan.length)]!;
+      const akhir = jalan[Math.floor(Math.random() * jalan.length)]!;
+      const warga = this.add
+        .rectangle(awal.x, awal.y - 3, 3, 5, WARNA_WARGA[i % WARNA_WARGA.length])
+        .setDepth(40)
+        .setStrokeStyle(1, 0x16323f);
+      this.tweens.add({
+        targets: warga,
+        x: akhir.x,
+        y: akhir.y - 3,
+        duration: 2600 + Math.random() * 1600,
+        ease: 'Linear',
+        onComplete: () => warga.destroy(),
+      });
+    }
+  }
+
+  /**
    * Mode kota (eksperimen TheoTown): bangunan digambar sesuai jenis yang
    * DITARUH pemain pada tiap petak, bukan dari penggeser alokasi.
    * `petak` memetakan seed petak (row * GRID + col) ke jenis bangunan.
@@ -408,6 +459,9 @@ export class CityScene extends Phaser.Scene {
     }
   }
 }
+
+/** Warna baju warga yang berjalan saat perayaan. */
+const WARNA_WARGA = [0xe2604a, 0x35b6ab, 0xf5c53f, 0x6c8ebf, 0xffffff];
 
 /** Sprite per jenis bangunan kota. Toko dan panel surya memakai palet terdekat. */
 const SPRITE_KOTA: Record<string, string> = {

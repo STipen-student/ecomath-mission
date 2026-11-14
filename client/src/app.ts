@@ -17,7 +17,6 @@ import { renderLoginScreen } from './ui/LoginScreen.js';
 import { PlayScreen } from './ui/PlayScreen.js';
 import { renderFinishScreen, renderResultScreen, type RiwayatLevel } from './ui/ResultScreen.js';
 import { TutorialScreen, type HasilTutorial } from './ui/TutorialScreen.js';
-import { TUTORIAL_TASK } from './ui/tutorialTask.js';
 
 /** Level yang dikerjakan berurutan dalam satu sesi. */
 const LEVELS = [1, 2, 3, 4] as const;
@@ -321,35 +320,12 @@ export class App {
    */
   private mulaiKotaBebas(): void {
     this.play?.destroy();
+    this.play = null;
     this.root.replaceChildren();
-
-    const kosong = (): void => undefined;
-    this.play = new PlayScreen(
-      this.root,
-      { studentName: this.studentName, level: 4, totalLevels: LEVELS.length, task: TUTORIAL_TASK },
-      {
-        onIdentifyVariable: kosong,
-        onSelectObjective: kosong,
-        onWriteConstraint: kosong,
-        onMoveSlider: kosong,
-        onCheckCorner: kosong,
-        onAttemptSubmit: kosong,
-        onRejectBySystem: kosong,
-        onReviseAfterEvent: kosong,
-        onSetZoneCenter: kosong,
-        onRequestDistractor: async () => null,
-        onFinish: async () => undefined,
-      },
+    // Kota Bebas memakai layar Kota dengan ekonomi, tanpa mengirim data apa pun.
+    void import('./kota/KotaScreen.js').then((m) =>
+      m.mountKotaScreen(this.root, { simpan: false, onKeluar: () => this.tampilkanSelesai() }),
     );
-    this.play.render();
-
-    const keluar = el('button', { class: 'btn btn-small kota-bebas-keluar', ariaLabel: 'Keluar dari Kota Bebas' }, '✕ KELUAR');
-    keluar.addEventListener('click', () => {
-      this.play?.destroy();
-      this.play = null;
-      this.tampilkanSelesai();
-    });
-    this.root.append(keluar);
   }
 
   /** Kembali ke layar ringkasan akhir sesi (dipakai setelah Kota Bebas). */

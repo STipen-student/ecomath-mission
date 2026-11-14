@@ -93,3 +93,22 @@ Penyimpangan dan batasan yang belum diselesaikan:
 5. **Belum diuji**: sinkron dari penggeser ke ubin, kuas zona Y, Level 2–4,
    tutorial, dan HP sungguhan. Yang sudah dicek di browser hanya memasang ubin
    zona X di Level 1.
+
+## Unsur hiburan (14 Nov 2026)
+
+Ditambahkan tanpa event baru dan tanpa mengubah skor:
+
+- **Suara** (`client/src/game/suara.ts`): bunyi saat memasang dan mencabut ubin,
+  saat rancangan disahkan, dan saat ditolak. Tombol bisu di HUD, disimpan per
+  perangkat.
+- **Perayaan kota** (`CityScene.rayakan()`): bangunan memantul, cahaya hangat,
+  dan warga berjalan di jalan setelah rancangan disahkan.
+- **Jeda 2,5 detik** sebelum lembar refleksi terbuka, supaya perayaan terlihat.
+  Selama jeda tombol Ajukan dikunci. Akibatnya stempel waktu
+  `reflection_response` mundur sekitar 2,5 detik; durasi total bersifat
+  deskriptif dan tidak dipakai rubrik.
+- **Kota Bebas** kini memakai layar Kota dengan ekonomi (dana, warga,
+  kebahagiaan), tanpa mengirim data apa pun ke server, dengan tombol Keluar.
+
+Belum diuji: Kota Bebas dari layar akhir sesi (butuh empat level selesai),
+dan bunyi di HP sungguhan.

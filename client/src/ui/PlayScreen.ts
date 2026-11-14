@@ -27,6 +27,7 @@ import { cornerCandidates, evaluate, objectiveValue } from '../game/geometry.js'
 import type { ConstraintDto, DistractorResponse, SkorKlaim, TargetBelajar, TaskDto } from '../api/types.js';
 import { clear, el, jam, num } from './dom.js';
 import { formPenilaianDiri } from './asesmenDiri.js';
+import { aturBisu, bunyikan, sedangBisu } from '../game/suara.js';
 import { KONSEKUENSI_DITERIMA, KONSEKUENSI_TERSIRAT, konsekuensiKendala } from '../game/konsekuensi.js';
 import { BidangPerencanaan } from './bidangPerencanaan.js';
 
@@ -229,6 +230,7 @@ export class PlayScreen {
       ),
       this.meterBar,
       this.bangunPlatTarget(),
+      this.bangunTombolSuara(),
       el('div', { class: 'plate plate-clock' }, el('span', { class: 'clock-ico' }, '⏱'), this.labelWaktu),
     );
   }
@@ -248,6 +250,16 @@ export class PlayScreen {
     );
     plat.addEventListener('click', () => this.toast(`Strategimu: ${target.strategyText}`, 'info', 5200));
     return plat;
+  }
+
+  /** Tombol bisu (hiburan, tidak dicatat sebagai event). */
+  private bangunTombolSuara(): HTMLElement {
+    const tombol = el('button', { class: 'plate plate-suara', ariaLabel: 'Nyalakan atau matikan suara' }, sedangBisu() ? '🔇' : '🔊');
+    tombol.addEventListener('click', () => {
+      aturBisu(!sedangBisu());
+      tombol.textContent = sedangBisu() ? '🔇' : '🔊';
+    });
+    return tombol;
   }
 
   private bangunDokZona(): HTMLElement {
@@ -701,11 +713,13 @@ export class PlayScreen {
     if (this.aksiSeret === 'cabut') {
       if (isi !== this.kuas) return;
       this.petakZona.delete(seed);
+      bunyikan('cabut');
     } else {
       if (isi === this.kuas) return;
       // Batas atas sama dengan batas penggeser.
       if ((this.jumlahUbin(this.kuas) + 1) * spec.step > spec.max) return;
       this.petakZona.set(seed, this.kuas);
+      bunyikan('pasang');
     }
 
     this.sliderX.value = String(this.jumlahUbin('x') * this.ctx.task.variables.x.step);
@@ -1022,6 +1036,7 @@ export class PlayScreen {
       // U4: penolakan tampil sebagai sidang Dewan Kota dengan akibat di kota.
       // Kendala yang dilanggar tetap dicatat lewat onRejectBySystem di atas.
       this.tampilkanDewan(this.constraints.filter((k) => hasil.violated.has(k.id)));
+      bunyikan('tolak');
 
       // Setelah dua penolakan, siswa diberi jalan keluar. Tanpa ini, siswa yang
       // benar-benar tidak menemukan solusi akan terjebak dan sesinya hilang -
@@ -1046,7 +1061,13 @@ export class PlayScreen {
 
     // U4: rancangan diterima, warga pindah dan lampu kota menyala (tampilan saja).
     this.toast(KONSEKUENSI_DITERIMA, 'good', 3200);
-    this.bukaRefleksi();
+    bunyikan('terima');
+    // Kota hidup sesudah disahkan: hanya animasi, tidak ada event.
+    this.kota?.rayakan();
+    // Beri waktu melihat kota merayakan sebelum lembar refleksi menutupi peta.
+    // Ajukan dikunci selama jeda (tahapRefleksi) agar tidak ada submit ganda.
+    this.tahapRefleksi = true;
+    window.setTimeout(() => this.bukaRefleksi(), 2500);
   }
 
   /**
