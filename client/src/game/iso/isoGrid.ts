@@ -12,12 +12,14 @@ import { TILE_H, TILE_W } from '../pixel/textures.js';
 /**
  * Ukuran kisi termasuk cincin air di tepinya.
  *
- * Dipilih 14 (bukan lebih besar) karena lebar kisi 14 x 32 = 448 piksel masih
- * muat pada layar HP 375 piksel dengan pembesaran 0,75 - tanpa memotong sudut
- * pulau. Kisi yang lebih besar memaksa pembesaran turun ke 0,5, dan pada
- * pembesaran itu ubin menjadi terlalu kecil untuk dibaca siswa.
+ * DIUBAH untuk eksperimen 2B (branch theotown-ui): 22 memberi 256 petak bangun,
+ * cukup untuk lahan 200 hektar dengan satu ubin = 1 satuan (docs/DRAF_INSTRUMEN_2B_MATEMATIKA_KOTA.md).
+ * Versi 1.1.0 memakai 14. Jangan ubah nilai ini di branch main.
+ *
+ * Konsekuensi: pada layar HP pembesaran menjadi lebih kecil. Performa dan
+ * keterbacaan ubin harus diuji di perangkat sungguhan sebelum dipakai.
  */
-export const GRID = 14;
+export const GRID = 22;
 
 export type TileKind = 'water' | 'road' | 'plot';
 
