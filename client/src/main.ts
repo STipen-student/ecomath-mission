@@ -10,12 +10,16 @@ import '@fontsource/silkscreen/700.css';
 import '@fontsource/archivo-black/400.css';
 import './style.css';
 import { App } from './app.js';
+import { pasangBunyiKlik } from './game/suara.js';
 
 const root = document.getElementById('app');
 
 if (!root) {
   throw new Error('Elemen #app tidak ditemukan pada index.html');
 }
+
+// Bunyi klik untuk semua tombol (hiburan, tanpa event).
+pasangBunyiKlik();
 
 // Eksperimen TheoTown (tidak mencatat data): ?mode=kota
 if (new URLSearchParams(window.location.search).get('mode') === 'kota') {
