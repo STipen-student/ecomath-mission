@@ -51,3 +51,15 @@ karena yang dituntut tetap menyusun model dan menganalisis trade-off.
 
 Ekonomi, kebahagiaan, dan mode Kota Bebas dari draf 2 tidak dipakai di versi
 ini, karena tidak berkaitan dengan SPtLDV.
+
+## Keputusan skala (14 Nov 2026)
+
+**Satu ubin = 1 satuan untuk semua soal.** Peta diperbesar agar muat lahan
+terbesar (L4-SDG11&13-A, 200 hektar). Dengan begitu angka soal tidak diubah,
+dan nilai optimum tetap bisa dicapai persis.
+
+Konsekuensi yang harus diuji sebelum dipakai:
+- Jumlah petak naik dari 100 menjadi sekitar 300 (perlu pengukuran).
+- Performa di HP perlu diuji, karena peta lebih besar dan jumlah sprite naik.
+- `GRID` pada `isoGrid.ts` dan `CityScene.ts` diubah **hanya di branch
+  `theotown-ui`**. Branch `main` dan instrumen 1.1.0 tidak boleh terpengaruh.
