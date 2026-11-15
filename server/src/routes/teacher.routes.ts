@@ -174,7 +174,7 @@ teacherRouter.get(
   '/student/:sessionId',
   asyncHandler(async (req, res) => {
     const session = await prisma.session.findUnique({
-      where: { id: req.params.sessionId! },
+      where: { id: String(req.params.sessionId) },
       include: {
         attempts: {
           orderBy: { level: 'asc' },
@@ -272,7 +272,7 @@ teacherRouter.get(
   '/attempt/:attemptId',
   asyncHandler(async (req, res) => {
     const attempt = await prisma.taskAttempt.findUnique({
-      where: { id: req.params.attemptId! },
+      where: { id: String(req.params.attemptId) },
       include: {
         session: true,
         score: true,

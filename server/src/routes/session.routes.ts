@@ -55,7 +55,7 @@ sessionRouter.post(
   '/:id/tutorial',
   asyncHandler(async (req, res) => {
     const input = TutorialResultSchema.parse(req.body);
-    const id = req.params.id!;
+    const id = String(req.params.id);
 
     const session = await prisma.session.findUnique({ where: { id } });
     if (!session) throw new HttpError(404, 'Sesi tidak ditemukan');
@@ -78,7 +78,7 @@ sessionRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
     const session = await prisma.session.findUnique({
-      where: { id: req.params.id! },
+      where: { id: String(req.params.id) },
       include: {
         attempts: {
           orderBy: { level: 'asc' },

@@ -37,7 +37,7 @@ distractorRouter.post(
   '/:attemptId/distractor',
   asyncHandler(async (req, res) => {
     const input = TriggerSchema.parse(req.body);
-    const attemptId = req.params.attemptId!;
+    const attemptId = String(req.params.attemptId);
 
     const attempt = await prisma.taskAttempt.findUnique({ where: { id: attemptId } });
     if (!attempt) throw new HttpError(404, 'Percobaan tidak ditemukan');

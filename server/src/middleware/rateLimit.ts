@@ -10,7 +10,7 @@
  */
 
 import rateLimit, { type Options } from 'express-rate-limit';
-import type { Request } from 'express';
+import type { Request, RequestHandler } from 'express';
 import { config } from '../config.js';
 
 /**
@@ -45,21 +45,38 @@ const base: Partial<Options> = {
   skip: () => config.isTest,
 };
 
-export const submitLimiter = rateLimit({
-  ...base,
-  windowMs: config.rateLimit.submitWindowMs,
-  limit: config.rateLimit.submitMax,
-  message: { error: 'Terlalu banyak percobaan submit. Tunggu sebentar lalu coba lagi.' },
-});
+/**
+ * Pembatas dibuat MALAS, saat permintaan pertama masuk. express-rate-limit
+ * memasang setInterval saat dibuat, dan Cloudflare Workers melarang timer di
+ * lingkup global (saat modul dimuat). Di Node.js perilakunya tetap sama.
+ */
+function malas(buat: () => RequestHandler): RequestHandler {
+  let pembatas: RequestHandler | null = null;
+  return (req, res, next) => {
+    pembatas ??= buat();
+    return pembatas(req, res, next);
+  };
+}
+
+export const submitLimiter = malas(() =>
+  rateLimit({
+    ...base,
+    windowMs: config.rateLimit.submitWindowMs,
+    limit: config.rateLimit.submitMax,
+    message: { error: 'Terlalu banyak percobaan submit. Tunggu sebentar lalu coba lagi.' },
+  }),
+);
 
 /**
  * Batas untuk endpoint log jauh lebih longgar: satu siswa dapat menghasilkan
  * ratusan event (setiap geseran slider) dalam beberapa menit, dan event yang
  * tertolak berarti bukti penelitian yang hilang.
  */
-export const logLimiter = rateLimit({
-  ...base,
-  windowMs: config.rateLimit.logWindowMs,
-  limit: config.rateLimit.logMax,
-  message: { error: 'Terlalu banyak event log dalam waktu singkat.' },
-});
+export const logLimiter = malas(() =>
+  rateLimit({
+    ...base,
+    windowMs: config.rateLimit.logWindowMs,
+    limit: config.rateLimit.logMax,
+    message: { error: 'Terlalu banyak event log dalam waktu singkat.' },
+  }),
+);

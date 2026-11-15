@@ -11,11 +11,13 @@
 // Gunakan `npm run db:use-postgres` / `npm run db:use-sqlite` untuk menukarnya.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  // Diperlukan untuk Cloudflare D1 (@prisma/adapter-d1) pada Prisma 5.x.
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 

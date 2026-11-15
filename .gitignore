@@ -42,3 +42,7 @@ desktop.ini
 .vite/
 coverage/
 .cache/
+
+# Rahasia lokal wrangler (Cloudflare Workers)
+.dev.vars
+server/.wrangler/
