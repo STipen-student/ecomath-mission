@@ -220,7 +220,7 @@ export class PlayScreen {
       el(
         'div',
         { class: 'plate plate-identity' },
-        el('span', { class: 'lvl-badge' }, `LV${this.ctx.level}`),
+        this.lencanaRahasia(),
         el(
           'span',
           { class: 'identity-text' },
@@ -250,6 +250,20 @@ export class PlayScreen {
     );
     plat.addEventListener('click', () => this.toast(`Strategimu: ${target.strategyText}`, 'info', 5200));
     return plat;
+  }
+
+  /**
+   * Lencana level. Diketuk lima kali = misi tersembunyi "Arsitek rahasia".
+   * Hanya mengirim CustomEvent ke jendela; tidak ada event log, tidak ada skor.
+   */
+  private lencanaRahasia(): HTMLElement {
+    let ketuk = 0;
+    const lencana = el('span', { class: 'lvl-badge' }, `LV${this.ctx.level}`);
+    lencana.addEventListener('click', () => {
+      ketuk++;
+      if (ketuk === 5) window.dispatchEvent(new CustomEvent('ecomath:rahasia', { detail: 'arsitek-rahasia' }));
+    });
+    return lencana;
   }
 
   /** Tombol bisu (hiburan, tidak dicatat sebagai event). */

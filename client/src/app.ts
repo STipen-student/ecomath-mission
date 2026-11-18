@@ -12,6 +12,8 @@ import type { DistractorResponse, Klaim, SkorKlaim, SubmitResponse, TargetBelaja
 import { logger } from './logging/logger.js';
 import { el } from './ui/dom.js';
 import { renderLayarTarget, type LevelSebelumnya } from './ui/asesmenDiri.js';
+import { progresUntuk, type IdRahasia, type Progres } from './game/progres.js';
+import { umumkanHadiah } from './ui/panelHadiah.js';
 import { renderLandingScreen, type LandingHandle } from './ui/LandingScreen.js';
 import { renderLoginScreen } from './ui/LoginScreen.js';
 import { PlayScreen } from './ui/PlayScreen.js';
@@ -30,6 +32,8 @@ export class App {
   private play: PlayScreen | null = null;
   private landing: LandingHandle | null = null;
   private riwayat: RiwayatLevel[] = [];
+  /** Elemen permainan per sesi (koin, misi, perlengkapan). Tidak dikirim ke server. */
+  private progres: Progres | null = null;
   /** Refleksi akhir sesi sudah tercatat; formulirnya tidak ditampilkan dua kali. */
   private refleksiTercatat = false;
   /** Berapa kali siswa memindahkan pusat zona pada level ini (U8, tampilan saja). */
@@ -77,6 +81,12 @@ export class App {
         const sesi = await api.createSession(data);
         this.sessionId = sesi.sessionId;
         this.studentName = sesi.studentName;
+        this.progres = progresUntuk(sesi.sessionId);
+        // Misi tersembunyi dari dalam permainan (mis. lencana level diketuk lima kali).
+        window.addEventListener('ecomath:rahasia', (ev) => {
+          const id = (ev as CustomEvent<IdRahasia>).detail;
+          if (this.progres) umumkanHadiah(this.progres.selesaikan(id));
+        });
         this.mulaiTutorial();
       },
       () => this.tampilkanHalamanDepan(),
@@ -283,7 +293,17 @@ export class App {
 
     renderResultScreen(
       this.root,
-      { hasil, task, level: this.levelSaatIni, totalLevels: LEVELS.length, adaLevelBerikutnya, jumlahPusatDipindah: this.jumlahPusatDipindah },
+      {
+        hasil,
+        task,
+        level: this.levelSaatIni,
+        totalLevels: LEVELS.length,
+        adaLevelBerikutnya,
+        jumlahPusatDipindah: this.jumlahPusatDipindah,
+        // Hadiah dihitung dari selesainya level dan adanya target, BUKAN dari skor.
+        hadiah: this.progres?.levelSelesai(this.levelSaatIni, LEVELS.length, this.target !== null),
+        progres: this.progres ?? undefined,
+      },
       () => {
         if (adaLevelBerikutnya) {
           this.levelIndex++;
@@ -305,6 +325,8 @@ export class App {
               this.refleksiTercatat = true;
             },
             () => this.mulaiKotaBebas(),
+            false,
+            this.progres ?? undefined,
           );
         }
       },
@@ -324,7 +346,7 @@ export class App {
     this.root.replaceChildren();
     // Kota Bebas memakai layar Kota dengan ekonomi, tanpa mengirim data apa pun.
     void import('./kota/KotaScreen.js').then((m) =>
-      m.mountKotaScreen(this.root, { simpan: false, onKeluar: () => this.tampilkanSelesai() }),
+      m.mountKotaScreen(this.root, { simpan: false, onKeluar: () => this.tampilkanSelesai(), progres: this.progres ?? undefined }),
     );
   }
 
@@ -336,6 +358,7 @@ export class App {
       async () => undefined,
       () => this.mulaiKotaBebas(),
       this.refleksiTercatat,
+      this.progres ?? undefined,
     );
   }
 

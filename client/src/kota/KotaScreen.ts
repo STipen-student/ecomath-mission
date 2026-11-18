@@ -11,6 +11,8 @@
 import { BANGUNAN, bisaMembangun, danaSehari, hitungKeadaan, type Bangunan } from './ekonomi.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { GRID, plotTiles } from '../game/iso/isoGrid.js';
+import type { Progres } from '../game/progres.js';
+import { umumkanHadiah } from '../ui/panelHadiah.js';
 
 const API_URL: string = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000';
 
@@ -54,7 +56,17 @@ export interface OpsiKota {
   simpan?: boolean;
   /** Bila diisi, bilah alat menampilkan tombol Keluar. */
   onKeluar?: () => void;
+  /**
+   * Progres permainan (Kota Bebas): misi, perlengkapan, dan Tantangan Kilat.
+   * Tidak ada yang dikirim ke server dan tidak ada yang dinilai.
+   */
+  progres?: Progres;
 }
+
+/** Tantangan Kilat: 1 hari per detik selama 90 detik. */
+const KILAT_DETIK = 90;
+const KILAT_WARGA = 25;
+const KILAT_BAHAGIA = 55;
 
 export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
   const simpan = opsi.simpan ?? true;
@@ -69,6 +81,22 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
   const parameter = new URLSearchParams(window.location.search);
   const namaSiswa = parameter.get('nama') ?? 'Siswa uji';
   const kodeKelas = `DRAF2-${parameter.get('kelas') ?? 'LOKAL'}`;
+  const progres = opsi.progres;
+  let kilat: { sisa: number; pewaktu: number } | null = null;
+
+  /** Biaya setelah potongan perlengkapan (hanya di Kota Bebas). */
+  const biaya = (jenis: Bangunan): number => Math.round(BANGUNAN[jenis].biaya * (1 - (progres?.potongan(jenis) ?? 0)));
+
+  /** Cek misi Kota Bebas setelah setiap perubahan. */
+  function cekMisi(): void {
+    if (!progres) return;
+    const k = keadaan();
+    const ids: string[] = [];
+    if (petak.filter((b) => b === 'taman').length >= 5) ids.push('kota-hijau');
+    if (k.warga >= 30) ids.push('kota-ramai');
+    if (k.warga >= 20 && !petak.includes('pabrik')) ids.push('kota-tanpa-asap');
+    if (ids.length > 0) umumkanHadiah(progres.selesaikan(...ids));
+  }
 
   // Kerangka layar: sama dengan layar utama (app-shell, HUD di atas, bilah di bawah).
   root.replaceChildren();
@@ -126,6 +154,9 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
       plat('Warga', `${k.warga} / ${TARGET_WARGA}`),
       plat('Pekerjaan', `${k.pekerja} / ${k.lapanganKerja}`),
       plat('Bahagia', `${k.bahagia}%`),
+      ...(kilat ? [plat('⚡ Kilat', `${kilat.sisa} dtk`)] : []),
+      ...(progres ? [plat('Koin', `${progres.koin} 🪙`)] : []),
+      ...(progres && progres.hiasan().length > 0 ? [plat('Hiasan', progres.hiasan().map((h) => h.ikon).join(' '))] : []),
     );
 
     const peton = new Map<number, string>();
@@ -143,7 +174,7 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
 
     bilah.replaceChildren(
       ...(Object.keys(BANGUNAN) as Bangunan[]).map((jenis) =>
-        tool(IKON[jenis], `${LABEL[jenis]} ${BANGUNAN[jenis].biaya}`, () => {
+        tool(IKON[jenis], `${LABEL[jenis]} ${biaya(jenis)}`, () => {
           pilihan = jenis;
           hapus = false;
           aksi.push({ tipe: 'pilih', jenis, hari });
@@ -152,9 +183,11 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
       ),
       tool('🗑', hapus ? 'Hapus (aktif)' : 'Hapus', () => { hapus = !hapus; gambar(); }, hapus),
       tool('↺', 'Ulang', mulaiUlang, false, opsi.onKeluar ? '' : 'tool-go'),
+      ...(progres ? [tool('⚡', kilat ? 'Kilat jalan' : 'Kilat', mulaiKilat, !!kilat)] : []),
       ...(opsi.onKeluar
         ? [tool('✕', 'Keluar', () => {
             window.clearInterval(pewaktu);
+            if (kilat) window.clearInterval(kilat.pewaktu);
             kota.destroy();
             opsi.onKeluar?.();
           }, false, 'tool-go')]
@@ -178,21 +211,25 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
       return gambar();
     }
     if (petak[i]) { pesan = 'Petak ini sudah terisi. Pilih Hapus untuk membongkarnya.'; return gambar(); }
-    if (!bisaMembangun(dana, pilihan)) { pesan = `Dana kurang: ${LABEL[pilihan]} butuh ${BANGUNAN[pilihan].biaya}.`; return gambar(); }
-    dana -= BANGUNAN[pilihan].biaya;
+    if (dana < biaya(pilihan)) { pesan = `Dana kurang: ${LABEL[pilihan]} butuh ${biaya(pilihan)}.`; return gambar(); }
+    dana -= biaya(pilihan);
     const melanggar = pilihan === 'pabrik' && tetangga(i).some((j) => petak[j] === 'rumah');
     aksi.push({ tipe: 'tempatkan', jenis: pilihan, petak: i, hari, melanggar });
     petak[i] = pilihan;
     pesan = `${LABEL[pilihan]} dibangun.`;
+    cekMisi();
     gambar();
   }
 
-  function berhari(): void {
+  function berhari(dariKilat = false): void {
     if (selesai) return;
+    // Selama Tantangan Kilat, hari hanya maju lewat pewaktu kilat.
+    if (kilat && !dariKilat) return;
     dana = danaSehari(dana, keadaan());
     hari++;
+    cekMisi();
     if (dana < 0) { selesai = true; pesan = 'Dana kota habis. Kota bangkrut.'; }
-    else if (hari > HARI_MAKS) {
+    else if (!kilat && hari > HARI_MAKS) {
       const k = keadaan();
       selesai = true;
       pesan = k.warga >= TARGET_WARGA && k.bahagia >= 60
@@ -222,6 +259,42 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
       pesan = `${pesan} Tidak bisa terhubung ke server.`;
     }
     gambar();
+  }
+
+  /**
+   * Tantangan Kilat (hanya Kota Bebas, tidak dinilai): kota dimulai ulang, lalu
+   * satu hari berlalu setiap detik. Menang bila warga dan kebahagiaan mencapai
+   * target sebelum waktu habis.
+   */
+  function mulaiKilat(): void {
+    if (kilat || !progres) return;
+    mulaiUlang();
+    pesan = `Tantangan Kilat! Capai ${KILAT_WARGA} warga dan kebahagiaan ${KILAT_BAHAGIA}% dalam ${KILAT_DETIK} detik.`;
+    kilat = {
+      sisa: KILAT_DETIK,
+      pewaktu: window.setInterval(() => {
+        if (!kilat) return;
+        kilat.sisa--;
+        berhari(true);
+        const k = keadaan();
+        if (k.warga >= KILAT_WARGA && k.bahagia >= KILAT_BAHAGIA) {
+          akhiriKilat();
+          pesan = 'Tantangan Kilat dimenangkan!';
+          umumkanHadiah(progres.selesaikan('tantangan-kilat'));
+        } else if (kilat.sisa <= 0 || selesai) {
+          akhiriKilat();
+          pesan = `Waktu habis. ${k.warga} warga, kebahagiaan ${k.bahagia}%. Coba lagi!`;
+          selesai = false;
+        }
+        gambar();
+      }, 1000),
+    };
+    gambar();
+  }
+
+  function akhiriKilat(): void {
+    if (kilat) window.clearInterval(kilat.pewaktu);
+    kilat = null;
   }
 
   function mulaiUlang(): void {

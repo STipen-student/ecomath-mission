@@ -15,6 +15,8 @@ import type { AsesmenSebagaiBelajar, StudentFeedback, SubmitResponse, TaskDto } 
 import { cornerCandidates, objectiveValue } from '../game/geometry.js';
 import { el, num } from './dom.js';
 import { bagianCerminDiri, formRefleksiBelajar, type RefleksiBelajar } from './asesmenDiri.js';
+import type { HadiahBaru, Progres } from '../game/progres.js';
+import { bukaTutupMisi, panelMisi, spandukHadiah } from './panelHadiah.js';
 
 /** Riwayat satu level untuk ringkasan akhir sesi. */
 export interface RiwayatLevel {
@@ -142,6 +144,9 @@ export function renderResultScreen(
     adaLevelBerikutnya: boolean;
     /** U8: jumlah pemindahan pusat zona; hanya untuk catatan tata kota. */
     jumlahPusatDipindah?: number;
+    /** Hadiah permainan; tampil SETELAH umpan balik dan cermin diri (AaL). */
+    hadiah?: HadiahBaru;
+    progres?: Progres;
   },
   onLanjut: () => void,
 ): void {
@@ -216,6 +221,10 @@ export function renderResultScreen(
         ...hasil.feedback.map(barisKlaim),
         catatanOptimum,
         kunciJawabanSection(task, hasil),
+        // Elemen permainan ditaruh paling bawah, setelah seluruh bagian AaL,
+        // supaya hadiah tidak membelokkan perhatian dari umpan balik dan kalibrasi.
+        data.hadiah ? spandukHadiah(data.hadiah) : null,
+        data.progres ? bukaTutupMisi(data.progres, { toko: false }) : null,
         tombol,
       ),
     ),
@@ -287,6 +296,7 @@ export function renderFinishScreen(
   onRefleksi: (r: RefleksiBelajar) => Promise<void>,
   onKotaBebas?: () => void,
   sudahRefleksi = false,
+  progres?: Progres,
 ): void {
   const klaim = ['K1', 'K2', 'K3', 'K4'] as const;
 
@@ -373,6 +383,8 @@ export function renderFinishScreen(
         // Setelah refleksi tercatat, formulir tidak ditampilkan lagi agar tidak
         // ada event learning_reflection kedua saat kembali dari Kota Bebas.
         sudahRefleksi ? null : formRefleksiBelajar(onRefleksi),
+        // Toko dan misi muncul di akhir sesi, setelah refleksi belajar.
+        progres ? panelMisi(progres, { toko: true }) : null,
         // U9: Kota Bebas. Setelah sesi selesai, pemain boleh bereksperimen tanpa skor.
         // Tidak memancarkan event dan tidak menyentuh log penelitian.
         onKotaBebas
