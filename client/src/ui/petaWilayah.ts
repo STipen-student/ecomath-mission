@@ -7,7 +7,8 @@
  */
 
 import type { VariableVisual } from '../api/types.js';
-import type { SpriteKota } from '../game/pixel/spriteKota.js';
+import { SPRITE_BERASAP, type SpriteKota } from '../game/pixel/spriteKota.js';
+import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
 
@@ -29,6 +30,75 @@ export interface KotaLevel {
   spriteY?: SpriteKota;
   /** Rancangan akhir memenuhi semua kendala soal. */
   layak: boolean;
+}
+
+/** Wujud yang dihitung sebagai bangunan hijau atau energi bersih. */
+const SPRITE_HIJAU: ReadonlySet<SpriteKota> = new Set<SpriteKota>([
+  'pohon', 'taman-kota', 'sepeda', 'trotoar', 'surya', 'turbin', 'bus-listrik',
+  'mesin-listrik', 'industri-hijau', 'kompos', 'daur-ulang', 'hijau-multifungsi',
+  'hunian-rendah-karbon', 'gedung',
+]);
+
+/** Distrik tiap level pada wilayah gabungan: seperempat pulau. */
+const DISTRIK: Record<number, { nama: string; kolom: 0 | 1; baris: 0 | 1 }> = {
+  1: { nama: 'Distrik Barat Laut', kolom: 0, baris: 0 },
+  2: { nama: 'Distrik Timur Laut', kolom: 1, baris: 0 },
+  3: { nama: 'Distrik Barat Daya', kolom: 0, baris: 1 },
+  4: { nama: 'Distrik Tenggara', kolom: 1, baris: 1 },
+};
+
+/**
+ * Petak bangun satu distrik, diurutkan dari pusat distrik ke tepi, sehingga
+ * bangunan tiap kasus mengumpul seperti satu kawasan.
+ */
+function petakDistrik(level: number): number[] {
+  const d = DISTRIK[level];
+  if (!d) return [];
+  const setengah = GRID / 2;
+  const pusatK = d.kolom * setengah + setengah / 2;
+  const pusatB = d.baris * setengah + setengah / 2;
+  return plotTiles()
+    .filter((t) => Math.floor(t.col / setengah) === d.kolom && Math.floor(t.row / setengah) === d.baris)
+    .sort((a, b) => Math.hypot(a.col - pusatK, a.row - pusatB) - Math.hypot(b.col - pusatK, b.row - pusatB))
+    .map((t) => t.seed);
+}
+
+/**
+ * Susun wilayah gabungan: setiap kasus mengisi distriknya dengan wujud x dan y.
+ * Jumlah ubin sebanding dengan nilai/batas tiap variabel (tampilan, bukan skala
+ * satuan), sehingga distrik yang hampir penuh terlihat padat.
+ */
+function susunGabungan(kota: KotaLevel[]): { petak: Map<number, string>; hijau: number; berasap: number; lainnya: number } {
+  const petak = new Map<number, string>();
+  let hijau = 0;
+  let berasap = 0;
+  let lainnya = 0;
+  for (const k of kota) {
+    const ruang = petakDistrik(k.level);
+    const kapasitas = Math.floor(ruang.length / 2);
+    const nx = Math.round(Math.min(1, k.x / Math.max(1, k.xMax)) * kapasitas);
+    const ny = Math.round(Math.min(1, k.y / Math.max(1, k.yMax)) * kapasitas);
+    const kodeX = k.spriteX ? `s:${k.spriteX}` : `v:${k.visualX}`;
+    const kodeY = k.spriteY ? `s:${k.spriteY}` : `v:${k.visualY}`;
+    // Selang-seling x dan y agar kedua zona tampak bercampur dalam distrik.
+    let ix = 0;
+    let iy = 0;
+    for (const seed of ruang) {
+      if (ix < nx && (iy >= ny || ix <= iy)) {
+        petak.set(seed, kodeX);
+        ix++;
+      } else if (iy < ny) {
+        petak.set(seed, kodeY);
+        iy++;
+      } else break;
+    }
+    for (const [jenis, n] of [[k.spriteX, nx], [k.spriteY, ny]] as const) {
+      if (jenis && SPRITE_HIJAU.has(jenis)) hijau += n;
+      else if (jenis && SPRITE_BERASAP.has(jenis)) berasap += n;
+      else lainnya += n;
+    }
+  }
+  return { petak, hijau, berasap, lainnya };
 }
 
 export function bukaPetaWilayah(kota: KotaLevel[]): void {
@@ -87,7 +157,58 @@ export function bukaPetaWilayah(kota: KotaLevel[]): void {
     );
   };
 
+  const tampilkanGabungan = (): void => {
+    for (const b of tab.querySelectorAll('button')) b.classList.toggle('is-active', b.dataset.level === 'semua');
+    peta?.destroy();
+    wadahPeta.replaceChildren();
+    peta = mountCity(wadahPeta);
+    const g = susunGabungan(kota);
+    const semuaLayak = kota.every((k) => k.layak);
+    peta.tampilkanKota(g.petak, semuaLayak);
+    peta.hidupkan(20 + kota.length * 6);
+
+    const total = Math.max(1, g.hijau + g.berasap + g.lainnya);
+    const persenHijau = Math.round((g.hijau / total) * 100);
+    const status =
+      g.berasap === 0
+        ? '🌿 Wilayah bebas asap: tidak ada bus berbahan bakar fosil maupun mesin fosil.'
+        : `💨 Masih ada ${g.berasap} bangunan berasap. Wilayah belum sepenuhnya bebas karbon.`;
+
+    keterangan.replaceChildren(
+      el('h3', {}, `Wilayah Gabungan · ${kota.length} distrik`),
+      el(
+        'div',
+        { class: 'peta-wilayah-indeks' },
+        el('span', {}, 'Indeks hijau wilayah'),
+        el('div', { class: 'profile-bar' }, (() => {
+          const isi = el('div', { class: 'profile-fill' });
+          isi.style.width = `${persenHijau}%`;
+          return isi;
+        })()),
+        el('strong', {}, `${persenHijau}%`),
+      ),
+      el('p', { class: g.berasap === 0 ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad' }, status),
+      el(
+        'ul',
+        { class: 'peta-wilayah-daftar' },
+        ...kota.map((k) =>
+          el(
+            'li',
+            {},
+            el('strong', {}, `${DISTRIK[k.level]?.nama ?? `Distrik ${k.level}`}: `),
+            `${k.judul} — ${num(k.x)} ${k.unitX} ${k.labelX.toLowerCase()}, ${num(k.y)} ${k.unitY} ${k.labelY.toLowerCase()} `,
+            k.layak ? '✓' : '✕',
+          ),
+        ),
+      ),
+      el('p', { class: 'hint' }, 'Tiap distrik adalah kota dari satu kasus. Kepadatan bangunan menggambarkan seberapa penuh nilai yang kamu pilih, bukan jumlah sebenarnya.'),
+    );
+  };
+
+  const tabGabungan = el('button', { class: 'btn btn-small', dataset: { level: 'semua' } }, '🗺 WILAYAH GABUNGAN');
+  tabGabungan.addEventListener('click', tampilkanGabungan);
   tab.replaceChildren(
+    tabGabungan,
     ...kota.map((k) => {
       const b = el('button', { class: 'btn btn-small', dataset: { level: String(k.level) } }, `LV${k.level}`);
       b.addEventListener('click', () => tampilkan(k));
@@ -107,7 +228,7 @@ export function bukaPetaWilayah(kota: KotaLevel[]): void {
   document.addEventListener('keydown', esc);
 
   document.body.append(latar);
-  tampilkan(kota[kota.length - 1]!);
+  tampilkanGabungan();
 }
 
 /** Tombol pembuka Peta Wilayah untuk layar hasil dan layar akhir. */

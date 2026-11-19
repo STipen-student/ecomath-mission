@@ -3098,6 +3098,8 @@ body {
 .peta-wilayah-kanvas {
   width: 100%;
   height: min(52vh, 420px);
+  min-height: 260px;
+  flex: 0 0 auto;
   border: 3px solid var(--ink);
   border-radius: 8px;
   overflow: hidden;
@@ -3124,3 +3126,16 @@ body {
 
 .peta-wilayah-status.ok { color: var(--green-lo); }
 .peta-wilayah-status.bad { color: var(--red-lo); }
+
+/* Wilayah gabungan: indeks hijau */
+.peta-wilayah-indeks {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 8px;
+  font-family: var(--font-read);
+}
+
+.peta-wilayah-indeks .profile-bar {
+  flex: 1;
+}
