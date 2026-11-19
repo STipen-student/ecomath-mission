@@ -108,6 +108,17 @@ export interface Objective {
  */
 export type VariableVisual = 'nature' | 'clean' | 'housing' | 'neutral';
 
+/**
+ * Wujud benda di peta untuk sebuah variabel (tampilan saja, tidak dibaca rubrik):
+ * bus listrik digambar sebagai bus listrik, bus konvensional berasap, dst.
+ * Harus sama dengan client/src/game/pixel/spriteKota.ts.
+ */
+export type SpriteKota =
+  | 'pohon' | 'taman-kota' | 'rumah' | 'rumah-a' | 'rumah-b' | 'perumahan-padat'
+  | 'hunian-rendah-karbon' | 'gedung' | 'bus-listrik' | 'bus-konvensional' | 'parkir'
+  | 'sepeda' | 'trotoar' | 'surya' | 'turbin' | 'industri-hijau' | 'mesin-fosil'
+  | 'mesin-listrik' | 'kompos' | 'daur-ulang' | 'hijau-multifungsi';
+
 /** Definisi satu variabel keputusan beserta batas slider di game. */
 export interface TaskVariable {
   key: 'x' | 'y';
@@ -117,6 +128,8 @@ export interface TaskVariable {
   max: number;
   step: number;
   visual: VariableVisual;
+  /** Wujud di peta; bila kosong, peta memakai `visual`. */
+  sprite?: SpriteKota;
 }
 
 /**

@@ -27,8 +27,8 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Taman Kota', unit: 'hektar', max: 90, step: 1, visual: 'nature' },
-      y: { key: 'y', label: 'Trotoar / Ruang Pejalan Kaki', unit: 'hektar', max: 70, step: 1, visual: 'neutral' },
+      x: { key: 'x', label: 'Taman Kota', unit: 'hektar', max: 90, step: 1, visual: 'nature', sprite: 'taman-kota' },
+      y: { key: 'y', label: 'Trotoar / Ruang Pejalan Kaki', unit: 'hektar', max: 70, step: 1, visual: 'neutral', sprite: 'trotoar' },
     },
     constraints: [
       c('k_lahan', 'Lahan pengembangan', 1, 1, '<=', 80, 'explicit', 'lahan pengembangan seluas 80 hektar', 'hektar'),
@@ -108,8 +108,8 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Pengomposan', unit: 'ton/hari', max: 60, step: 0.5, visual: 'clean' },
-      y: { key: 'y', label: 'Daur ulang', unit: 'ton/hari', max: 110, step: 0.5, visual: 'neutral' },
+      x: { key: 'x', label: 'Pengomposan', unit: 'ton/hari', max: 60, step: 0.5, visual: 'clean', sprite: 'kompos' },
+      y: { key: 'y', label: 'Daur ulang', unit: 'ton/hari', max: 110, step: 0.5, visual: 'neutral', sprite: 'daur-ulang' },
     },
     constraints: [
       c('k_kapasitas', 'Kapasitas pengolahan minimal', 1, 1, '>=', 50, 'explicit', 'total kapasitas pengolahan minimal 50 ton/hari', 'ton'),
@@ -188,8 +188,8 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Hunian Vertikal Hemat Energi', unit: 'hektar', max: 110, step: 1, visual: 'housing' },
-      y: { key: 'y', label: 'Koridor Hijau', unit: 'hektar', max: 120, step: 1, visual: 'nature' },
+      x: { key: 'x', label: 'Hunian Vertikal Hemat Energi', unit: 'hektar', max: 110, step: 1, visual: 'housing', sprite: 'gedung' },
+      y: { key: 'y', label: 'Koridor Hijau', unit: 'hektar', max: 120, step: 1, visual: 'nature', sprite: 'pohon' },
     },
     constraints: [
       c('k_kawasan', 'Luas kawasan campuran', 1, 1, '<=', 100, 'explicit', 'kawasan campuran seluas 100 hektar', 'hektar'),

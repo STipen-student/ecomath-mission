@@ -41,6 +41,7 @@ import {
   TILE_SKIRT,
   TILE_W,
 } from './pixel/textures.js';
+import { buatSpriteKota, kunciSprite, SPRITE_BERASAP, type SpriteKota } from './pixel/spriteKota.js';
 
 export interface AllocationView {
   x: number;
@@ -52,6 +53,9 @@ export interface AllocationView {
   visualY: VariableVisual;
   /** Titik pusat pembangunan tiap zona; bawaan berada di tengah pulau. */
   pusat?: { x: ZoneCenter; y: ZoneCenter };
+  /** Wujud benda tiap zona sesuai makna variabel; bila kosong memakai visual. */
+  spriteX?: SpriteKota;
+  spriteY?: SpriteKota;
 }
 
 /**
@@ -130,6 +134,8 @@ export class CityScene extends Phaser.Scene {
     this.scale.on('resize', () => this.aturKamera());
 
     this.siap = true;
+    // Asap dari bus konvensional dan mesin fosil: kepulan naik terus-menerus.
+    this.time.addEvent({ delay: 650, loop: true, callback: () => this.kepulkanAsap() });
     if (this.terakhir) this.render(this.terakhir);
     if (this.jumlahWargaTertunda > 0) this.hidupkan(this.jumlahWargaTertunda);
   }
@@ -158,6 +164,7 @@ export class CityScene extends Phaser.Scene {
       });
     }
 
+    buatSpriteKota(this);
     makeTree(this, 'pohon_besar', PALET.pohon, 'besar');
     makeTree(this, 'pohon_kecil', PALET.pohon, 'kecil');
     makeShadow(this, 'bayangan');
@@ -338,7 +345,8 @@ export class CityScene extends Phaser.Scene {
         continue;
       }
 
-      const kunci = this.varian(seed, diX ? view.visualX : view.visualY);
+      const wujud = diX ? view.spriteX : view.spriteY;
+      const kunci = wujud ? kunciSprite(wujud) : this.varian(seed, diX ? view.visualX : view.visualY);
       if (sprite.texture.key !== kunci) sprite.setTexture(kunci);
 
       if (!sprite.visible) {
@@ -412,6 +420,37 @@ export class CityScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Satu putaran asap: beberapa sprite berasap yang tampil mengeluarkan kepulan
+   * abu-abu yang naik dan memudar. Hanya tampilan.
+   */
+  private kepulkanAsap(): void {
+    const berasap: Phaser.GameObjects.Image[] = [];
+    for (const sprite of this.bangunan.values()) {
+      if (!sprite.visible) continue;
+      const jenis = sprite.texture.key.startsWith('sk_') ? (sprite.texture.key.slice(3) as SpriteKota) : null;
+      if (jenis && SPRITE_BERASAP.has(jenis)) berasap.push(sprite);
+    }
+    for (let i = 0; i < Math.min(8, berasap.length); i++) {
+      const s = berasap[Math.floor(Math.random() * berasap.length)]!;
+      // Knalpot bus di kiri bawah; cerobong pabrik di kanan atas.
+      const bus = s.texture.key === 'sk_bus-konvensional';
+      const asap = this.add
+        .circle(s.x + (bus ? -12 : 7), s.y - (bus ? 12 : 30), 3 + Math.random() * 2, 0x5a5a5a, 0.75)
+        .setDepth(45);
+      this.tweens.add({
+        targets: asap,
+        y: asap.y - 10 - Math.random() * 8,
+        x: asap.x + (Math.random() - 0.5) * 6,
+        scale: 2.2,
+        alpha: 0,
+        duration: 1400,
+        ease: 'Sine.easeOut',
+        onComplete: () => asap.destroy(),
+      });
+    }
+  }
+
   /** Jumlah warga yang diminta sebelum scene siap; dijalankan di create(). */
   private jumlahWargaTertunda = 0;
 
@@ -482,10 +521,13 @@ export class CityScene extends Phaser.Scene {
         bayang?.setVisible(false);
         continue;
       }
-      // 'v:<visual>' = zona soal SPtLDV (2B); selain itu jenis bangunan draf 2.
-      const kunci = jenis.startsWith('v:')
-        ? this.varian(seed, jenis.slice(2) as VariableVisual)
-        : (SPRITE_KOTA[jenis] ?? 'bgn_housing_1');
+      // 's:<sprite>' = wujud sesuai makna variabel; 'v:<visual>' = cadangan warna
+      // makna; selain itu jenis bangunan draf 2 (layar Kota).
+      const kunci = jenis.startsWith('s:')
+        ? kunciSprite(jenis.slice(2) as SpriteKota)
+        : jenis.startsWith('v:')
+          ? this.varian(seed, jenis.slice(2) as VariableVisual)
+          : (SPRITE_KOTA[jenis] ?? 'bgn_housing_1');
       if (sprite.texture.key !== kunci) sprite.setTexture(kunci);
       if (!sprite.visible) {
         sprite.setVisible(true);

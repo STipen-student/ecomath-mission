@@ -29,8 +29,8 @@ export const LEVEL_2_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Rumah subsidi tipe A', unit: 'unit', max: 40, step: 1, visual: 'housing' },
-      y: { key: 'y', label: 'Rumah subsidi tipe B', unit: 'unit', max: 55, step: 1, visual: 'neutral' },
+      x: { key: 'x', label: 'Rumah subsidi tipe A', unit: 'unit', max: 40, step: 1, visual: 'housing', sprite: 'rumah-a' },
+      y: { key: 'y', label: 'Rumah subsidi tipe B', unit: 'unit', max: 55, step: 1, visual: 'neutral', sprite: 'rumah-b' },
     },
     constraints: [
       c('k_anggaran', 'Anggaran pembangunan', 30, 20, '<=', 900, 'explicit', 'anggaran yang tersedia Rp 900 juta', 'juta rupiah'),
@@ -101,8 +101,8 @@ export const LEVEL_2_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Panel surya komunal', unit: 'unit', max: 45, step: 1, visual: 'clean' },
-      y: { key: 'y', label: 'Turbin angin mini', unit: 'unit', max: 35, step: 1, visual: 'neutral' },
+      x: { key: 'x', label: 'Panel surya komunal', unit: 'unit', max: 45, step: 1, visual: 'clean', sprite: 'surya' },
+      y: { key: 'y', label: 'Turbin angin mini', unit: 'unit', max: 35, step: 1, visual: 'neutral', sprite: 'turbin' },
     },
     constraints: [
       c('k_dana', 'Dana investasi', 40, 60, '<=', 1200, 'explicit', 'total dana investasi tidak melebihi Rp 1,2 miliar', 'juta rupiah'),
@@ -173,8 +173,8 @@ export const LEVEL_2_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Ruang Terbuka Hijau', unit: 'hektar', max: 60, step: 1, visual: 'nature' },
-      y: { key: 'y', label: 'Zona Industri Rendah Emisi', unit: 'hektar', max: 60, step: 1, visual: 'neutral' },
+      x: { key: 'x', label: 'Ruang Terbuka Hijau', unit: 'hektar', max: 60, step: 1, visual: 'nature', sprite: 'pohon' },
+      y: { key: 'y', label: 'Zona Industri Rendah Emisi', unit: 'hektar', max: 60, step: 1, visual: 'neutral', sprite: 'industri-hijau' },
     },
     constraints: [
       c('k_kawasan', 'Luas kawasan pengembangan', 1, 1, '<=', 50, 'explicit', 'kawasan pengembangan seluas 50 hektar', 'hektar'),

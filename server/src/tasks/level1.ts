@@ -23,8 +23,8 @@ export const LEVEL_1_TASKS: TaskDefinition[] = [
     narrative:
       'Sebuah kota kecil bernama Ecoville memiliki total lahan kosong seluas 40 hektar yang akan dibagi untuk dua peruntukan: Ruang Terbuka Hijau (RTH) seluas x hektar dan kawasan permukiman baru seluas y hektar. Sesuai target SDG 11, luas RTH minimal harus 2 kali luas kawasan permukiman baru. Tuliskan pertidaksamaan yang menggambarkan hubungan antara x dan y, serta pertidaksamaan yang menggambarkan total lahan yang tersedia.',
     variables: {
-      x: { key: 'x', label: 'Ruang Terbuka Hijau (RTH)', unit: 'hektar', max: 50, step: 1, visual: 'nature' },
-      y: { key: 'y', label: 'Kawasan permukiman baru', unit: 'hektar', max: 50, step: 1, visual: 'housing' },
+      x: { key: 'x', label: 'Ruang Terbuka Hijau (RTH)', unit: 'hektar', max: 50, step: 1, visual: 'nature', sprite: 'pohon' },
+      y: { key: 'y', label: 'Kawasan permukiman baru', unit: 'hektar', max: 50, step: 1, visual: 'housing', sprite: 'rumah' },
     },
     constraints: [
       c('k_lahan', 'Total lahan tersedia', 1, 1, '<=', 40, 'explicit', 'total lahan kosong seluas 40 hektar', 'hektar'),
@@ -89,8 +89,8 @@ export const LEVEL_1_TASKS: TaskDefinition[] = [
     narrative:
       'Dinas Perhubungan kota Ecoville akan menambah armada transportasi umum sebanyak x unit bus listrik dan y unit bus konvensional, dengan total penambahan tidak lebih dari 24 unit karena keterbatasan garasi. Sesuai komitmen SDG 13, jumlah bus listrik yang ditambahkan harus lebih dari jumlah bus konvensional. Tuliskan pertidaksamaan-pertidaksamaan yang menggambarkan situasi tersebut.',
     variables: {
-      x: { key: 'x', label: 'Bus listrik', unit: 'unit', max: 30, step: 1, visual: 'clean' },
-      y: { key: 'y', label: 'Bus konvensional', unit: 'unit', max: 30, step: 1, visual: 'neutral' },
+      x: { key: 'x', label: 'Bus listrik', unit: 'unit', max: 30, step: 1, visual: 'clean', sprite: 'bus-listrik' },
+      y: { key: 'y', label: 'Bus konvensional', unit: 'unit', max: 30, step: 1, visual: 'neutral', sprite: 'bus-konvensional' },
     },
     constraints: [
       c('k_garasi', 'Kapasitas garasi', 1, 1, '<=', 24, 'explicit', 'total penambahan tidak lebih dari 24 unit', 'unit'),
@@ -155,8 +155,8 @@ export const LEVEL_1_TASKS: TaskDefinition[] = [
     narrative:
       'Pemerintah kota akan merenovasi satu ruas jalan dengan total 30 meter lebar efektif menjadi dua peruntukan: lahan parkir selebar x meter dan jalur sepeda selebar y meter. Untuk mendukung mobilitas rendah emisi, lebar jalur sepeda harus paling sedikit sama dengan lebar lahan parkir. Tuliskan pertidaksamaan yang menggambarkan situasi ini.',
     variables: {
-      x: { key: 'x', label: 'Lahan parkir', unit: 'meter', max: 35, step: 1, visual: 'neutral' },
-      y: { key: 'y', label: 'Jalur sepeda', unit: 'meter', max: 35, step: 1, visual: 'nature' },
+      x: { key: 'x', label: 'Lahan parkir', unit: 'meter', max: 35, step: 1, visual: 'neutral', sprite: 'parkir' },
+      y: { key: 'y', label: 'Jalur sepeda', unit: 'meter', max: 35, step: 1, visual: 'nature', sprite: 'sepeda' },
     },
     constraints: [
       c('k_lebar', 'Lebar efektif jalan', 1, 1, '<=', 30, 'explicit', 'total 30 meter lebar efektif', 'meter'),

@@ -38,8 +38,8 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Perumahan Padat Terjangkau', unit: 'hektar', max: 130, step: 1, visual: 'housing' },
-      y: { key: 'y', label: 'Ruang Terbuka Hijau', unit: 'hektar', max: 130, step: 1, visual: 'nature' },
+      x: { key: 'x', label: 'Perumahan Padat Terjangkau', unit: 'hektar', max: 130, step: 1, visual: 'housing', sprite: 'perumahan-padat' },
+      y: { key: 'y', label: 'Ruang Terbuka Hijau', unit: 'hektar', max: 130, step: 1, visual: 'nature', sprite: 'pohon' },
     },
     constraints: [
       c('k_lahan', 'Lahan pengembangan', 1, 1, '<=', 120, 'explicit', 'lahan pengembangan 120 hektar', 'hektar'),
@@ -134,8 +134,8 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Mesin bertenaga fosil', unit: 'unit', max: 70, step: 1, visual: 'neutral' },
-      y: { key: 'y', label: 'Mesin bertenaga listrik', unit: 'unit', max: 70, step: 1, visual: 'clean' },
+      x: { key: 'x', label: 'Mesin bertenaga fosil', unit: 'unit', max: 70, step: 1, visual: 'neutral', sprite: 'mesin-fosil' },
+      y: { key: 'y', label: 'Mesin bertenaga listrik', unit: 'unit', max: 70, step: 1, visual: 'clean', sprite: 'mesin-listrik' },
     },
     constraints: [
       c('k_kapasitas', 'Kapasitas produksi minimal', 1, 1, '>=', 60, 'explicit', 'kapasitas produksi total dibutuhkan minimal 60 unit mesin', 'unit'),
@@ -235,8 +235,8 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Zona Hunian Rendah Karbon', unit: 'hektar', max: 210, step: 1, visual: 'housing' },
-      y: { key: 'y', label: 'Zona Hijau Multifungsi', unit: 'hektar', max: 210, step: 1, visual: 'nature' },
+      x: { key: 'x', label: 'Zona Hunian Rendah Karbon', unit: 'hektar', max: 210, step: 1, visual: 'housing', sprite: 'hunian-rendah-karbon' },
+      y: { key: 'y', label: 'Zona Hijau Multifungsi', unit: 'hektar', max: 210, step: 1, visual: 'nature', sprite: 'hijau-multifungsi' },
     },
     constraints: [
       c('k_kawasan', 'Luas kawasan rencana induk', 1, 1, '<=', 200, 'explicit', 'kawasan seluas 200 hektar', 'hektar'),

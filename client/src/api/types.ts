@@ -39,6 +39,8 @@ export interface VariableDto {
   max: number;
   step: number;
   visual: VariableVisual;
+  /** Wujud di peta (tampilan saja); lihat game/pixel/spriteKota.ts. */
+  sprite?: import('../game/pixel/spriteKota.js').SpriteKota;
 }
 
 export interface TaskDto {

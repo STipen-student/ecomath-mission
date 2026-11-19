@@ -323,6 +323,8 @@ export class App {
         unitY: task.variables.y.unit,
         visualX: task.variables.x.visual,
         visualY: task.variables.y.visual,
+        spriteX: task.variables.x.sprite,
+        spriteY: task.variables.y.sprite,
         layak: hasil.finalPositionValid,
       },
     ];
@@ -348,7 +350,7 @@ export class App {
           this.levelIndex++;
           void this.mulaiLevel();
         } else {
-          renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.length), () => renderFinishScreen(
+          renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.map((k) => k.judul)), () => renderFinishScreen(
             this.root,
             {
               studentName: this.studentName,

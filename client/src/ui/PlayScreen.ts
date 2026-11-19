@@ -831,7 +831,10 @@ export class PlayScreen {
 
     this.sinkronPetak();
     const ubin = new Map<number, string>();
-    for (const [seed, v] of this.petakZona) ubin.set(seed, `v:${t.variables[v].visual}`);
+    for (const [seed, v] of this.petakZona) {
+      const spec = t.variables[v];
+      ubin.set(seed, spec.sprite ? `s:${spec.sprite}` : `v:${spec.visual}`);
+    }
     this.kota?.tampilkanKota(ubin, hasil.feasible);
   }
 

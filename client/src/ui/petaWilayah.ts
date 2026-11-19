@@ -7,6 +7,7 @@
  */
 
 import type { VariableVisual } from '../api/types.js';
+import type { SpriteKota } from '../game/pixel/spriteKota.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
 
@@ -24,6 +25,8 @@ export interface KotaLevel {
   unitY: string;
   visualX: VariableVisual;
   visualY: VariableVisual;
+  spriteX?: SpriteKota;
+  spriteY?: SpriteKota;
   /** Rancangan akhir memenuhi semua kendala soal. */
   layak: boolean;
 }
@@ -63,6 +66,8 @@ export function bukaPetaWilayah(kota: KotaLevel[]): void {
       feasible: k.layak,
       visualX: k.visualX,
       visualY: k.visualY,
+      spriteX: k.spriteX,
+      spriteY: k.spriteY,
     });
     peta.hidupkan(12 + Math.round((k.x + k.y) / Math.max(1, k.xMax + k.yMax) * 18));
 
