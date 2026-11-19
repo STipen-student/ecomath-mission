@@ -81,9 +81,9 @@ describe('optimum - nilai acuan bank skenario', () => {
 
   it('L3-SDG13-A: meminimumkan biaya pada perpotongan dua kendala', () => {
     const hasil = findOptimum(getTaskById('L3-SDG13-A')!);
-    expect(hasil.point!.x).toBeCloseTo(33.333, 2);
-    expect(hasil.point!.y).toBeCloseTo(16.667, 2);
-    expect(hasil.z!).toBeCloseTo(8666.67, 1);
+    expect(hasil.point!.x).toBeCloseTo(30, 6);
+    expect(hasil.point!.y).toBeCloseTo(20, 6);
+    expect(hasil.z!).toBeCloseTo(8900, 6);
   });
 
   it('L4-SDG13-A: memakai kisi bilangan bulat karena satuannya unit mesin', () => {

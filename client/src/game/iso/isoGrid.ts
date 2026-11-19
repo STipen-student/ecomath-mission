@@ -125,7 +125,7 @@ function jarakKuadrat(t: PlotTile, pusat: ZoneCenter): number {
  * ini disengaja dan penting bagi kesahihan instrumen: bila jumlah zona ikut
  * ditentukan dengan mengecat ubin, nilai x dan y jadi terkunci pada kelipatan
  * satu petak. Peta hanya punya seratusan petak, sedangkan sebagian task menuntut
- * x sampai 210 hektar - dan titik optimum L3-SDG13-A berada di 33,33 ton.
+ * x sampai 210 hektar - dan titik optimum L3-SDG13-A berada di 30 ton.
  * Titik optimum akan menjadi tak terjangkau, dan K3 menghukum seluruh siswa
  * karena keterbatasan tampilan, bukan karena penalaran mereka.
  *

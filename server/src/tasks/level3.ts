@@ -99,7 +99,7 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
     sdgContext: 'SDG13',
     title: 'Minimisasi Biaya Pengelolaan Sampah dengan Batas Emisi',
     narrative:
-      'Setiap hari, Kota Meridian harus mengolah sampah paling sedikit 50 ton. Sampah dapat diolah dengan dua cara: dikomposkan atau didaur ulang. Misalkan x adalah banyak sampah yang dikomposkan (ton/hari) dan y adalah banyak sampah yang didaur ulang (ton/hari). Setiap ton sampah yang dikomposkan menghasilkan emisi 0,5 kg CO2 dan berbiaya Rp 150 ribu, sedangkan setiap ton sampah yang didaur ulang menghasilkan emisi 0,2 kg CO2 dan berbiaya Rp 220 ribu. Total emisi dari kedua cara tidak boleh lebih dari 20 kg CO2 per hari. Berapa ton sampah yang sebaiknya dikomposkan dan berapa ton yang didaur ulang setiap hari agar biaya pengolahan sampah per hari serendah mungkin?',
+      'Setiap hari, Kota Meridian harus mengolah sampah paling sedikit 50 ton. Sampah dapat diolah dengan dua cara: dikomposkan atau didaur ulang. Misalkan x adalah banyak sampah yang dikomposkan (ton/hari) dan y adalah banyak sampah yang didaur ulang (ton/hari). Setiap ton sampah yang dikomposkan menghasilkan emisi 0,5 kg CO2 dan berbiaya Rp 150 ribu, sedangkan setiap ton sampah yang didaur ulang menghasilkan emisi 0,2 kg CO2 dan berbiaya Rp 220 ribu. Total emisi dari kedua cara tidak boleh lebih dari 19 kg CO2 per hari. Berapa ton sampah yang sebaiknya dikomposkan dan berapa ton yang didaur ulang setiap hari agar biaya pengolahan sampah per hari serendah mungkin?',
     dataTable: {
       headers: ['Metode', 'Emisi per ton', 'Biaya per ton'],
       rows: [
@@ -113,7 +113,7 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
     },
     constraints: [
       c('k_kapasitas', 'Kapasitas pengolahan minimal', 1, 1, '>=', 50, 'explicit', 'total kapasitas pengolahan minimal 50 ton/hari', 'ton'),
-      c('k_emisi', 'Batas emisi harian', 0.5, 0.2, '<=', 20, 'explicit', 'batas emisi total tidak lebih dari 20 kg CO2/hari', 'kg CO2'),
+      c('k_emisi', 'Batas emisi harian', 0.5, 0.2, '<=', 19, 'explicit', 'batas emisi total tidak lebih dari 19 kg CO2/hari', 'kg CO2'),
       ...nonNegativity(),
     ],
     objective: {
@@ -151,7 +151,7 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
           { id: 'r2', text: 'Karena nilai Z pada titik itu paling rendah di antara titik pojok yang saya cek', quality: 2 },
           {
             id: 'r3',
-            text: 'Karena pengomposan lebih murah tetapi emisinya lebih besar, sehingga porsi pengomposan hanya bisa dinaikkan sampai batas emisi 20 kg CO2 tercapai',
+            text: 'Karena pengomposan lebih murah tetapi emisinya lebih besar, sehingga porsi pengomposan hanya bisa dinaikkan sampai batas emisi 19 kg CO2 tercapai',
             quality: 3,
           },
         ],
