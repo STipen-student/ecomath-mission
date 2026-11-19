@@ -110,6 +110,8 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
   peta.className = 'kota-peta';
   // Peta isometrik dari layar utama (CityScene), dalam mode kota.
   const kota: CityHandle = mountCity(peta);
+  // Penduduk berjalan di jalan agar kota terasa hidup (tampilan saja).
+  kota.hidupkan(16);
 
   const panel = document.createElement('div');
   panel.className = 'plate kota-panel';

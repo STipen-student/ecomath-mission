@@ -17,6 +17,7 @@ import { el, num } from './dom.js';
 import { bagianCerminDiri, formRefleksiBelajar, type RefleksiBelajar } from './asesmenDiri.js';
 import type { HadiahBaru, Progres } from '../game/progres.js';
 import { bukaTutupMisi, panelMisi, spandukHadiah } from './panelHadiah.js';
+import { tombolPetaWilayah, type KotaLevel } from './petaWilayah.js';
 
 /** Riwayat satu level untuk ringkasan akhir sesi. */
 export interface RiwayatLevel {
@@ -147,6 +148,8 @@ export function renderResultScreen(
     /** Hadiah permainan; tampil SETELAH umpan balik dan cermin diri (AaL). */
     hadiah?: HadiahBaru;
     progres?: Progres;
+    /** Kota hasil level-level yang sudah selesai, untuk Peta Wilayah. */
+    kota?: KotaLevel[];
   },
   onLanjut: () => void,
 ): void {
@@ -225,6 +228,7 @@ export function renderResultScreen(
         // supaya hadiah tidak membelokkan perhatian dari umpan balik dan kalibrasi.
         data.hadiah ? spandukHadiah(data.hadiah) : null,
         data.progres ? bukaTutupMisi(data.progres, { toko: false }) : null,
+        data.kota ? tombolPetaWilayah(data.kota) : null,
         tombol,
       ),
     ),
@@ -292,6 +296,7 @@ export function renderFinishScreen(
     studentName: string;
     sessionComposite: number | null;
     riwayat: RiwayatLevel[];
+    kota?: KotaLevel[];
   },
   onRefleksi: (r: RefleksiBelajar) => Promise<void>,
   onKotaBebas?: () => void,
@@ -384,6 +389,7 @@ export function renderFinishScreen(
         // ada event learning_reflection kedua saat kembali dari Kota Bebas.
         sudahRefleksi ? null : formRefleksiBelajar(onRefleksi),
         // Toko dan misi muncul di akhir sesi, setelah refleksi belajar.
+        data.kota ? tombolPetaWilayah(data.kota) : null,
         progres ? panelMisi(progres, { toko: true }) : null,
         // U9: Kota Bebas. Setelah sesi selesai, pemain boleh bereksperimen tanpa skor.
         // Tidak memancarkan event dan tidak menyentuh log penelitian.

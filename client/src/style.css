@@ -3025,3 +3025,102 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .hadiah-melayang { animation: none; }
 }
+
+/* ================================================================== */
+/* Cerita dan Peta Wilayah                                            */
+/* ================================================================== */
+
+.cerita {
+  text-align: left;
+}
+
+.cerita-judul {
+  margin: 10px 0 6px;
+  font-size: 1.3rem;
+}
+
+.cerita-ilustrasi {
+  font-size: 2.4rem;
+  text-align: center;
+  margin: 6px 0 10px;
+  letter-spacing: 0.2em;
+}
+
+.cerita-paragraf {
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+
+.peta-wilayah {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(22, 50, 63, 0.55);
+}
+
+.peta-wilayah-panel {
+  width: min(96vw, 720px);
+  max-height: 96vh;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.peta-wilayah-kepala {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.peta-wilayah-kepala h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.peta-wilayah-tab {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.peta-wilayah-tab .is-active {
+  background: var(--green);
+  color: #fff;
+}
+
+.peta-wilayah-kanvas {
+  width: 100%;
+  height: min(52vh, 420px);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #7cc4dd;
+}
+
+.peta-wilayah-ket h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+
+.peta-wilayah-daftar {
+  margin: 0 0 6px;
+  padding-left: 0;
+  list-style: none;
+  font-family: var(--font-read);
+}
+
+.peta-wilayah-status {
+  margin: 0;
+  font-family: var(--font-read);
+  font-weight: 600;
+}
+
+.peta-wilayah-status.ok { color: var(--green-lo); }
+.peta-wilayah-status.bad { color: var(--red-lo); }

@@ -14,6 +14,8 @@ import { el } from './ui/dom.js';
 import { renderLayarTarget, type LevelSebelumnya } from './ui/asesmenDiri.js';
 import { progresUntuk, type IdRahasia, type Progres } from './game/progres.js';
 import { umumkanHadiah } from './ui/panelHadiah.js';
+import { babak, epilog, prolog, renderAdegan } from './ui/cerita.js';
+import type { KotaLevel } from './ui/petaWilayah.js';
 import { renderLandingScreen, type LandingHandle } from './ui/LandingScreen.js';
 import { renderLoginScreen } from './ui/LoginScreen.js';
 import { PlayScreen } from './ui/PlayScreen.js';
@@ -32,6 +34,12 @@ export class App {
   private play: PlayScreen | null = null;
   private landing: LandingHandle | null = null;
   private riwayat: RiwayatLevel[] = [];
+  /** Kota hasil tiap level untuk Peta Wilayah (tampilan saja). */
+  private kotaHasil: KotaLevel[] = [];
+  /** Nilai x dan y yang terakhir diajukan, untuk Peta Wilayah. */
+  private akhirXY = { x: 0, y: 0 };
+  /** Prolog cerita hanya ditampilkan sekali per sesi. */
+  private prologTampil = false;
   /** Elemen permainan per sesi (koin, misi, perlengkapan). Tidak dikirim ke server. */
   private progres: Progres | null = null;
   /** Refleksi akhir sesi sudah tercatat; formulirnya tidak ditampilkan dua kali. */
@@ -129,11 +137,22 @@ export class App {
 
       this.play?.destroy();
       this.play = null;
-      renderLayarTarget(
-        this.root,
-        { level: this.levelSaatIni, totalLevels: LEVELS.length, task: res.task, sebelumnya: this.sebelumnya },
-        (target, disarankan) => this.mulaiBermain(res.task, target, disarankan),
-      );
+
+      // Cerita tampil SEBELUM layar target, saat pencatat log belum berjalan,
+      // jadi waktu membaca cerita tidak terhitung. Teks soal tidak diubah.
+      const keTarget = (): void =>
+        renderLayarTarget(
+          this.root,
+          { level: this.levelSaatIni, totalLevels: LEVELS.length, task: res.task, sebelumnya: this.sebelumnya },
+          (target, disarankan) => this.mulaiBermain(res.task, target, disarankan),
+        );
+      const keBabak = (): void => renderAdegan(this.root, babak(this.levelSaatIni, res.task), keTarget);
+      if (!this.prologTampil) {
+        this.prologTampil = true;
+        renderAdegan(this.root, prolog(this.studentName), keBabak);
+      } else {
+        keBabak();
+      }
     } catch (err) {
       this.tampilkanError(err, () => void this.mulaiLevel());
     }
@@ -254,6 +273,7 @@ export class App {
         }
         // Pastikan seluruh log sampai SEBELUM skoring dijalankan di server.
         await logger.flush();
+        this.akhirXY = { x: data.finalX, y: data.finalY };
 
         const adaLevelBerikutnya = this.levelIndex < LEVELS.length - 1;
         const hasil = await api.submit({
@@ -288,6 +308,24 @@ export class App {
     this.sessionComposite = hasil.sessionComposite;
 
     const task = this.task!;
+    this.kotaHasil = [
+      ...this.kotaHasil.filter((k) => k.level !== this.levelSaatIni),
+      {
+        level: this.levelSaatIni,
+        judul: task.title,
+        x: this.akhirXY.x,
+        y: this.akhirXY.y,
+        xMax: task.variables.x.max,
+        yMax: task.variables.y.max,
+        labelX: task.variables.x.label,
+        labelY: task.variables.y.label,
+        unitX: task.variables.x.unit,
+        unitY: task.variables.y.unit,
+        visualX: task.variables.x.visual,
+        visualY: task.variables.y.visual,
+        layak: hasil.finalPositionValid,
+      },
+    ];
     this.play?.destroy();
     this.play = null;
 
@@ -303,18 +341,20 @@ export class App {
         // Hadiah dihitung dari selesainya level dan adanya target, BUKAN dari skor.
         hadiah: this.progres?.levelSelesai(this.levelSaatIni, LEVELS.length, this.target !== null),
         progres: this.progres ?? undefined,
+        kota: this.kotaHasil,
       },
       () => {
         if (adaLevelBerikutnya) {
           this.levelIndex++;
           void this.mulaiLevel();
         } else {
-          renderFinishScreen(
+          renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.length), () => renderFinishScreen(
             this.root,
             {
               studentName: this.studentName,
               sessionComposite: this.sessionComposite,
               riwayat: this.riwayat,
+              kota: this.kotaHasil,
             },
             // Refleksi akhir sesi dicatat pada percobaan level terakhir - pencatat
             // log masih menunjuk ke task itu. Disaring dari skoring di server.
@@ -327,7 +367,7 @@ export class App {
             () => this.mulaiKotaBebas(),
             false,
             this.progres ?? undefined,
-          );
+          ));
         }
       },
     );
@@ -354,7 +394,7 @@ export class App {
   private tampilkanSelesai(): void {
     renderFinishScreen(
       this.root,
-      { studentName: this.studentName, sessionComposite: this.sessionComposite, riwayat: this.riwayat },
+      { studentName: this.studentName, sessionComposite: this.sessionComposite, riwayat: this.riwayat, kota: this.kotaHasil },
       async () => undefined,
       () => this.mulaiKotaBebas(),
       this.refleksiTercatat,

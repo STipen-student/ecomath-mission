@@ -131,6 +131,7 @@ export class CityScene extends Phaser.Scene {
 
     this.siap = true;
     if (this.terakhir) this.render(this.terakhir);
+    if (this.jumlahWargaTertunda > 0) this.hidupkan(this.jumlahWargaTertunda);
   }
 
   /* ---------------------------------------------------------------- */
@@ -368,6 +369,51 @@ export class CityScene extends Phaser.Scene {
   guncang(): void {
     if (this.siap) this.kamera.shake(220, 0.006);
   }
+
+  /**
+   * Penduduk yang terus berjalan di jalan kota (Peta Wilayah dan Kota Bebas).
+   * Setiap warga berjalan dari satu titik jalan ke titik jalan lain tanpa henti.
+   * Hanya tampilan: tidak ada event, tidak ada skor.
+   */
+  hidupkan(jumlah: number): void {
+    if (!this.siap) {
+      this.jumlahWargaTertunda = jumlah;
+      return;
+    }
+    const jalan: Array<{ x: number; y: number }> = [];
+    for (let row = 0; row < GRID; row++) {
+      for (let col = 0; col < GRID; col++) {
+        if (tileKind(col, row) === 'road') jalan.push(toIso(col, row));
+      }
+    }
+    if (jalan.length < 2) return;
+    const acak = () => jalan[Math.floor(Math.random() * jalan.length)]!;
+
+    for (let i = 0; i < jumlah; i++) {
+      const awal = acak();
+      const warga = this.add
+        .rectangle(awal.x, awal.y - 3, 3, 5, WARNA_WARGA[i % WARNA_WARGA.length])
+        .setDepth(40)
+        .setStrokeStyle(1, 0x16323f);
+      const jalankan = (): void => {
+        const tujuan = acak();
+        const jarak = Math.hypot(tujuan.x - warga.x, tujuan.y - warga.y);
+        this.tweens.add({
+          targets: warga,
+          x: tujuan.x,
+          y: tujuan.y - 3,
+          duration: Math.max(1200, jarak * 28),
+          delay: Math.random() * 800,
+          ease: 'Linear',
+          onComplete: jalankan,
+        });
+      };
+      jalankan();
+    }
+  }
+
+  /** Jumlah warga yang diminta sebelum scene siap; dijalankan di create(). */
+  private jumlahWargaTertunda = 0;
 
   /**
    * Perayaan setelah rancangan disahkan (hiburan, tanpa event).
