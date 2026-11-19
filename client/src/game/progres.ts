@@ -96,6 +96,8 @@ interface Keadaan {
   bukaMisi: number;
   /** Misi perpustakaan sudah terbuka (skor rubrik >= SKOR_BUKA_PERPUSTAKAAN). */
   perpustakaanTerbuka: boolean;
+  /** Bangunan yang dibeli dengan koin dan ditaruh di wilayah gabungan. */
+  bangunanKota: Array<{ seed: number; jenis: string }>;
 }
 
 const kosong = (): Keadaan => ({
@@ -106,6 +108,7 @@ const kosong = (): Keadaan => ({
   levelBertarget: [],
   bukaMisi: 0,
   perpustakaanTerbuka: false,
+  bangunanKota: [],
 });
 
 /** Hasil sebuah aksi: misi yang baru selesai beserta koinnya. */
@@ -194,6 +197,24 @@ export class Progres {
     this.k.perpustakaanTerbuka = true;
     this.simpan();
     return true;
+  }
+
+  /** Bangunan yang sudah dibeli dan ditaruh di wilayah gabungan. */
+  bangunanKota(): Array<{ seed: number; jenis: string }> {
+    return [...this.k.bangunanKota];
+  }
+
+  /**
+   * Beli bangunan dengan koin dan taruh di satu petak wilayah gabungan.
+   * Hanya tampilan; tidak menyentuh skor maupun data penelitian.
+   */
+  bangunDiKota(seed: number, jenis: string, harga: number, nama: string): { ok: boolean; pesan: string } {
+    if (this.k.bangunanKota.some((b) => b.seed === seed)) return { ok: false, pesan: 'Petak ini sudah terisi.' };
+    if (this.k.koin < harga) return { ok: false, pesan: `Koin kurang: ${nama} seharga ${harga} 🪙.` };
+    this.k.koin -= harga;
+    this.k.bangunanKota.push({ seed, jenis });
+    this.simpan();
+    return { ok: true, pesan: `${nama} dibangun.` };
   }
 
   /** Daftar misi dibuka; membuka tiga kali menemukan misi tersembunyi. */

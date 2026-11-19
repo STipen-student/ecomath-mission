@@ -11,6 +11,17 @@ import { SPRITE_BERASAP, type SpriteKota } from '../game/pixel/spriteKota.js';
 import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
+import type { Progres } from '../game/progres.js';
+
+/** Bangunan yang bisa dibeli dengan koin untuk wilayah gabungan. */
+const KATALOG: Array<{ jenis: SpriteKota; nama: string; ikon: string; harga: number }> = [
+  { jenis: 'pohon', nama: 'Pohon', ikon: '🌳', harga: 10 },
+  { jenis: 'taman-kota', nama: 'Taman', ikon: '🌷', harga: 25 },
+  { jenis: 'toko', nama: 'Toko', ikon: '🏪', harga: 40 },
+  { jenis: 'surya', nama: 'Panel surya', ikon: '☀️', harga: 35 },
+  { jenis: 'turbin', nama: 'Kincir angin', ikon: '🌬️', harga: 45 },
+  { jenis: 'pabrik-hijau', nama: 'Pabrik ramah lingkungan', ikon: '🏭', harga: 70 },
+];
 
 /** Kota hasil satu level, disimpan saat level diajukan. */
 export interface KotaLevel {
@@ -36,6 +47,7 @@ export interface KotaLevel {
 
 /** Wujud yang dihitung sebagai bangunan hijau atau energi bersih. */
 const SPRITE_HIJAU: ReadonlySet<SpriteKota> = new Set<SpriteKota>([
+  'pabrik-hijau',
   'pohon', 'taman-kota', 'sepeda', 'trotoar', 'surya', 'turbin', 'bus-listrik',
   'mesin-listrik', 'industri-hijau', 'kompos', 'daur-ulang', 'hijau-multifungsi',
   'hunian-rendah-karbon', 'gedung',
@@ -113,7 +125,7 @@ function susunGabungan(kota: KotaLevel[]): { petak: Map<number, string>; hijau: 
   return { petak, hijau, berasap, lainnya };
 }
 
-export function bukaPetaWilayah(kota: KotaLevel[]): void {
+export function bukaPetaWilayah(kota: KotaLevel[], progres?: Progres): void {
   if (kota.length === 0) return;
 
   let peta: CityHandle | null = null;
@@ -176,8 +188,54 @@ export function bukaPetaWilayah(kota: KotaLevel[]): void {
     peta = mountCity(wadahPeta);
     const g = susunGabungan(kota);
     const semuaLayak = kota.every((k) => k.layak);
+    // Bangunan yang dibeli dengan koin ikut tampil dan ikut dihitung.
+    for (const b of progres?.bangunanKota() ?? []) {
+      g.petak.set(b.seed, `s:${b.jenis}`);
+      if (SPRITE_HIJAU.has(b.jenis as SpriteKota)) g.hijau++;
+      else g.lainnya++;
+    }
     peta.tampilkanKota(g.petak, semuaLayak);
     peta.hidupkan(20 + kota.length * 6);
+
+    // Palet "Bangun dengan koin": pilih bangunan, lalu ketuk petak kosong.
+    let pilihan: (typeof KATALOG)[number] | null = null;
+    const infoBeli = el('p', { class: 'hint' }, 'Pilih bangunan, lalu ketuk petak kosong di peta.');
+    const palet = el('div', { class: 'peta-beli-palet' });
+    const gambarPalet = (): void => {
+      palet.replaceChildren(
+        ...KATALOG.map((item) => {
+          const b = el(
+            'button',
+            { class: `btn btn-small${pilihan?.jenis === item.jenis ? ' is-active' : ''}` },
+            `${item.ikon} ${item.nama} · ${item.harga} 🪙`,
+          );
+          b.disabled = !progres || progres.koin < item.harga;
+          b.addEventListener('click', () => {
+            pilihan = pilihan?.jenis === item.jenis ? null : item;
+            infoBeli.textContent = pilihan ? `Ketuk petak kosong untuk membangun ${pilihan.nama}.` : 'Pilih bangunan, lalu ketuk petak kosong di peta.';
+            gambarPalet();
+          });
+          return b;
+        }),
+      );
+    };
+    gambarPalet();
+    peta.setPickMode((titik) => {
+      if (!progres || !pilihan) return;
+      const seed = titik.row * GRID + titik.col;
+      if (g.petak.has(seed)) {
+        infoBeli.textContent = 'Petak itu sudah terisi. Pilih petak kosong.';
+        return;
+      }
+      const hasil = progres.bangunDiKota(seed, pilihan.jenis, pilihan.harga, pilihan.nama);
+      infoBeli.textContent = hasil.pesan;
+      if (hasil.ok) {
+        const posisi = (wadahPeta.closest('.peta-wilayah-panel') as HTMLElement | null)?.scrollTop ?? 0;
+        tampilkanGabungan();
+        const panel = wadahPeta.closest('.peta-wilayah-panel') as HTMLElement | null;
+        if (panel) panel.scrollTop = posisi;
+      }
+    });
 
     const total = Math.max(1, g.hijau + g.berasap + g.lainnya);
     const persenHijau = Math.round((g.hijau / total) * 100);
@@ -214,6 +272,14 @@ export function bukaPetaWilayah(kota: KotaLevel[]): void {
         ),
       ),
       el('p', { class: 'hint' }, 'Tiap distrik adalah kota dari satu kasus. Kepadatan bangunan menggambarkan seberapa penuh nilai yang kamu pilih, bukan jumlah sebenarnya.'),
+      ...(progres
+        ? [
+            el('h3', {}, `BANGUN DENGAN KOIN · ${progres.koin} 🪙`),
+            el('p', { class: 'hint' }, 'Percantik dan lestarikan kotamu. Bangunan ini hanya hiasan dan tidak memengaruhi skor.'),
+            palet,
+            infoBeli,
+          ]
+        : []),
     );
   };
 
@@ -244,9 +310,9 @@ export function bukaPetaWilayah(kota: KotaLevel[]): void {
 }
 
 /** Tombol pembuka Peta Wilayah untuk layar hasil dan layar akhir. */
-export function tombolPetaWilayah(kota: KotaLevel[]): HTMLElement | null {
+export function tombolPetaWilayah(kota: KotaLevel[], progres?: Progres): HTMLElement | null {
   if (kota.length === 0) return null;
   const b = el('button', { class: 'btn btn-block' }, `🗺  PETA WILAYAH (${kota.length} kota)`);
-  b.addEventListener('click', () => bukaPetaWilayah(kota));
+  b.addEventListener('click', () => bukaPetaWilayah(kota, progres));
   return b;
 }

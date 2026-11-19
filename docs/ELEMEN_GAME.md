@@ -43,3 +43,24 @@ Branch: `cloudflare-workers`. Kode: `client/src/game/progres.ts`,
 - **Belum diuji**: misi Kota hijau, Kota ramai, Kota tanpa asap, kemenangan
   Tantangan Kilat, misi "semua level" dan "selalu punya rencana" (butuh 4 level),
   serta tampilan di HP.
+
+## Tambahan: pemandangan, perpustakaan, dan bangun dengan koin
+
+| Elemen | Keterangan |
+|---|---|
+| **Pencakar langit dan perpustakaan** | Pusat kota di tengah Peta Wilayah gabungan, pada petak yang masih kosong. Dekorasi saja, tidak masuk indeks hijau. |
+| **Awan** | Melayang pelan di peta yang punya penduduk (Peta Wilayah, Kota Bebas). Tidak muncul di level yang dinilai. |
+| **Misi tersembunyi "Sahabat perpustakaan"** | Terbuka bila **skor rubrik** satu level minimal 10/12. Siswa merapikan rak buku Bu Rani (mengurutkan nomor rak). Kegiatan ini tidak dinilai dan tidak dicatat. |
+| **Bangun dengan koin** | Di Peta Wilayah gabungan, koin bisa dipakai membeli pohon, taman, toko, panel surya, kincir angin, dan pabrik ramah lingkungan (atap panel surya, tanpa cerobong), lalu menaruhnya di petak kosong. Bangunan disimpan bersama progres dan ikut dihitung dalam indeks hijau. |
+
+### Pengecualian terhadap batas no. 1
+
+Misi perpustakaan adalah **satu-satunya** hadiah yang bergantung pada skor.
+Batas yang tetap dijaga:
+
+- Syaratnya skor rubrik, bukan penilaian diri. Penilaian diri diisi sebelum skor
+  tampil dan tidak pernah memengaruhi hadiah, jadi kalibrasi AaL tidak terdorong.
+- Teks di panel misi kini menyebutkan pengecualian ini secara terbuka.
+- **Risiko yang perlu ditimbang:** hadiah berbasis skor bisa sedikit menaikkan
+  motivasi di level berikutnya. Itu bukan kecurangan, tetapi menjadi kondisi
+  pengambilan data yang sebaiknya dilaporkan.

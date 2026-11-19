@@ -13,6 +13,8 @@ import { makeBuilding, makeTree, TILE_H, TILE_W } from './textures.js';
 
 /** Jenis sprite yang dipakai variabel soal. Harus sama dengan server/src/domain/types.ts. */
 export type SpriteKota =
+  | 'pabrik-hijau'
+  | 'toko'
   | 'pencakar-a'
   | 'pencakar-b'
   | 'perpustakaan'
@@ -201,6 +203,37 @@ export function buatSpriteKota(scene: Phaser.Scene): void {
     kotak(c, CX - 1, ALAS_Y - 15, 2, 15, '#e8eef2');
     kotak(c, CX - 1, ALAS_Y - 16, 2, 2, '#9fb4bf');
     // Bilah digambar terpisah (sk_bilah) dan diputar oleh CityScene.
+  });
+
+  // Pabrik ramah lingkungan: dinding hijau berdaun, atap panel surya, kincir
+  // kecil, dan TANPA cerobong asap.
+  gambar('sk_pabrik-hijau', (c) => {
+    alas(c, '#6fc25a');
+    kotak(c, 6, ALAS_Y - 9, 20, 10, '#dff2e0');
+    for (let i = 0; i < 4; i++) {
+      kotak(c, 6 + i * 5, ALAS_Y - 12, 4, 3, '#2c4fa3'); // panel surya di atap
+      kotak(c, 7 + i * 5, ALAS_Y - 11, 1, 1, '#9fb4d8');
+    }
+    for (let y = 0; y < 8; y += 2) kotak(c, 6, ALAS_Y - 8 + y, 2, 1, '#4eae4a'); // tanaman rambat
+    kotak(c, 11, ALAS_Y - 6, 3, 3, '#8fd0e8');
+    kotak(c, 17, ALAS_Y - 6, 3, 3, '#8fd0e8');
+    kotak(c, 22, ALAS_Y - 4, 3, 4, '#3a8c39'); // pintu hijau
+    kotak(c, 25, ALAS_Y - 19, 1, 8, '#e8eef2'); // tiang kincir kecil
+    kotak(c, 25, ALAS_Y - 21, 1, 2, '#ffffff');
+    kotak(c, 23, ALAS_Y - 19, 2, 1, '#ffffff');
+    kotak(c, 26, ALAS_Y - 19, 2, 1, '#ffffff');
+    kotak(c, 13, ALAS_Y - 15, 3, 2, '#4eae4a'); // daun di papan nama
+    kotak(c, 14, ALAS_Y - 16, 2, 1, '#74cc68');
+  });
+
+  // Toko: bangunan kecil dengan tenda bergaris dan etalase.
+  gambar('sk_toko', (c) => {
+    alas(c, '#d8d2c4', '#bfb8a8');
+    kotak(c, 8, ALAS_Y - 9, 16, 9, '#f1e7c8');
+    for (let i = 0; i < 8; i++) kotak(c, 8 + i * 2, ALAS_Y - 11, 2, 2, i % 2 === 0 ? '#d9534f' : '#ffffff');
+    kotak(c, 10, ALAS_Y - 7, 7, 4, '#8fd0e8'); // etalase
+    kotak(c, 19, ALAS_Y - 6, 3, 6, '#8a6a3c'); // pintu
+    kotak(c, 12, ALAS_Y - 14, 8, 2, '#35b6ab'); // papan nama
   });
 
   // Pencakar langit pusat kota (dekorasi Peta Wilayah).

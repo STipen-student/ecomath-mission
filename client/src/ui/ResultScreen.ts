@@ -234,7 +234,7 @@ export function renderResultScreen(
           : null,
         tombolPerpustakaan(data.progres),
         data.progres ? bukaTutupMisi(data.progres, { toko: false }) : null,
-        data.kota ? tombolPetaWilayah(data.kota) : null,
+        data.kota ? tombolPetaWilayah(data.kota, data.progres) : null,
         tombol,
       ),
     ),
@@ -395,7 +395,7 @@ export function renderFinishScreen(
         // ada event learning_reflection kedua saat kembali dari Kota Bebas.
         sudahRefleksi ? null : formRefleksiBelajar(onRefleksi),
         // Toko dan misi muncul di akhir sesi, setelah refleksi belajar.
-        data.kota ? tombolPetaWilayah(data.kota) : null,
+        data.kota ? tombolPetaWilayah(data.kota, progres) : null,
         tombolPerpustakaan(progres),
         progres ? panelMisi(progres, { toko: true }) : null,
         // U9: Kota Bebas. Setelah sesi selesai, pemain boleh bereksperimen tanpa skor.
