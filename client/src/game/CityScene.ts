@@ -403,6 +403,7 @@ export class CityScene extends Phaser.Scene {
       }
     }
     if (jalan.length < 2) return;
+    this.pasangAwan();
     const acak = () => jalan[Math.floor(Math.random() * jalan.length)]!;
 
     for (let i = 0; i < jumlah; i++) {
@@ -607,6 +608,43 @@ export class CityScene extends Phaser.Scene {
         },
       });
     });
+  }
+
+  /**
+   * Awan yang melayang pelan melintasi kota. Dipasang bersama penduduk
+   * (hidupkan), jadi hanya muncul di peta yang bukan level dinilai.
+   */
+  private awanTerpasang = false;
+
+  private pasangAwan(): void {
+    if (this.awanTerpasang) return;
+    this.awanTerpasang = true;
+    const kiri = toIso(0, GRID - 1).x - 120;
+    const kanan = toIso(GRID - 1, 0).x + 120;
+    const atas = toIso(0, 0).y - 20;
+    const bawah = toIso(GRID - 1, GRID - 1).y;
+    for (let i = 0; i < 6; i++) {
+      const y = atas + ((bawah - atas) * i) / 6;
+      const awan = this.add
+        .image(kiri + Math.random() * (kanan - kiri), y, 'sk_awan')
+        .setDepth(70)
+        .setAlpha(0.7)
+        .setScale(1.2 + Math.random() * 0.8);
+      const melintas = (): void => {
+        const durasi = 26000 + Math.random() * 16000;
+        this.tweens.add({
+          targets: awan,
+          x: kanan,
+          duration: durasi * ((kanan - awan.x) / (kanan - kiri)),
+          ease: 'Linear',
+          onComplete: () => {
+            awan.x = kiri;
+            melintas();
+          },
+        });
+      };
+      melintas();
+    }
   }
 
   /** Jumlah warga yang diminta sebelum scene siap; dijalankan di create(). */

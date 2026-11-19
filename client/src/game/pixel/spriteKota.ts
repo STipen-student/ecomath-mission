@@ -13,6 +13,9 @@ import { makeBuilding, makeTree, TILE_H, TILE_W } from './textures.js';
 
 /** Jenis sprite yang dipakai variabel soal. Harus sama dengan server/src/domain/types.ts. */
 export type SpriteKota =
+  | 'pencakar-a'
+  | 'pencakar-b'
+  | 'perpustakaan'
   | 'pohon'
   | 'taman-kota'
   | 'rumah'
@@ -199,6 +202,36 @@ export function buatSpriteKota(scene: Phaser.Scene): void {
     kotak(c, CX - 1, ALAS_Y - 16, 2, 2, '#9fb4bf');
     // Bilah digambar terpisah (sk_bilah) dan diputar oleh CityScene.
   });
+
+  // Pencakar langit pusat kota (dekorasi Peta Wilayah).
+  makeBuilding(scene, 'sk_pencakar-a', 40, { top: '#8fd0e8', left: '#6f8fa0', right: '#a9c6d4', window: '#e0fbf7' }, 4);
+  makeBuilding(scene, 'sk_pencakar-b', 32, { top: '#35b6ab', left: '#7d8f9a', right: '#b9ccd6', window: '#f5e6a8' }, 5);
+
+  // Perpustakaan kota: gedung bertiang dengan atap segitiga dan papan buku.
+  gambar('sk_perpustakaan', (c) => {
+    alas(c, '#d8d2c4', '#bfb8a8');
+    kotak(c, 6, ALAS_Y - 10, 20, 10, '#f1e7c8');
+    for (const x of [8, 12, 16, 20, 24]) kotak(c, x, ALAS_Y - 10, 1, 9, '#cbbf9a');
+    for (let i = 0; i < 6; i++) kotak(c, 6 + i, ALAS_Y - 11 - i, 20 - i * 2, 1, '#b5562f');
+    kotak(c, 14, ALAS_Y - 15, 4, 3, '#4f7fd9'); // papan buku
+    kotak(c, 15, ALAS_Y - 14, 2, 1, '#ffffff');
+    kotak(c, 14, ALAS_Y - 5, 4, 5, '#8a6a3c'); // pintu
+  });
+
+  // Awan: gumpalan putih untuk langit yang bergerak.
+  {
+    const key = 'sk_awan';
+    if (scene.textures.exists(key)) scene.textures.remove(key);
+    const tex = scene.textures.createCanvas(key, 40, 16);
+    const c = tex?.getContext();
+    if (c) {
+      kotak(c, 6, 8, 30, 6, '#ffffff');
+      kotak(c, 10, 4, 14, 5, '#ffffff');
+      kotak(c, 20, 2, 10, 7, '#ffffff');
+      kotak(c, 8, 13, 26, 1, '#dfeef5');
+      selesai(scene, key);
+    }
+  }
 
   // Pesepeda: warga berkeliling kota dengan sepeda (9x9, pusat di roda).
   {

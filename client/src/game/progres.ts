@@ -23,7 +23,10 @@ export type IdMisi =
   | 'kota-ramai'
   | 'tantangan-kilat';
 
-export type IdRahasia = 'arsitek-rahasia' | 'kota-tanpa-asap' | 'penjelajah-misi' | 'tiket-jalan-pintas';
+export type IdRahasia = 'arsitek-rahasia' | 'kota-tanpa-asap' | 'penjelajah-misi' | 'tiket-jalan-pintas' | 'bantu-perpustakaan';
+
+/** Skor rubrik minimal satu level untuk membuka misi perpustakaan. */
+export const SKOR_BUKA_PERPUSTAKAAN = 10;
 
 export type IdBarang = 'air-mancur' | 'lampu-kota' | 'bendera-kota' | 'subsidi-hijau' | 'panel-efisien';
 
@@ -48,6 +51,14 @@ export const MISI: Misi[] = [
   { id: 'arsitek-rahasia', judul: 'Arsitek rahasia', keterangan: 'Mengetuk lencana level lima kali.', koin: 30, rahasia: true, tempat: 'di-mana-saja' },
   { id: 'kota-tanpa-asap', judul: 'Kota tanpa asap', keterangan: 'Di Kota Bebas, punya 20 warga tanpa satu pabrik pun.', koin: 80, rahasia: true, tempat: 'kota-bebas' },
   { id: 'penjelajah-misi', judul: 'Penjelajah', keterangan: 'Membuka daftar misi tiga kali.', koin: 20, rahasia: true, tempat: 'di-mana-saja' },
+  {
+    id: 'bantu-perpustakaan',
+    judul: 'Sahabat perpustakaan',
+    keterangan: `Terbuka bila satu level mendapat skor minimal 10/12. Bantu Bu Rani merapikan rak buku perpustakaan kota.`,
+    koin: 80,
+    rahasia: true,
+    tempat: 'di-mana-saja',
+  },
   {
     id: 'tiket-jalan-pintas',
     judul: 'Tiket jalan pintas',
@@ -83,9 +94,19 @@ interface Keadaan {
   levelSelesai: number[];
   levelBertarget: number[];
   bukaMisi: number;
+  /** Misi perpustakaan sudah terbuka (skor rubrik >= SKOR_BUKA_PERPUSTAKAAN). */
+  perpustakaanTerbuka: boolean;
 }
 
-const kosong = (): Keadaan => ({ koin: 0, selesai: [], punya: [], levelSelesai: [], levelBertarget: [], bukaMisi: 0 });
+const kosong = (): Keadaan => ({
+  koin: 0,
+  selesai: [],
+  punya: [],
+  levelSelesai: [],
+  levelBertarget: [],
+  bukaMisi: 0,
+  perpustakaanTerbuka: false,
+});
 
 /** Hasil sebuah aksi: misi yang baru selesai beserta koinnya. */
 export interface HadiahBaru {
@@ -156,6 +177,23 @@ export class Progres {
     if (this.k.levelSelesai.length >= totalLevel) ids.push('semua-level');
     if (this.k.levelBertarget.length >= totalLevel) ids.push('punya-rencana');
     return this.selesaikan(...ids);
+  }
+
+  get perpustakaanTerbuka(): boolean {
+    return this.k.perpustakaanTerbuka;
+  }
+
+  /**
+   * SATU-SATUNYA syarat yang membaca skor: skor rubrik satu level (bukan penilaian
+   * diri) minimal SKOR_BUKA_PERPUSTAKAAN membuka misi perpustakaan. Penilaian diri
+   * sudah diisi sebelum skor muncul, jadi tidak bisa dipengaruhi syarat ini.
+   * Mengembalikan true bila misi baru saja terbuka.
+   */
+  catatSkorLevel(rawSum: number): boolean {
+    if (this.k.perpustakaanTerbuka || rawSum < SKOR_BUKA_PERPUSTAKAAN) return false;
+    this.k.perpustakaanTerbuka = true;
+    this.simpan();
+    return true;
   }
 
   /** Daftar misi dibuka; membuka tiga kali menemukan misi tersembunyi. */

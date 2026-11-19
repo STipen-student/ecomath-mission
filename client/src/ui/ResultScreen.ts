@@ -16,7 +16,7 @@ import { cornerCandidates, objectiveValue } from '../game/geometry.js';
 import { el, num } from './dom.js';
 import { bagianCerminDiri, formRefleksiBelajar, type RefleksiBelajar } from './asesmenDiri.js';
 import type { HadiahBaru, Progres } from '../game/progres.js';
-import { bukaTutupMisi, panelMisi, spandukHadiah } from './panelHadiah.js';
+import { bukaTutupMisi, panelMisi, spandukHadiah, tombolPerpustakaan } from './panelHadiah.js';
 import { tombolPetaWilayah, type KotaLevel } from './petaWilayah.js';
 
 /** Riwayat satu level untuk ringkasan akhir sesi. */
@@ -150,6 +150,8 @@ export function renderResultScreen(
     progres?: Progres;
     /** Kota hasil level-level yang sudah selesai, untuk Peta Wilayah. */
     kota?: KotaLevel[];
+    /** Misi perpustakaan baru saja terbuka karena skor level ini >= 10/12. */
+    perpustakaanBaru?: boolean;
   },
   onLanjut: () => void,
 ): void {
@@ -227,6 +229,10 @@ export function renderResultScreen(
         // Elemen permainan ditaruh paling bawah, setelah seluruh bagian AaL,
         // supaya hadiah tidak membelokkan perhatian dari umpan balik dan kalibrasi.
         data.hadiah ? spandukHadiah(data.hadiah) : null,
+        data.perpustakaanBaru
+          ? el('div', { class: 'hadiah-spanduk' }, el('span', { class: 'hadiah-koin' }, '🗝'), el('p', { class: 'hadiah-misi' }, 'Skormu tinggi! Misi tersembunyi terbuka: ', el('strong', {}, 'Bu Rani butuh bantuan di perpustakaan.')))
+          : null,
+        tombolPerpustakaan(data.progres),
         data.progres ? bukaTutupMisi(data.progres, { toko: false }) : null,
         data.kota ? tombolPetaWilayah(data.kota) : null,
         tombol,
@@ -390,6 +396,7 @@ export function renderFinishScreen(
         sudahRefleksi ? null : formRefleksiBelajar(onRefleksi),
         // Toko dan misi muncul di akhir sesi, setelah refleksi belajar.
         data.kota ? tombolPetaWilayah(data.kota) : null,
+        tombolPerpustakaan(progres),
         progres ? panelMisi(progres, { toko: true }) : null,
         // U9: Kota Bebas. Setelah sesi selesai, pemain boleh bereksperimen tanpa skor.
         // Tidak memancarkan event dan tidak menyentuh log penelitian.

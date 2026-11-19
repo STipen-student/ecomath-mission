@@ -100,6 +100,16 @@ function susunGabungan(kota: KotaLevel[]): { petak: Map<number, string>; hijau: 
       else lainnya += n;
     }
   }
+  // Pusat kota di tengah pulau: perpustakaan dan beberapa pencakar langit pada
+  // petak yang masih kosong. Hanya dekorasi; tidak dihitung dalam indeks hijau.
+  const tengah = (GRID - 1) / 2;
+  const kosong = plotTiles()
+    .filter((t) => !petak.has(t.seed))
+    .sort((a, b) => Math.hypot(a.col - tengah, a.row - tengah) - Math.hypot(b.col - tengah, b.row - tengah));
+  const [perpus, ...lain] = kosong;
+  if (perpus) petak.set(perpus.seed, 's:perpustakaan');
+  lain.slice(0, 7).forEach((t, i) => petak.set(t.seed, i % 2 === 0 ? 's:pencakar-a' : 's:pencakar-b'));
+
   return { petak, hijau, berasap, lainnya };
 }
 

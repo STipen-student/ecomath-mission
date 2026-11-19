@@ -3139,3 +3139,29 @@ body {
 .peta-wilayah-indeks .profile-bar {
   flex: 1;
 }
+
+/* Perpustakaan kota (misi tersembunyi, tidak dinilai) */
+.perpus-rak {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  background: #8a6a3c;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+}
+
+.perpus-buku {
+  min-height: 48px;
+  padding: 8px 10px;
+  font-family: var(--font-display);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.perpus-buku.is-done {
+  background: #e7f4dd;
+  opacity: 0.7;
+}

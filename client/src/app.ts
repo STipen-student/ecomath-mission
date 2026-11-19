@@ -356,6 +356,8 @@ export class App {
         jumlahPusatDipindah: this.jumlahPusatDipindah,
         // Hadiah dihitung dari selesainya level dan adanya target, BUKAN dari skor.
         hadiah: this.progres?.levelSelesai(this.levelSaatIni, LEVELS.length, this.target !== null),
+        // Pengecualian tunggal: skor rubrik >= 10/12 membuka misi perpustakaan.
+        perpustakaanBaru: this.progres?.catatSkorLevel(hasil.rawSum) ?? false,
         progres: this.progres ?? undefined,
         kota: this.kotaHasil,
       },
