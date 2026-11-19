@@ -200,6 +200,24 @@ export function buatSpriteKota(scene: Phaser.Scene): void {
     // Bilah digambar terpisah (sk_bilah) dan diputar oleh CityScene.
   });
 
+  // Pesepeda: warga berkeliling kota dengan sepeda (9x9, pusat di roda).
+  {
+    const key = 'sk_pesepeda';
+    if (scene.textures.exists(key)) scene.textures.remove(key);
+    const tex = scene.textures.createCanvas(key, 9, 9);
+    const c = tex?.getContext();
+    if (c) {
+      kotak(c, 0, 6, 3, 1, '#16323f');
+      kotak(c, 6, 6, 3, 1, '#16323f');
+      kotak(c, 0, 8, 3, 1, '#16323f');
+      kotak(c, 6, 8, 3, 1, '#16323f');
+      kotak(c, 2, 5, 5, 1, '#d9534f'); // rangka
+      kotak(c, 4, 2, 2, 3, '#35b6ab'); // badan pengendara
+      kotak(c, 4, 0, 2, 2, '#f1d2b0'); // kepala
+      selesai(scene, key);
+    }
+  }
+
   // Bilah kincir: tiga bilah 120 derajat di tekstur 15x15, pusat di tengah.
   {
     const key = 'sk_bilah';

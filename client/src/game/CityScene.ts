@@ -137,7 +137,12 @@ export class CityScene extends Phaser.Scene {
     // Asap dari bus konvensional dan mesin fosil: kepulan naik terus-menerus.
     this.time.addEvent({ delay: 650, loop: true, callback: () => this.kepulkanAsap() });
     // Bus beroperasi: bus berangkat dari depo dan berjalan di jalan kota.
-    this.time.addEvent({ delay: 1300, loop: true, callback: () => this.jalankanBus() });
+    this.time.addEvent({ delay: 900, loop: true, callback: () => this.jalankanBus() });
+    // Komentar warga muncul bergiliran, dan gelembungnya mengikuti warga berjalan.
+    this.time.addEvent({ delay: 2200, loop: true, callback: () => this.wargaBerkomentar() });
+    this.events.on('update', () => {
+      for (const g of this.gelembung) g.teks.setPosition(g.warga.x, g.warga.y - 8);
+    });
     if (this.terakhir) this.render(this.terakhir);
     if (this.jumlahWargaTertunda > 0) this.hidupkan(this.jumlahWargaTertunda);
   }
@@ -402,18 +407,24 @@ export class CityScene extends Phaser.Scene {
 
     for (let i = 0; i < jumlah; i++) {
       const awal = acak();
-      const warga = this.add
-        .rectangle(awal.x, awal.y - 3, 3, 5, WARNA_WARGA[i % WARNA_WARGA.length])
-        .setDepth(40)
-        .setStrokeStyle(1, 0x16323f);
+      // Kira-kira sepertiga warga berkeliling kota dengan sepeda.
+      const bersepeda = i % 3 === 0;
+      const warga: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image = bersepeda
+        ? this.add.image(awal.x, awal.y - 3, 'sk_pesepeda').setDepth(40)
+        : this.add
+            .rectangle(awal.x, awal.y - 3, 3, 5, WARNA_WARGA[i % WARNA_WARGA.length])
+            .setDepth(40)
+            .setStrokeStyle(1, 0x16323f);
+      this.wargaJalan.push(warga);
       const jalankan = (): void => {
         const tujuan = acak();
         const jarak = Math.hypot(tujuan.x - warga.x, tujuan.y - warga.y);
+        if (bersepeda) (warga as Phaser.GameObjects.Image).setFlipX(tujuan.x < warga.x);
         this.tweens.add({
           targets: warga,
           x: tujuan.x,
           y: tujuan.y - 3,
-          duration: Math.max(1200, jarak * 28),
+          duration: Math.max(bersepeda ? 700 : 1200, jarak * (bersepeda ? 12 : 28)),
           delay: Math.random() * 800,
           ease: 'Linear',
           onComplete: jalankan,
@@ -482,46 +493,119 @@ export class CityScene extends Phaser.Scene {
     }
   }
 
-  /** Bus yang sedang berjalan di jalan. */
+  /** Bus yang sedang berkeliling kota. */
   private busBerjalan: Phaser.GameObjects.Image[] = [];
 
   /**
-   * Bus beroperasi: selama ada depo bus (sprite bus) yang tampil, sebuah bus
-   * berangkat dari depo menuju titik jalan acak, lalu menghilang. Paling banyak
-   * delapan bus berjalan bersamaan. Hanya tampilan.
+   * Rute keliling kota: persegi panjang mengikuti jalan terluar, lalu satu
+   * putaran memotong lewat jalan tengah. Titik-titik sudutnya berada di jalan,
+   * sehingga garis lurus di antara dua sudut juga berada di jalan.
+   */
+  private ruteKeliling(): Array<{ x: number; y: number }> {
+    const jalanKolom: number[] = [];
+    for (let c = 1; c < GRID - 1; c++) if (tileKind(c, 1) === 'road') jalanKolom.push(c);
+    if (jalanKolom.length < 2) return [];
+    const a = jalanKolom[0]!;
+    const z = jalanKolom[jalanKolom.length - 1]!;
+    const m = jalanKolom[Math.floor(jalanKolom.length / 2)]!;
+    const sudut: Array<[number, number]> = [[a, a], [z, a], [z, m], [a, m], [a, z], [z, z], [z, a], [a, a]];
+    return sudut.map(([col, row]) => toIso(col, row));
+  }
+
+  /**
+   * Bus beroperasi: selama ada depo bus (sprite bus) yang tampil, beberapa bus
+   * berkeliling kota terus-menerus di rute jalan. Jumlahnya mengikuti banyaknya
+   * depo, paling banyak enam. Bus konvensional ikut berasap. Hanya tampilan.
    */
   private jalankanBus(): void {
     this.busBerjalan = this.busBerjalan.filter((b) => b.active);
-    if (this.busBerjalan.length >= 8) return;
     const depo = [...this.bangunan.values()].filter(
       (s) => s.visible && (s.texture.key === 'sk_bus-listrik' || s.texture.key === 'sk_bus-konvensional'),
     );
-    if (depo.length === 0) return;
-
-    const jalan: Array<{ x: number; y: number }> = [];
-    for (let row = 0; row < GRID; row++) {
-      for (let col = 0; col < GRID; col++) {
-        if (tileKind(col, row) === 'road') jalan.push(toIso(col, row));
-      }
+    if (depo.length === 0) {
+      for (const bus of this.busBerjalan) bus.destroy();
+      this.busBerjalan = [];
+      return;
     }
-    if (jalan.length === 0) return;
+    const target = Math.min(6, 2 + Math.floor(depo.length / 8));
+    if (this.busBerjalan.length >= target) return;
 
+    const rute = this.ruteKeliling();
+    if (rute.length < 2) return;
+    // Jenis bus mengikuti komposisi depo.
     const asal = depo[Math.floor(Math.random() * depo.length)]!;
-    const tujuan = jalan[Math.floor(Math.random() * jalan.length)]!;
-    const bus = this.add.image(asal.x, asal.y, asal.texture.key).setOrigin(0.5, 1).setScale(0.6).setDepth(42);
-    // Bus menghadap arah gerak.
-    bus.setFlipX(tujuan.x < asal.x);
+    const mulai = Math.floor(Math.random() * (rute.length - 1));
+    const awal = rute[mulai]!;
+    const bus = this.add.image(awal.x, awal.y + 4, asal.texture.key).setOrigin(0.5, 1).setScale(0.6).setDepth(42).setAlpha(0);
     this.busBerjalan.push(bus);
-    const jarak = Math.hypot(tujuan.x - asal.x, tujuan.y - asal.y);
-    this.tweens.add({
-      targets: bus,
-      x: tujuan.x,
-      y: tujuan.y + 4,
-      duration: Math.max(1500, jarak * 22),
-      ease: 'Sine.easeInOut',
-      onComplete: () => {
-        this.tweens.add({ targets: bus, alpha: 0, duration: 300, onComplete: () => bus.destroy() });
-      },
+    this.tweens.add({ targets: bus, alpha: 1, duration: 300 });
+
+    const lanjut = (i: number): void => {
+      if (!bus.active) return;
+      const dari = rute[i % rute.length]!;
+      const ke = rute[(i + 1) % rute.length]!;
+      bus.setFlipX(ke.x < dari.x);
+      const jarak = Math.hypot(ke.x - dari.x, ke.y - dari.y);
+      this.tweens.add({
+        targets: bus,
+        x: ke.x,
+        y: ke.y + 4,
+        duration: Math.max(800, jarak * 24),
+        ease: 'Linear',
+        onComplete: () => lanjut(i + 1),
+      });
+    };
+    lanjut(mulai);
+  }
+
+  /** Penduduk yang berjalan terus; menjadi pembicara komentar warga. */
+  private readonly wargaJalan: Array<Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image> = [];
+  /** Gelembung komentar yang sedang tampil, mengikuti wargannya. */
+  private gelembung: Array<{ teks: Phaser.GameObjects.Text; warga: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image }> = [];
+
+  /**
+   * Satu warga berkomentar tentang fasilitas yang tampil di peta. Komentar
+   * dipilih dari jenis bangunan yang benar-benar ada, jadi isinya ikut berubah
+   * mengikuti kota yang dibangun siswa. Hanya tampilan.
+   */
+  private wargaBerkomentar(): void {
+    if (this.wargaJalan.length === 0 || this.gelembung.length >= 3) return;
+    const jenis = new Set<SpriteKota>();
+    for (const sprite of this.bangunan.values()) {
+      if (sprite.visible && sprite.texture.key.startsWith('sk_')) jenis.add(sprite.texture.key.slice(3) as SpriteKota);
+    }
+    const pilihan = [...jenis].filter((j) => KOMENTAR[j]?.length);
+    if (pilihan.length === 0) return;
+    const daftar = KOMENTAR[pilihan[Math.floor(Math.random() * pilihan.length)]!]!;
+    const isi = daftar[Math.floor(Math.random() * daftar.length)]!;
+    const warga = this.wargaJalan[Math.floor(Math.random() * this.wargaJalan.length)]!;
+
+    const teks = this.add
+      .text(warga.x, warga.y - 8, isi, {
+        fontFamily: 'system-ui, sans-serif',
+        // Ukuran huruf menyesuaikan pembesaran kamera agar tetap terbaca di layar.
+        fontSize: `${Math.round(11 / Math.max(0.25, this.kamera.zoom))}px`,
+        color: '#16323f',
+        backgroundColor: '#ffffff',
+        padding: { x: Math.round(4 / Math.max(0.25, this.kamera.zoom)), y: Math.round(2 / Math.max(0.25, this.kamera.zoom)) },
+      })
+      .setOrigin(0.5, 1)
+      .setResolution(4)
+      .setDepth(60)
+      .setAlpha(0);
+    const g = { teks, warga };
+    this.gelembung.push(g);
+    this.tweens.add({ targets: teks, alpha: 1, duration: 200 });
+    this.time.delayedCall(2600, () => {
+      this.tweens.add({
+        targets: teks,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => {
+          teks.destroy();
+          this.gelembung = this.gelembung.filter((x) => x !== g);
+        },
+      });
     });
   }
 
@@ -622,6 +706,34 @@ export class CityScene extends Phaser.Scene {
     }
   }
 }
+
+/**
+ * Komentar warga per fasilitas yang tampil di peta (hiburan, tanpa event).
+ * Hanya muncul di peta yang punya penduduk berjalan (Peta Wilayah, Kota Bebas).
+ */
+const KOMENTAR: Partial<Record<SpriteKota, string[]>> = {
+  'pohon': ['Adem banget di sini!', 'Anak-anak jadi punya tempat main.', 'Udaranya segar ya.'],
+  'taman-kota': ['Tamannya cantik!', 'Enak buat piknik sore.', 'Bunganya wangi.'],
+  'rumah': ['Akhirnya punya rumah!', 'Tetangganya ramah.'],
+  'rumah-a': ['Rumahnya luas, pas buat keluarga.', 'Cicilannya terjangkau!'],
+  'rumah-b': ['Mungil tapi nyaman.', 'Pas buat keluarga muda.'],
+  'perumahan-padat': ['Dekat ke tempat kerja.', 'Ramai, tapi masih ada taman.'],
+  'hunian-rendah-karbon': ['Tagihan listrik turun!', 'Atapnya hijau, keren.'],
+  'gedung': ['Pemandangan dari atas bagus!', 'Liftnya hemat energi.'],
+  'bus-listrik': ['Bus listriknya senyap!', 'Naik bus jadi nyaman.', 'Nggak ada bau solar lagi.'],
+  'bus-konvensional': ['Uhuk... asapnya.', 'Busnya berisik banget.', 'Semoga cepat diganti bus listrik.'],
+  'parkir': ['Gampang cari parkir.', 'Parkirnya luas.'],
+  'sepeda': ['Bersepeda jadi aman!', 'Ke sekolah naik sepeda, yuk.', 'Lajurnya lebar, mantap.'],
+  'trotoar': ['Jalan kaki jadi enak.', 'Trotoarnya rata, nggak becek.'],
+  'surya': ['Listrik dari matahari!', 'Nggak padam lagi pas badai.'],
+  'turbin': ['Kincirnya berputar terus!', 'Anginnya jadi berguna.'],
+  'industri-hijau': ['Kerja dekat rumah, bersih lagi.', 'Pabriknya nggak berasap.'],
+  'mesin-fosil': ['Kabutnya bikin sesak.', 'Asap pabrik lagi...', 'Kapan ganti mesin listrik?'],
+  'mesin-listrik': ['Pabriknya jadi tenang.', 'Udara di sini makin bersih.'],
+  'kompos': ['Sampahnya jadi pupuk!', 'Kebunku subur pakai kompos.'],
+  'daur-ulang': ['Botol bekas jadi berguna.', 'Pasar nggak bau lagi.'],
+  'hijau-multifungsi': ['Nggak banjir lagi pas hujan!', 'Kolamnya bikin sejuk.'],
+};
 
 /** Warna baju warga yang berjalan saat perayaan. */
 const WARNA_WARGA = [0xe2604a, 0x35b6ab, 0xf5c53f, 0x6c8ebf, 0xffffff];
