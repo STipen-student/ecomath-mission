@@ -136,6 +136,8 @@ export class CityScene extends Phaser.Scene {
     this.siap = true;
     // Asap dari bus konvensional dan mesin fosil: kepulan naik terus-menerus.
     this.time.addEvent({ delay: 650, loop: true, callback: () => this.kepulkanAsap() });
+    // Bus beroperasi: bus berangkat dari depo dan berjalan di jalan kota.
+    this.time.addEvent({ delay: 1300, loop: true, callback: () => this.jalankanBus() });
     if (this.terakhir) this.render(this.terakhir);
     if (this.jumlahWargaTertunda > 0) this.hidupkan(this.jumlahWargaTertunda);
   }
@@ -363,6 +365,7 @@ export class CityScene extends Phaser.Scene {
     // terbaca sekejap tanpa harus membaca panel. Ronanya sengaja tipis: rona
     // pekat membuat kedua zona nyaris tak terbedakan, padahal justru
     // perbandingan kedua zona itulah yang harus dinilai siswa.
+    this.sinkronBilah();
     this.kamera.setBackgroundColor(view.feasible ? PALET.langit : PALET.langitBahaya);
     const rona = view.feasible ? 0xffffff : 0xffc9bd;
     for (const lapisan of [this.lapisanDasar, this.lapisanBangunan]) {
@@ -431,12 +434,16 @@ export class CityScene extends Phaser.Scene {
       const jenis = sprite.texture.key.startsWith('sk_') ? (sprite.texture.key.slice(3) as SpriteKota) : null;
       if (jenis && SPRITE_BERASAP.has(jenis)) berasap.push(sprite);
     }
+    for (const bus of this.busBerjalan) {
+      if (bus.active && bus.texture.key === 'sk_bus-konvensional') berasap.push(bus);
+    }
     for (let i = 0; i < Math.min(8, berasap.length); i++) {
       const s = berasap[Math.floor(Math.random() * berasap.length)]!;
       // Knalpot bus di kiri bawah; cerobong pabrik di kanan atas.
       const bus = s.texture.key === 'sk_bus-konvensional';
+      const skala = s.scaleX;
       const asap = this.add
-        .circle(s.x + (bus ? -12 : 7), s.y - (bus ? 12 : 30), 3 + Math.random() * 2, 0x5a5a5a, 0.75)
+        .circle(s.x + (bus ? -12 : 7) * skala, s.y - (bus ? 12 : 30) * skala, (3 + Math.random() * 2) * skala, 0x5a5a5a, 0.75)
         .setDepth(45);
       this.tweens.add({
         targets: asap,
@@ -449,6 +456,73 @@ export class CityScene extends Phaser.Scene {
         onComplete: () => asap.destroy(),
       });
     }
+  }
+
+  /** Bilah kincir per petak, diputar terus selama kincirnya tampil. */
+  private readonly bilah = new Map<number, Phaser.GameObjects.Image>();
+
+  /**
+   * Pasang atau sembunyikan bilah berputar di atas setiap kincir angin yang
+   * tampil. Pusat bilah berada di poros kincir (sk_turbin).
+   */
+  private sinkronBilah(): void {
+    for (const [seed, sprite] of this.bangunan) {
+      const kincir = sprite.visible && sprite.texture.key === 'sk_turbin';
+      let b = this.bilah.get(seed);
+      if (!kincir) {
+        b?.setVisible(false);
+        continue;
+      }
+      if (!b) {
+        b = this.add.image(sprite.x, sprite.y - 24, 'sk_bilah').setDepth(41);
+        this.tweens.add({ targets: b, angle: 360, duration: 1600 + (seed % 5) * 200, repeat: -1 });
+        this.bilah.set(seed, b);
+      }
+      b.setPosition(sprite.x, sprite.y - 24).setVisible(true);
+    }
+  }
+
+  /** Bus yang sedang berjalan di jalan. */
+  private busBerjalan: Phaser.GameObjects.Image[] = [];
+
+  /**
+   * Bus beroperasi: selama ada depo bus (sprite bus) yang tampil, sebuah bus
+   * berangkat dari depo menuju titik jalan acak, lalu menghilang. Paling banyak
+   * delapan bus berjalan bersamaan. Hanya tampilan.
+   */
+  private jalankanBus(): void {
+    this.busBerjalan = this.busBerjalan.filter((b) => b.active);
+    if (this.busBerjalan.length >= 8) return;
+    const depo = [...this.bangunan.values()].filter(
+      (s) => s.visible && (s.texture.key === 'sk_bus-listrik' || s.texture.key === 'sk_bus-konvensional'),
+    );
+    if (depo.length === 0) return;
+
+    const jalan: Array<{ x: number; y: number }> = [];
+    for (let row = 0; row < GRID; row++) {
+      for (let col = 0; col < GRID; col++) {
+        if (tileKind(col, row) === 'road') jalan.push(toIso(col, row));
+      }
+    }
+    if (jalan.length === 0) return;
+
+    const asal = depo[Math.floor(Math.random() * depo.length)]!;
+    const tujuan = jalan[Math.floor(Math.random() * jalan.length)]!;
+    const bus = this.add.image(asal.x, asal.y, asal.texture.key).setOrigin(0.5, 1).setScale(0.6).setDepth(42);
+    // Bus menghadap arah gerak.
+    bus.setFlipX(tujuan.x < asal.x);
+    this.busBerjalan.push(bus);
+    const jarak = Math.hypot(tujuan.x - asal.x, tujuan.y - asal.y);
+    this.tweens.add({
+      targets: bus,
+      x: tujuan.x,
+      y: tujuan.y + 4,
+      duration: Math.max(1500, jarak * 22),
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.tweens.add({ targets: bus, alpha: 0, duration: 300, onComplete: () => bus.destroy() });
+      },
+    });
   }
 
   /** Jumlah warga yang diminta sebelum scene siap; dijalankan di create(). */
@@ -536,6 +610,7 @@ export class CityScene extends Phaser.Scene {
         this.tweens.add({ targets: sprite, scaleY: 1, duration: 160, ease: 'Back.easeOut' });
       }
     }
+    this.sinkronBilah();
     // Rona kelayakan sama dengan render(): sumbernya tetap ditentukan pemanggil (§7.20).
     this.kamera.setBackgroundColor(feasible ? PALET.langit : PALET.langitBahaya);
     const rona = feasible ? 0xffffff : 0xffc9bd;

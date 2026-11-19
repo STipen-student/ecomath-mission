@@ -197,11 +197,24 @@ export function buatSpriteKota(scene: Phaser.Scene): void {
     alas(c, '#6fc25a');
     kotak(c, CX - 1, ALAS_Y - 15, 2, 15, '#e8eef2');
     kotak(c, CX - 1, ALAS_Y - 16, 2, 2, '#9fb4bf');
-    // Tiga bilah
-    for (let i = 0; i < 6; i++) kotak(c, CX, ALAS_Y - 16 - i, 1, 1, '#ffffff');
-    for (let i = 0; i < 6; i++) kotak(c, CX + 1 + i, ALAS_Y - 15 + Math.floor(i / 2), 1, 1, '#ffffff');
-    for (let i = 0; i < 6; i++) kotak(c, CX - 2 - i, ALAS_Y - 15 + Math.floor(i / 2), 1, 1, '#ffffff');
+    // Bilah digambar terpisah (sk_bilah) dan diputar oleh CityScene.
   });
+
+  // Bilah kincir: tiga bilah 120 derajat di tekstur 15x15, pusat di tengah.
+  {
+    const key = 'sk_bilah';
+    if (scene.textures.exists(key)) scene.textures.remove(key);
+    const tex = scene.textures.createCanvas(key, 15, 15);
+    const c = tex?.getContext();
+    if (c) {
+      for (const sudut of [-90, 30, 150]) {
+        const r = (sudut * Math.PI) / 180;
+        for (let i = 1; i <= 7; i++) kotak(c, Math.round(7 + Math.cos(r) * i), Math.round(7 + Math.sin(r) * i), 1, 1, '#ffffff');
+      }
+      kotak(c, 6, 6, 3, 3, '#9fb4bf');
+      selesai(scene, key);
+    }
+  }
   gambar('sk_industri-hijau', (c) => {
     alas(c, '#b9b4a8');
     pabrik(c, '#cfe3dd', '#35b6ab', '#8fa6b2', false);
