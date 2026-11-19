@@ -12,6 +12,7 @@ import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
 import type { Progres } from '../game/progres.js';
+import { jenisDariKode, periksaStandar } from '../game/standarSdg.js';
 
 /** Bangunan yang bisa dibeli dengan koin untuk wilayah gabungan. */
 const KATALOG: Array<{ jenis: SpriteKota; nama: string; ikon: string; harga: number }> = [
@@ -258,6 +259,17 @@ export function bukaPetaWilayah(kota: KotaLevel[], progres?: Progres): void {
         el('strong', {}, `${persenHijau}%`),
       ),
       el('p', { class: g.berasap === 0 ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad' }, status),
+      (() => {
+        const protes = periksaStandar([...g.petak.values()].map(jenisDariKode));
+        return protes.length === 0
+          ? el('p', { class: 'peta-wilayah-status ok' }, '😊 Warga puas: kota sesuai semangat SDG 11 dan SDG 13.')
+          : el(
+              'div',
+              { class: 'peta-protes' },
+              el('strong', {}, '📢 Warga berdemo:'),
+              el('ul', {}, ...protes.map((p) => el('li', {}, `SDG ${p.sdg}: ${p.alasan}.`))),
+            );
+      })(),
       el(
         'ul',
         { class: 'peta-wilayah-daftar' },

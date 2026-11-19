@@ -3178,3 +3178,19 @@ body {
   background: var(--green);
   color: #fff;
 }
+
+/* Ringkasan protes warga di Peta Wilayah */
+.peta-protes {
+  margin: 4px 0 8px;
+  padding: 8px 10px;
+  background: #fdecea;
+  border: 2px solid #d9534f;
+  border-radius: 8px;
+  font-family: var(--font-read);
+  font-size: 0.9rem;
+}
+
+.peta-protes ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}

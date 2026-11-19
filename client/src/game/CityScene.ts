@@ -42,6 +42,7 @@ import {
   TILE_W,
 } from './pixel/textures.js';
 import { buatSpriteKota, kunciSprite, SPRITE_BERASAP, type SpriteKota } from './pixel/spriteKota.js';
+import { JENIS_BERASAP, JENIS_HUNIAN, jenisDariKode, periksaStandar, SERUAN } from './standarSdg.js';
 
 export interface AllocationView {
   x: number;
@@ -140,6 +141,8 @@ export class CityScene extends Phaser.Scene {
     this.time.addEvent({ delay: 900, loop: true, callback: () => this.jalankanBus() });
     // Komentar warga muncul bergiliran, dan gelembungnya mengikuti warga berjalan.
     this.time.addEvent({ delay: 2200, loop: true, callback: () => this.wargaBerkomentar() });
+    // Warga berdemo bila ada bangunan yang tidak sesuai semangat SDG 11/13.
+    this.time.addEvent({ delay: 5500, loop: true, callback: () => this.wargaProtes() });
     this.events.on('update', () => {
       for (const g of this.gelembung) g.teks.setPosition(g.warga.x, g.warga.y - 8);
     });
@@ -355,6 +358,7 @@ export class CityScene extends Phaser.Scene {
       const wujud = diX ? view.spriteX : view.spriteY;
       const kunci = wujud ? kunciSprite(wujud) : this.varian(seed, diX ? view.visualX : view.visualY);
       if (sprite.texture.key !== kunci) sprite.setTexture(kunci);
+      sprite.setData('jenis', wujud ?? (diX ? view.visualX : view.visualY));
 
       if (!sprite.visible) {
         sprite.setVisible(true);
@@ -647,6 +651,69 @@ export class CityScene extends Phaser.Scene {
     }
   }
 
+  /** Demo yang sedang berlangsung; paling banyak satu dalam satu waktu. */
+  private demoBerjalan = false;
+
+  /**
+   * Warga berdemo di dekat bangunan yang melanggar: SDG 13 di dekat bangunan
+   * berasap, SDG 11 di dekat hunian bila ruang hijau kurang. Hanya di peta yang
+   * punya penduduk berjalan (bukan level dinilai). Hanya tampilan.
+   */
+  private wargaProtes(): void {
+    if (this.demoBerjalan || this.wargaJalan.length === 0) return;
+    const tampil = [...this.bangunan.values()].filter((s) => s.visible && s.getData('jenis'));
+    const pelanggaran = periksaStandar(tampil.map((s) => String(s.getData('jenis'))));
+    if (pelanggaran.length === 0) return;
+
+    const p = pelanggaran[Math.floor(Math.random() * pelanggaran.length)]!;
+    const kandidat = tampil.filter((s) => {
+      const j = String(s.getData('jenis'));
+      return p.sdg === 13 ? j === p.jenis || JENIS_BERASAP.has(j) : JENIS_HUNIAN.has(j);
+    });
+    const sasaran = kandidat[Math.floor(Math.random() * kandidat.length)];
+    if (!sasaran) return;
+
+    this.demoBerjalan = true;
+    const objek: Phaser.GameObjects.GameObject[] = [];
+    for (let i = 0; i < 4; i++) {
+      const x = sasaran.x - 12 + i * 8;
+      const y = sasaran.y + 4 + (i % 2) * 3;
+      const orang = this.add.rectangle(x, y, 3, 5, WARNA_WARGA[i % WARNA_WARGA.length]).setDepth(61).setStrokeStyle(1, 0x16323f);
+      const tongkat = this.add.rectangle(x + 1, y - 6, 1, 6, 0x8a6a3c).setDepth(61);
+      const papan = this.add.rectangle(x + 1, y - 10, 7, 4, 0xffffff).setDepth(62).setStrokeStyle(1, 0xd9534f);
+      // Papan diangkat naik-turun seperti orang berdemo.
+      this.tweens.add({ targets: [tongkat, papan], y: '-=2', duration: 280 + i * 40, yoyo: true, repeat: -1 });
+      objek.push(orang, tongkat, papan);
+    }
+
+    const zoom = Math.max(0.25, this.kamera.zoom);
+    const seruan = SERUAN[p.sdg][Math.floor(Math.random() * SERUAN[p.sdg].length)]!;
+    const teks = this.add
+      .text(sasaran.x, sasaran.y - 16, `📢 SDG ${p.sdg}: ${seruan}`, {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: `${Math.round(11 / zoom)}px`,
+        color: '#ffffff',
+        backgroundColor: '#d9534f',
+        padding: { x: Math.round(4 / zoom), y: Math.round(2 / zoom) },
+      })
+      .setOrigin(0.5, 1)
+      .setResolution(4)
+      .setDepth(63);
+    objek.push(teks);
+
+    this.time.delayedCall(4500, () => {
+      this.tweens.add({
+        targets: objek,
+        alpha: 0,
+        duration: 400,
+        onComplete: () => {
+          for (const o of objek) o.destroy();
+          this.demoBerjalan = false;
+        },
+      });
+    });
+  }
+
   /** Jumlah warga yang diminta sebelum scene siap; dijalankan di create(). */
   private jumlahWargaTertunda = 0;
 
@@ -725,6 +792,7 @@ export class CityScene extends Phaser.Scene {
           ? this.varian(seed, jenis.slice(2) as VariableVisual)
           : (SPRITE_KOTA[jenis] ?? 'bgn_housing_1');
       if (sprite.texture.key !== kunci) sprite.setTexture(kunci);
+      sprite.setData('jenis', jenisDariKode(jenis));
       if (!sprite.visible) {
         sprite.setVisible(true);
         bayang?.setVisible(true);
