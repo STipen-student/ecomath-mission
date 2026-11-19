@@ -38,6 +38,8 @@ const RENCANA = [
 export function formTanggapanProtes(
   pelanggaran: Pelanggaran[],
   kirim: (t: TanggapanProtes) => Promise<void> | void,
+  /** Dipanggil bila diagnosis dan rencana tepat: kota diperbaiki sesuai rencana. */
+  terapkan?: (rencanaId: string) => void,
 ): HTMLElement {
   const sdgDilanggar = new Set(pelanggaran.map((p) => p.sdg));
   const pilihanDiagnosis = new Set<number>();
@@ -135,6 +137,12 @@ export function formTanggapanProtes(
       el('p', { class: 'overall-msg' }, `Keyakinanmu ${keyakinan}/3. ${cermin}`),
       el('p', { class: 'hint' }, 'Tanggapanmu tersimpan untuk refleksi belajar dan tidak memengaruhi skor level.'),
     );
+    if (benar && terapkan) {
+      const id = rencana.id;
+      const tombolTerap = el('button', { class: 'btn btn-small' }, id === 'ganti-listrik' ? '🔧 Terapkan: ganti ke versi listrik' : '🌳 Terapkan: tanam ruang hijau');
+      tombolTerap.addEventListener('click', () => terapkan(id));
+      wadah.append(tombolTerap);
+    }
   });
 
   return wadah;

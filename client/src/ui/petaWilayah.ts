@@ -12,7 +12,7 @@ import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
 import type { Progres } from '../game/progres.js';
-import { jenisDariKode, periksaStandar } from '../game/standarSdg.js';
+import { JENIS_HIJAU, JENIS_HUNIAN, jenisDariKode, periksaStandar } from '../game/standarSdg.js';
 import { formTanggapanProtes, type TanggapanProtes } from './tanggapanProtes.js';
 
 /** Bangunan yang bisa dibeli dengan koin untuk wilayah gabungan. */
@@ -200,6 +200,35 @@ export function bukaPetaWilayah(
       if (SPRITE_HIJAU.has(b.jenis as SpriteKota)) g.hijau++;
       else g.lainnya++;
     }
+    // Perbaikan kota dari tanggapan protes yang tepat (AaL): kota ikut berubah.
+    const perbaikan = progres?.perbaikanKota() ?? [];
+    if (perbaikan.includes('ganti-listrik')) {
+      const GANTI: Record<string, string> = { 'bus-konvensional': 'bus-listrik', 'mesin-fosil': 'surya', pabrik: 'pabrik-hijau' };
+      for (const [seed, kode] of g.petak) {
+        const baru = GANTI[jenisDariKode(kode)];
+        if (baru) {
+          g.petak.set(seed, `s:${baru}`);
+          g.berasap = Math.max(0, g.berasap - 1);
+          g.lainnya++;
+        }
+      }
+    }
+    if (perbaikan.includes('tambah-hijau')) {
+      // Tanam pohon/taman di petak kosong dekat hunian sampai ruang hijau >= 25%.
+      const jenisSemua = (): string[] => [...g.petak.values()].map(jenisDariKode);
+      const hijauKini = (): number => jenisSemua().filter((j) => JENIS_HIJAU.has(j)).length;
+      const hunian = [...g.petak].filter(([, k]) => JENIS_HUNIAN.has(jenisDariKode(k))).map(([s]) => s);
+      let i = 0;
+      outer: for (const s of hunian) {
+        for (const d of [1, -1, GRID, -GRID, GRID + 1, GRID - 1, -GRID + 1, -GRID - 1]) {
+          if (hijauKini() / g.petak.size >= 0.25) break outer;
+          const t = s + d;
+          if (t < 0 || t >= GRID * GRID || g.petak.has(t) || Math.abs((t % GRID) - (s % GRID)) > 1) continue;
+          g.petak.set(t, i++ % 2 ? 's:taman-kota' : 's:pohon');
+          g.hijau++;
+        }
+      }
+    }
     peta.tampilkanKota(g.petak, semuaLayak);
     peta.hidupkan(20 + kota.length * 6);
 
@@ -277,7 +306,13 @@ export function bukaPetaWilayah(
               );
               if (onTanggapan) {
                 const tombol = el('button', { class: 'btn btn-small' }, '✍ Tanggapi protes warga');
-                tombol.addEventListener('click', () => tombol.replaceWith(formTanggapanProtes(protes, onTanggapan)));
+                tombol.addEventListener('click', () => tombol.replaceWith(
+                    formTanggapanProtes(protes, onTanggapan, (id) => {
+                      progres?.perbaikiKota(id);
+                      tampilkanGabungan();
+                    }),
+                  ),
+                );
                 kotak.append(tombol);
               }
               return kotak;

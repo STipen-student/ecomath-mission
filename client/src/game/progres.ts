@@ -98,6 +98,8 @@ interface Keadaan {
   perpustakaanTerbuka: boolean;
   /** Bangunan yang dibeli dengan koin dan ditaruh di wilayah gabungan. */
   bangunanKota: Array<{ seed: number; jenis: string }>;
+  /** Perbaikan kota hasil tanggapan protes yang tepat ('ganti-listrik' | 'tambah-hijau'). */
+  perbaikanKota: string[];
 }
 
 const kosong = (): Keadaan => ({
@@ -109,6 +111,7 @@ const kosong = (): Keadaan => ({
   bukaMisi: 0,
   perpustakaanTerbuka: false,
   bangunanKota: [],
+  perbaikanKota: [],
 });
 
 /** Hasil sebuah aksi: misi yang baru selesai beserta koinnya. */
@@ -200,6 +203,17 @@ export class Progres {
   }
 
   /** Bangunan yang sudah dibeli dan ditaruh di wilayah gabungan. */
+  /** Catat perbaikan kota dari tanggapan protes yang tepat. Hanya tampilan. */
+  perbaikiKota(id: string): void {
+    if (this.k.perbaikanKota.includes(id)) return;
+    this.k.perbaikanKota.push(id);
+    this.simpan();
+  }
+
+  perbaikanKota(): string[] {
+    return [...this.k.perbaikanKota];
+  }
+
   bangunanKota(): Array<{ seed: number; jenis: string }> {
     return [...this.k.bangunanKota];
   }
