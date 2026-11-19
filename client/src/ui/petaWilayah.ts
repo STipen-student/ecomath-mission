@@ -193,7 +193,6 @@ export function bukaPetaWilayah(
     wadahPeta.replaceChildren();
     peta = mountCity(wadahPeta);
     const g = susunGabungan(kota);
-    const semuaLayak = kota.every((k) => k.layak);
     // Bangunan yang dibeli dengan koin ikut tampil dan ikut dihitung.
     for (const b of progres?.bangunanKota() ?? []) {
       g.petak.set(b.seed, `s:${b.jenis}`);
@@ -242,7 +241,10 @@ export function bukaPetaWilayah(
       else if (SPRITE_BERASAP.has(j as SpriteKota)) g.berasap++;
       else g.lainnya++;
     }
-    peta.tampilkanKota(g.petak, semuaLayak);
+    // Latar mengikuti keadaan wilayah akhir: hijau bila tidak ada protes warga
+    // (bebas asap dan ruang hijau cukup), merah bila masih ada masalah.
+    const wilayahSehat = periksaStandar([...g.petak.values()].map(jenisDariKode)).length === 0;
+    peta.tampilkanKota(g.petak, wilayahSehat);
     peta.hidupkan(20 + kota.length * 6);
 
     // Palet "Bangun dengan koin": pilih bangunan, lalu ketuk petak kosong.
