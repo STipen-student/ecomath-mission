@@ -99,7 +99,7 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
     sdgContext: 'SDG13',
     title: 'Minimisasi Biaya Pengelolaan Sampah dengan Batas Emisi',
     narrative:
-      'Kota Meridian mengelola sampah melalui dua metode: pengomposan sebanyak x ton/hari dan daur ulang sebanyak y ton/hari, dengan total kapasitas pengolahan minimal 50 ton/hari untuk memenuhi kebutuhan kota. Emisi karbon dari pengomposan adalah 0,5 kg CO2/ton dan dari daur ulang 0,2 kg CO2/ton, dengan batas emisi total tidak lebih dari 20 kg CO2/hari. Biaya pengomposan Rp 150 ribu/ton dan daur ulang Rp 220 ribu/ton. Tentukan kombinasi x dan y yang meminimumkan biaya total.',
+      'Setiap hari, Kota Meridian harus mengolah sampah paling sedikit 50 ton. Sampah dapat diolah dengan dua cara: dikomposkan atau didaur ulang. Misalkan x adalah banyak sampah yang dikomposkan (ton/hari) dan y adalah banyak sampah yang didaur ulang (ton/hari). Setiap ton sampah yang dikomposkan menghasilkan emisi 0,5 kg CO2 dan berbiaya Rp 150 ribu, sedangkan setiap ton sampah yang didaur ulang menghasilkan emisi 0,2 kg CO2 dan berbiaya Rp 220 ribu. Total emisi dari kedua cara tidak boleh lebih dari 20 kg CO2 per hari. Berapa ton sampah yang sebaiknya dikomposkan dan berapa ton yang didaur ulang setiap hari agar biaya pengolahan sampah per hari serendah mungkin?',
     dataTable: {
       headers: ['Metode', 'Emisi per ton', 'Biaya per ton'],
       rows: [
