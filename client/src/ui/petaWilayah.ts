@@ -229,6 +229,19 @@ export function bukaPetaWilayah(
         }
       }
     }
+    // Hitung ulang indeks dari isi peta akhir, sehingga pembelian bangunan hijau
+    // dan perbaikan kota hasil tanggapan protes langsung menaikkan indeks.
+    // Pusat kota (perpustakaan, pencakar langit) tidak dihitung.
+    g.hijau = 0;
+    g.berasap = 0;
+    g.lainnya = 0;
+    for (const kode of g.petak.values()) {
+      const j = jenisDariKode(kode);
+      if (j === 'perpustakaan' || j.startsWith('pencakar')) continue;
+      if (SPRITE_HIJAU.has(j as SpriteKota) || JENIS_HIJAU.has(j)) g.hijau++;
+      else if (SPRITE_BERASAP.has(j as SpriteKota)) g.berasap++;
+      else g.lainnya++;
+    }
     peta.tampilkanKota(g.petak, semuaLayak);
     peta.hidupkan(20 + kota.length * 6);
 
@@ -292,6 +305,9 @@ export function bukaPetaWilayah(
         })()),
         el('strong', {}, `${persenHijau}%`),
       ),
+      persenHijau < 100
+        ? el('p', { class: 'hint' }, '🌱 Naikkan indeks hijau: bangun pohon, taman, panel surya, kincir angin, atau pabrik ramah lingkungan dengan koin di bawah, atau tanggapi protes warga dengan tepat lalu terapkan rencanamu.')
+        : el('p', { class: 'peta-wilayah-status ok' }, '🏆 Indeks hijau penuh!'),
       el('p', { class: g.berasap === 0 ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad' }, status),
       (() => {
         const protes = periksaStandar([...g.petak.values()].map(jenisDariKode));
