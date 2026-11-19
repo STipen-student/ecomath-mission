@@ -201,6 +201,19 @@ export function narrateEvent(taskId: string, eventType: string, payloadJson: str
       return { ...KOSONG, catatan: nilai, keterangan: `Menilai diri sebelum melihat skor (${nilai})` };
     }
 
+    case 'aal_tanggapan_protes': {
+      const tepat = p.diagnosisTepat ? 'tepat' : 'belum tepat';
+      const rencana = p.rencanaSesuai ? 'sesuai SDG' : 'belum sesuai SDG';
+      const yakin = angka(p.keyakinan);
+      const kaitan = teks(p.kaitanKendala);
+      return {
+        ...KOSONG,
+        pilihan_teks: teks(p.rencana),
+        catatan: kaitan,
+        keterangan: `Menanggapi protes warga: diagnosis ${tepat}, rencana ${rencana}, keyakinan diri ${yakin}/3`,
+      };
+    }
+
     case 'learning_reflection': {
       const klaim = teks(p.mostImprovedClaim);
       const terbuka = teks(p.openText);

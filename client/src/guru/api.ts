@@ -291,6 +291,15 @@ export interface LaporanSiswa {
   kesimpulan: string;
   /** Refleksi belajar akhir sesi (Assessment as Learning); null bila tidak diisi. */
   refleksiBelajar: { mostImprovedClaim: string | null; openText: string | null } | null;
+  /** Tanggapan protes warga (AaL); kosong pada data lama. */
+  tanggapanProtes?: Array<{
+    diagnosisTepat?: boolean;
+    rencana?: string;
+    rencanaSesuai?: boolean;
+    kaitanKendala?: string;
+    keyakinan?: number;
+    terkalibrasi?: boolean;
+  }>;
 }
 
 /* ------------------------------------------------------------------ */

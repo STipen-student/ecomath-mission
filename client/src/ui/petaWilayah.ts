@@ -13,6 +13,7 @@ import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
 import type { Progres } from '../game/progres.js';
 import { jenisDariKode, periksaStandar } from '../game/standarSdg.js';
+import { formTanggapanProtes, type TanggapanProtes } from './tanggapanProtes.js';
 
 /** Bangunan yang bisa dibeli dengan koin untuk wilayah gabungan. */
 const KATALOG: Array<{ jenis: SpriteKota; nama: string; ikon: string; harga: number }> = [
@@ -126,7 +127,11 @@ function susunGabungan(kota: KotaLevel[]): { petak: Map<number, string>; hijau: 
   return { petak, hijau, berasap, lainnya };
 }
 
-export function bukaPetaWilayah(kota: KotaLevel[], progres?: Progres): void {
+export function bukaPetaWilayah(
+  kota: KotaLevel[],
+  progres?: Progres,
+  onTanggapan?: (t: TanggapanProtes) => Promise<void> | void,
+): void {
   if (kota.length === 0) return;
 
   let peta: CityHandle | null = null;
@@ -263,12 +268,20 @@ export function bukaPetaWilayah(kota: KotaLevel[], progres?: Progres): void {
         const protes = periksaStandar([...g.petak.values()].map(jenisDariKode));
         return protes.length === 0
           ? el('p', { class: 'peta-wilayah-status ok' }, '😊 Warga puas: kota sesuai semangat SDG 11 dan SDG 13.')
-          : el(
-              'div',
-              { class: 'peta-protes' },
-              el('strong', {}, '📢 Warga berdemo:'),
-              el('ul', {}, ...protes.map((p) => el('li', {}, `SDG ${p.sdg}: ${p.alasan}.`))),
-            );
+          : (() => {
+              const kotak = el(
+                'div',
+                { class: 'peta-protes' },
+                el('strong', {}, '📢 Warga berdemo:'),
+                el('ul', {}, ...protes.map((p) => el('li', {}, `SDG ${p.sdg}: ${p.alasan}.`))),
+              );
+              if (onTanggapan) {
+                const tombol = el('button', { class: 'btn btn-small' }, '✍ Tanggapi protes warga');
+                tombol.addEventListener('click', () => tombol.replaceWith(formTanggapanProtes(protes, onTanggapan)));
+                kotak.append(tombol);
+              }
+              return kotak;
+            })();
       })(),
       el(
         'ul',
@@ -322,9 +335,13 @@ export function bukaPetaWilayah(kota: KotaLevel[], progres?: Progres): void {
 }
 
 /** Tombol pembuka Peta Wilayah untuk layar hasil dan layar akhir. */
-export function tombolPetaWilayah(kota: KotaLevel[], progres?: Progres): HTMLElement | null {
+export function tombolPetaWilayah(
+  kota: KotaLevel[],
+  progres?: Progres,
+  onTanggapan?: (t: TanggapanProtes) => Promise<void> | void,
+): HTMLElement | null {
   if (kota.length === 0) return null;
   const b = el('button', { class: 'btn btn-block' }, `🗺  PETA WILAYAH (${kota.length} kota)`);
-  b.addEventListener('click', () => bukaPetaWilayah(kota, progres));
+  b.addEventListener('click', () => bukaPetaWilayah(kota, progres, onTanggapan));
   return b;
 }

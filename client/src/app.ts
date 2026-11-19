@@ -16,6 +16,7 @@ import { progresUntuk, type IdRahasia, type Progres } from './game/progres.js';
 import { umumkanHadiah } from './ui/panelHadiah.js';
 import { babak, epilog, prolog, renderAdegan } from './ui/cerita.js';
 import type { KotaLevel } from './ui/petaWilayah.js';
+import type { TanggapanProtes } from './ui/tanggapanProtes.js';
 import { renderLandingScreen, type LandingHandle } from './ui/LandingScreen.js';
 import { renderLoginScreen } from './ui/LoginScreen.js';
 import { PlayScreen } from './ui/PlayScreen.js';
@@ -38,6 +39,15 @@ export class App {
   private kotaHasil: KotaLevel[] = [];
   /** Nilai x dan y yang terakhir diajukan, untuk Peta Wilayah. */
   private akhirXY = { x: 0, y: 0 };
+  /**
+   * Tanggapan protes warga (AaL) dicatat pada percobaan level terakhir, sama
+   * seperti refleksi belajar. Disaring dari skoring di server.
+   */
+  private async catatTanggapanProtes(t: TanggapanProtes): Promise<void> {
+    logger.record('aal_tanggapan_protes', { ...t }, true);
+    await logger.flush();
+  }
+
   /** Kasus yang terakhir selesai, untuk menyambung cerita ke kasus berikutnya. */
   private kasusTerakhir(): { taskId: string; judul: string; layak: boolean } | null {
     const k = this.kotaHasil[this.kotaHasil.length - 1];
@@ -360,6 +370,7 @@ export class App {
         perpustakaanBaru: this.progres?.catatSkorLevel(hasil.rawSum) ?? false,
         progres: this.progres ?? undefined,
         kota: this.kotaHasil,
+        onTanggapanProtes: (t) => this.catatTanggapanProtes(t),
       },
       () => {
         if (adaLevelBerikutnya) {
@@ -373,6 +384,7 @@ export class App {
               sessionComposite: this.sessionComposite,
               riwayat: this.riwayat,
               kota: this.kotaHasil,
+              onTanggapanProtes: (t) => this.catatTanggapanProtes(t),
             },
             // Refleksi akhir sesi dicatat pada percobaan level terakhir - pencatat
             // log masih menunjuk ke task itu. Disaring dari skoring di server.
@@ -414,7 +426,13 @@ export class App {
   private tampilkanSelesai(): void {
     renderFinishScreen(
       this.root,
-      { studentName: this.studentName, sessionComposite: this.sessionComposite, riwayat: this.riwayat, kota: this.kotaHasil },
+      {
+        studentName: this.studentName,
+        sessionComposite: this.sessionComposite,
+        riwayat: this.riwayat,
+        kota: this.kotaHasil,
+        onTanggapanProtes: (t) => this.catatTanggapanProtes(t),
+      },
       async () => undefined,
       () => this.mulaiKotaBebas(),
       this.refleksiTercatat,

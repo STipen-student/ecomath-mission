@@ -232,6 +232,13 @@ teacherRouter.get(
     });
     const refleksiBelajar = refleksiBelajarRow ? parseJson(refleksiBelajarRow.payload) : null;
 
+    // Tanggapan atas protes warga (AaL): seluruh tanggapan, urut waktu diterima.
+    const tanggapanRows = await prisma.eventLog.findMany({
+      where: { sessionId: session.id, eventType: 'aal_tanggapan_protes' },
+      orderBy: { receivedAt: 'asc' },
+    });
+    const tanggapanProtes = tanggapanRows.map((r) => parseJson(r.payload));
+
     res.json({
       sessionId: session.id,
       studentName: session.studentName,
@@ -258,6 +265,7 @@ teacherRouter.get(
       perLevel,
       profilKlaim,
       kesimpulan: buildSessionConclusion(profilKlaim),
+      tanggapanProtes,
       refleksiBelajar: refleksiBelajar
         ? {
             mostImprovedClaim: typeof refleksiBelajar.mostImprovedClaim === 'string' ? refleksiBelajar.mostImprovedClaim : null,

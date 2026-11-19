@@ -18,6 +18,7 @@ import { bagianCerminDiri, formRefleksiBelajar, type RefleksiBelajar } from './a
 import type { HadiahBaru, Progres } from '../game/progres.js';
 import { bukaTutupMisi, panelMisi, spandukHadiah, tombolPerpustakaan } from './panelHadiah.js';
 import { tombolPetaWilayah, type KotaLevel } from './petaWilayah.js';
+import type { TanggapanProtes } from './tanggapanProtes.js';
 
 /** Riwayat satu level untuk ringkasan akhir sesi. */
 export interface RiwayatLevel {
@@ -152,6 +153,8 @@ export function renderResultScreen(
     kota?: KotaLevel[];
     /** Misi perpustakaan baru saja terbuka karena skor level ini >= 10/12. */
     perpustakaanBaru?: boolean;
+    /** Mencatat tanggapan protes warga (AaL) ke log. */
+    onTanggapanProtes?: (t: TanggapanProtes) => Promise<void> | void;
   },
   onLanjut: () => void,
 ): void {
@@ -234,7 +237,7 @@ export function renderResultScreen(
           : null,
         tombolPerpustakaan(data.progres),
         data.progres ? bukaTutupMisi(data.progres, { toko: false }) : null,
-        data.kota ? tombolPetaWilayah(data.kota, data.progres) : null,
+        data.kota ? tombolPetaWilayah(data.kota, data.progres, data.onTanggapanProtes) : null,
         tombol,
       ),
     ),
@@ -303,6 +306,7 @@ export function renderFinishScreen(
     sessionComposite: number | null;
     riwayat: RiwayatLevel[];
     kota?: KotaLevel[];
+    onTanggapanProtes?: (t: TanggapanProtes) => Promise<void> | void;
   },
   onRefleksi: (r: RefleksiBelajar) => Promise<void>,
   onKotaBebas?: () => void,
@@ -395,7 +399,7 @@ export function renderFinishScreen(
         // ada event learning_reflection kedua saat kembali dari Kota Bebas.
         sudahRefleksi ? null : formRefleksiBelajar(onRefleksi),
         // Toko dan misi muncul di akhir sesi, setelah refleksi belajar.
-        data.kota ? tombolPetaWilayah(data.kota, progres) : null,
+        data.kota ? tombolPetaWilayah(data.kota, progres, data.onTanggapanProtes) : null,
         tombolPerpustakaan(progres),
         progres ? panelMisi(progres, { toko: true }) : null,
         // U9: Kota Bebas. Setelah sesi selesai, pemain boleh bereksperimen tanpa skor.

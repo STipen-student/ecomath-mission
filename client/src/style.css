@@ -3194,3 +3194,10 @@ body {
   margin: 4px 0 0;
   padding-left: 18px;
 }
+
+/* Tanggapan protes warga (AaL) */
+.tanggapan-protes {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 2px dashed #d9534f;
+}

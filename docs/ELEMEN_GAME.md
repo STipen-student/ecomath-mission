@@ -64,3 +64,29 @@ Batas yang tetap dijaga:
 - **Risiko yang perlu ditimbang:** hadiah berbasis skor bisa sedikit menaikkan
   motivasi di level berikutnya. Itu bukan kecurangan, tetapi menjadi kondisi
   pengambilan data yang sebaiknya dilaporkan.
+
+## Tanggapan protes warga sebagai instrumen AaL
+
+Saat warga berdemo di Peta Wilayah (lihat `client/src/game/standarSdg.ts`), siswa
+bisa menekan **"Tanggapi protes warga"** dan mengisi empat bagian:
+
+1. **Diagnosis**: mengapa warga berdemo (SDG 13 emisi, SDG 11 ruang hijau, atau pengecoh).
+2. **Rencana perbaikan**: satu dari empat pilihan, dua di antaranya keliru.
+3. **Kaitan dengan kendala soal**: jawaban terbuka, misalnya kendala garasi yang
+   membatasi penggantian bus.
+4. **Keyakinan diri 0–3**, diisi **sebelum** hasil pemeriksaan tampil.
+
+Lalu siswa melihat hasil pemeriksaan (diagnosis tepat atau belum, rencana sesuai
+atau belum) dan cermin keyakinannya (terkalibrasi bila yakin dan benar, atau ragu
+dan keliru). Polanya sama dengan penilaian diri di akhir level.
+
+**Pencatatan.** Jawaban dikirim sebagai event `aal_tanggapan_protes` pada
+percobaan level terakhir, dan event ini termasuk `NON_EVIDENCE_EVENTS`, jadi
+disaring dari mesin skoring. Uji `assessmentAsLearning.test.ts` memastikan skor
+K1–K4 identik dengan atau tanpa event ini. Guru melihatnya di laporan siswa
+(bagian "Tanggapan protes warga (AaL)"), dan ekspor `events.csv` memuat
+narasinya.
+
+**Batas.** Kegiatan ini opsional dan hanya muncul bila ada protes, jadi tidak
+semua siswa mengerjakannya. Datanya cocok untuk analisis deskriptif kemandirian
+belajar, bukan untuk dibandingkan antarsiswa seperti skor K1–K4.

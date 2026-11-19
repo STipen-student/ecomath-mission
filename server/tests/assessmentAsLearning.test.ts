@@ -50,7 +50,7 @@ function aal(type: RawEvent['event_type'], timestamp: number, payload: Record<st
 }
 
 describe('event asesmen diri tidak memengaruhi skor', () => {
-  it('skor dan observable identik dengan atau tanpa goal_set, self_assessment, learning_reflection', () => {
+  it('skor dan observable identik dengan atau tanpa goal_set, self_assessment, learning_reflection, aal_tanggapan_protes', () => {
     const dasar = logL3();
     const akhir = dasar[dasar.length - 1]!.timestamp_ms;
     const denganAal = [
@@ -59,6 +59,7 @@ describe('event asesmen diri tidak memengaruhi skor', () => {
       // Jauh setelah submit: bila tidak disaring, totalDurationMs akan melonjak.
       aal('self_assessment', akhir + 600_000, { K1: 3, K2: 3, K3: 3, K4: 3 }),
       aal('learning_reflection', akhir + 900_000, { openText: 'Saya belajar memeriksa titik pojok.' }),
+      aal('aal_tanggapan_protes', akhir + 950_000, { diagnosisTepat: true, rencanaSesuai: true, keyakinan: 3 }),
     ];
 
     const a = scoreAttempt(l3, dasar);

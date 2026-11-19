@@ -729,7 +729,7 @@ const LABEL_KALIBRASI: Record<string, string> = {
  */
 function panelKemandirianBelajar(lap: LaporanSiswa): HTMLElement[] {
   const ada = lap.perLevel.filter((p) => p.assessmentAsLearning);
-  if (ada.length === 0 && !lap.refleksiBelajar) return [];
+  if (ada.length === 0 && !lap.refleksiBelajar && !(lap.tanggapanProtes?.length)) return [];
 
   const rows = ada.map((p) => {
     const k = p.assessmentAsLearning!.calibration;
@@ -765,6 +765,30 @@ function panelKemandirianBelajar(lap: LaporanSiswa): HTMLElement[] {
             { class: 'data-table' },
             el('thead', {}, el('tr', {}, ...['Level', 'Target & strategi', 'Hasil target', 'Diri = bukti', 'Bias'].map((h) => el('th', {}, h)))),
             el('tbody', {}, ...rows),
+          ),
+        ),
+      ),
+    );
+  }
+
+  if (lap.tanggapanProtes?.length) {
+    bagian.push(
+      el(
+        'section',
+        { class: 'sub-card' },
+        el('h3', {}, 'TANGGAPAN PROTES WARGA (AaL)'),
+        el('p', { class: 'hint' }, 'Diagnosis, rencana, kaitan dengan kendala soal, dan keyakinan diri siswa. Tidak memengaruhi skor.'),
+        ...lap.tanggapanProtes.map((t) =>
+          el(
+            'div',
+            { class: 'reflect-block' },
+            el(
+              'span',
+              { class: 'reflect-label' },
+              `Diagnosis ${t.diagnosisTepat ? 'tepat' : 'belum tepat'} · rencana ${t.rencanaSesuai ? 'sesuai' : 'belum sesuai'} · keyakinan ${t.keyakinan ?? '-'}/3 · ${t.terkalibrasi ? 'terkalibrasi' : 'tidak terkalibrasi'}`,
+            ),
+            el('p', { class: 'reflect-text' }, t.rencana ?? ''),
+            el('p', { class: 'reflect-text reflect-open' }, t.kaitanKendala ?? ''),
           ),
         ),
       ),
