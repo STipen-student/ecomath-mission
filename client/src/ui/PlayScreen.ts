@@ -28,6 +28,7 @@ import type { ConstraintDto, DistractorResponse, SkorKlaim, TargetBelajar, TaskD
 import { clear, el, jam, num } from './dom.js';
 import { formPenilaianDiri } from './asesmenDiri.js';
 import { aturBisu, bunyikan, sedangBisu } from '../game/suara.js';
+import { progresAktif } from '../game/progres.js';
 import { KONSEKUENSI_DITERIMA, KONSEKUENSI_TERSIRAT, konsekuensiKendala } from '../game/konsekuensi.js';
 import { BidangPerencanaan } from './bidangPerencanaan.js';
 
@@ -1084,7 +1085,9 @@ export class PlayScreen {
     // Beri waktu melihat kota merayakan sebelum lembar refleksi menutupi peta.
     // Ajukan dikunci selama jeda (tahapRefleksi) agar tidak ada submit ganda.
     this.tahapRefleksi = true;
-    window.setTimeout(() => this.bukaRefleksi(), 2500);
+    // Tiket jalan pintas melewati jeda perayaan; refleksi tetap dibuka.
+    const jeda = progresAktif()?.sudah('tiket-jalan-pintas') ? 0 : 2500;
+    window.setTimeout(() => this.bukaRefleksi(), jeda);
   }
 
   /**

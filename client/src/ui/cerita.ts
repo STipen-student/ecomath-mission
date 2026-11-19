@@ -156,6 +156,20 @@ export function epilog(nama: string, kota: string[]): Adegan {
   };
 }
 
+/**
+ * Ilustrasi cerita. Diketuk tiga kali = misi tersembunyi "Tiket jalan pintas".
+ * Hanya CustomEvent ke jendela; tidak ada event log dan tidak ada skor.
+ */
+function ilustrasiRahasia(): HTMLElement {
+  let ketuk = 0;
+  const gambar = el('div', { class: 'cerita-ilustrasi', ariaLabel: 'Ilustrasi kota' }, '🏝️🏘️🌳');
+  gambar.addEventListener('click', () => {
+    ketuk++;
+    if (ketuk === 3) window.dispatchEvent(new CustomEvent('ecomath:rahasia', { detail: 'tiket-jalan-pintas' }));
+  });
+  return gambar;
+}
+
 /** Layar satu adegan cerita. */
 export function renderAdegan(root: HTMLElement, a: Adegan, onLanjut: () => void): void {
   const tombol = el('button', { class: 'btn btn-primary btn-block' }, a.tombol);
@@ -169,7 +183,7 @@ export function renderAdegan(root: HTMLElement, a: Adegan, onLanjut: () => void)
         { class: 'plate card cerita' },
         el('div', { class: 'brand-badge' }, a.babak),
         el('h2', { class: 'cerita-judul' }, a.judul),
-        el('div', { class: 'cerita-ilustrasi', ariaLabel: 'Ilustrasi kota' }, '🏝️🏘️🌳'),
+        ilustrasiRahasia(),
         ...a.paragraf.map((p) => el('p', { class: 'prose cerita-paragraf' }, p)),
         tombol,
       ),

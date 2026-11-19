@@ -146,8 +146,13 @@ export class App {
           { level: this.levelSaatIni, totalLevels: LEVELS.length, task: res.task, sebelumnya: this.sebelumnya },
           (target, disarankan) => this.mulaiBermain(res.task, target, disarankan),
         );
-      const keBabak = (): void => renderAdegan(this.root, babak(this.levelSaatIni, res.task), keTarget);
-      if (!this.prologTampil) {
+      // Tiket jalan pintas (misi tersembunyi): layar cerita dilewati, level tetap utuh.
+      const lewatiCerita = this.progres?.sudah('tiket-jalan-pintas') ?? false;
+      const keBabak = (): void =>
+        lewatiCerita ? keTarget() : renderAdegan(this.root, babak(this.levelSaatIni, res.task), keTarget);
+      if (lewatiCerita) {
+        keTarget();
+      } else if (!this.prologTampil) {
         this.prologTampil = true;
         renderAdegan(this.root, prolog(this.studentName), keBabak);
       } else {
@@ -350,7 +355,7 @@ export class App {
           this.levelIndex++;
           void this.mulaiLevel();
         } else {
-          renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.map((k) => k.judul)), () => renderFinishScreen(
+          const keRingkasan = (): void => renderFinishScreen(
             this.root,
             {
               studentName: this.studentName,
@@ -369,7 +374,9 @@ export class App {
             () => this.mulaiKotaBebas(),
             false,
             this.progres ?? undefined,
-          ));
+          );
+          if (this.progres?.sudah('tiket-jalan-pintas')) keRingkasan();
+          else renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.map((k) => k.judul)), keRingkasan);
         }
       },
     );

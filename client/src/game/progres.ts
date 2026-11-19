@@ -23,7 +23,7 @@ export type IdMisi =
   | 'kota-ramai'
   | 'tantangan-kilat';
 
-export type IdRahasia = 'arsitek-rahasia' | 'kota-tanpa-asap' | 'penjelajah-misi';
+export type IdRahasia = 'arsitek-rahasia' | 'kota-tanpa-asap' | 'penjelajah-misi' | 'tiket-jalan-pintas';
 
 export type IdBarang = 'air-mancur' | 'lampu-kota' | 'bendera-kota' | 'subsidi-hijau' | 'panel-efisien';
 
@@ -48,6 +48,14 @@ export const MISI: Misi[] = [
   { id: 'arsitek-rahasia', judul: 'Arsitek rahasia', keterangan: 'Mengetuk lencana level lima kali.', koin: 30, rahasia: true, tempat: 'di-mana-saja' },
   { id: 'kota-tanpa-asap', judul: 'Kota tanpa asap', keterangan: 'Di Kota Bebas, punya 20 warga tanpa satu pabrik pun.', koin: 80, rahasia: true, tempat: 'kota-bebas' },
   { id: 'penjelajah-misi', judul: 'Penjelajah', keterangan: 'Membuka daftar misi tiga kali.', koin: 20, rahasia: true, tempat: 'di-mana-saja' },
+  {
+    id: 'tiket-jalan-pintas',
+    judul: 'Tiket jalan pintas',
+    keterangan: 'Mengetuk ilustrasi cerita tiga kali. Hadiah: layar cerita dan jeda perayaan berikutnya dilewati. Level, target, refleksi, dan penilaian diri tetap dikerjakan.',
+    koin: 25,
+    rahasia: true,
+    tempat: 'di-mana-saja',
+  },
 ];
 
 export interface Barang {
