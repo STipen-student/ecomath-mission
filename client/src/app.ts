@@ -38,6 +38,12 @@ export class App {
   private kotaHasil: KotaLevel[] = [];
   /** Nilai x dan y yang terakhir diajukan, untuk Peta Wilayah. */
   private akhirXY = { x: 0, y: 0 };
+  /** Kasus yang terakhir selesai, untuk menyambung cerita ke kasus berikutnya. */
+  private kasusTerakhir(): { taskId: string; judul: string; layak: boolean } | null {
+    const k = this.kotaHasil[this.kotaHasil.length - 1];
+    return k ? { taskId: k.taskId, judul: k.judul, layak: k.layak } : null;
+  }
+
   /** Prolog cerita hanya ditampilkan sekali per sesi. */
   private prologTampil = false;
   /** Elemen permainan per sesi (koin, misi, perlengkapan). Tidak dikirim ke server. */
@@ -149,7 +155,9 @@ export class App {
       // Tiket jalan pintas (misi tersembunyi): layar cerita dilewati, level tetap utuh.
       const lewatiCerita = this.progres?.sudah('tiket-jalan-pintas') ?? false;
       const keBabak = (): void =>
-        lewatiCerita ? keTarget() : renderAdegan(this.root, babak(this.levelSaatIni, res.task), keTarget);
+        lewatiCerita
+          ? keTarget()
+          : renderAdegan(this.root, babak(this.levelSaatIni, res.task, this.kasusTerakhir()), keTarget);
       if (lewatiCerita) {
         keTarget();
       } else if (!this.prologTampil) {
@@ -317,6 +325,7 @@ export class App {
       ...this.kotaHasil.filter((k) => k.level !== this.levelSaatIni),
       {
         level: this.levelSaatIni,
+        taskId: task.id,
         judul: task.title,
         x: this.akhirXY.x,
         y: this.akhirXY.y,
@@ -376,7 +385,7 @@ export class App {
             this.progres ?? undefined,
           );
           if (this.progres?.sudah('tiket-jalan-pintas')) keRingkasan();
-          else renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.map((k) => k.judul)), keRingkasan);
+          else renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.map((k) => k.judul), this.kotaHasil), keRingkasan);
         }
       },
     );

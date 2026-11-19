@@ -15,6 +15,8 @@ import { el, num } from './dom.js';
 /** Kota hasil satu level, disimpan saat level diajukan. */
 export interface KotaLevel {
   level: number;
+  /** Id soal, dipakai untuk menyambung cerita antarkasus. */
+  taskId: string;
   judul: string;
   x: number;
   y: number;

@@ -131,24 +131,101 @@ const CERITA: Record<string, { judul: string; paragraf: string[] }> = {
   },
 };
 
+/**
+ * Kesan akhir tiap kasus, dipakai sebagai jembatan ke kasus berikutnya.
+ * `sah`: rancangan disahkan Dewan. `belum`: rancangan akhir masih melanggar.
+ * Tidak menyebut angka maupun jawaban.
+ */
+const JEJAK: Record<string, { sah: string; belum: string }> = {
+  'L1-SDG11-A': {
+    sah: 'Di Ecoville, anak-anak kini bermain di bawah pohon-pohon muda, dan Pak Wiryo berjanji merawat taman barunya.',
+    belum: 'Di Ecoville, rencana ruang hijau masih dibahas ulang. Pak Wiryo menitip pesan: "Jangan lupa kami."',
+  },
+  'L1-SDG13-A': {
+    sah: 'Di terminal Ecoville, Pak Darto kini menyetir bus listrik yang senyap, dan batuknya mulai berkurang.',
+    belum: 'Di terminal Ecoville, armada baru belum disetujui. Pak Darto masih memanaskan bus tuanya setiap pagi.',
+  },
+  'L1-SDG11&13-A': {
+    sah: 'Di pusat Ecoville, Mbak Sari dan teman-temannya kini bersepeda di lajur yang aman, dan pemilik toko tetap punya tempat parkir.',
+    belum: 'Di pusat Ecoville, pembagian jalan masih diperdebatkan. Mbak Sari berharap kamu kembali suatu hari.',
+  },
+  'L2-SDG11-A': {
+    sah: 'Di Greenhaven, Bu Maya akhirnya mendapat kunci rumah barunya. Ia mengirim foto keluarganya di depan pintu.',
+    belum: 'Di Greenhaven, pembangunan rumah subsidi tertunda karena hitungannya belum cocok. Bu Maya masih menunggu.',
+  },
+  'L2-SDG13-A': {
+    sah: 'Di Greenhaven, panel surya dan kincir angin mulai berputar. Saat badai terakhir, rumah sakit tidak lagi padam.',
+    belum: 'Di Greenhaven, pembangkit bersih belum disetujui. Pak Rendra menyiapkan genset untuk musim badai.',
+  },
+  'L2-SDG11&13-A': {
+    sah: 'Di Greenhaven, zona industri bersih dibuka berdampingan dengan taman. Warga dan pengusaha berjabat tangan di balai kota.',
+    belum: 'Di Greenhaven, pembagian kawasan masih ditolak Dewan, dan perdebatan di balai kota belum selesai.',
+  },
+  'L3-SDG11-A': {
+    sah: 'Di Meridian, distrik baru kini ramai pejalan kaki sore hari, dan survei kenyamanan warga naik.',
+    belum: 'Di Meridian, distrik baru masih setengah jadi. Warga menunggu taman dan trotoar yang dijanjikan.',
+  },
+  'L3-SDG13-A': {
+    sah: 'Di Meridian, gunungan sampah mulai menyusut. Bu Nita membuka kelas kompos untuk ibu-ibu pasar.',
+    belum: 'Di Meridian, rencana pengolahan sampah belum lolos, dan bau dari tempat pembuangan masih tercium di pasar.',
+  },
+  'L3-SDG11&13-A': {
+    sah: 'Di Meridian, menara hunian hemat energi berdiri di antara koridor hijau, dan sawah di pinggir kota terselamatkan.',
+    belum: 'Di Meridian, rencana hunian vertikal dikembalikan untuk dihitung ulang. Pak Hadi menyimpan maketnya baik-baik.',
+  },
+  'L4-SDG11-A': {
+    sah: 'Di Meridian Utara, keluarga-keluarga pertama pindah ke perumahan baru yang tetap dikelilingi ruang hijau.',
+    belum: 'Di Meridian Utara, rencana perumahan belum memenuhi standar kota sehat, dan antrean warga masih panjang.',
+  },
+  'L4-SDG13-A': {
+    sah: 'Di Meridian Selatan, mesin-mesin listrik mulai bekerja dan kabut di atas pabrik perlahan menipis.',
+    belum: 'Di Meridian Selatan, rencana transisi energi belum lolos aturan emisi, dan kabut masih menggantung di atas pabrik.',
+  },
+  'L4-SDG11&13-A': {
+    sah: 'Di Solantis, kota baru siap dihuni: rumah rendah karbon dan ruang hijau yang menyerap hujan tropis.',
+    belum: 'Di Solantis, rencana induk masih perlu direvisi sebelum warga pertama datang.',
+  },
+};
+
+/** Kasus yang selesai sebelum kasus ini, untuk menyambung cerita. */
+export interface KasusSebelumnya {
+  taskId: string;
+  judul: string;
+  layak: boolean;
+}
+
+/** Kalimat penyambung dari kasus sebelumnya ke kasus berikutnya. */
+function jembatan(prev: KasusSebelumnya | null): string | null {
+  if (!prev) return null;
+  const j = JEJAK[prev.taskId];
+  const kesan = j ? (prev.layak ? j.sah : j.belum) : `Berkas "${prev.judul}" sudah kamu serahkan ke Dewan.`;
+  return `${kesan} Bu Laras menutup berkas itu, lalu kapal kembali berlayar.`;
+}
+
 /** Cerita sebelum sebuah soal. Teks soal tetap di layar misi dan tidak diubah. */
-export function babak(level: number, task: TaskDto): Adegan {
+export function babak(level: number, task: TaskDto, sebelumnya: KasusSebelumnya | null = null): Adegan {
   const c = CERITA[task.id] ?? { judul: task.title, paragraf: [`Berkas berikutnya dari Bu Laras: "${task.title}".`] };
+  const sambung = jembatan(sebelumnya);
   return {
     babak: `PERJALANAN ${level} DARI 4`,
     judul: c.judul,
-    paragraf: c.paragraf,
+    paragraf: sambung ? [sambung, ...c.paragraf] : c.paragraf,
     tombol: `▶  LANJUT KE LEVEL ${level}`,
   };
 }
 
-export function epilog(nama: string, kota: string[]): Adegan {
+export function epilog(nama: string, kota: string[], kasus: KasusSebelumnya[] = []): Adegan {
   const daftar = kota.length > 0 ? kota.map((k) => `"${k}"`).join(', ') : 'kota-kota yang kamu kunjungi';
+  const kesan = kasus.map((k) => {
+    const j = JEJAK[k.taskId];
+    return j ? (k.layak ? j.sah : j.belum) : null;
+  }).filter((x): x is string => x !== null);
   return {
     babak: 'EPILOG',
     judul: 'Nusa Lestari menyala',
     paragraf: [
       `Malam turun di ${WILAYAH}. Dari atas kapal, kamu melihat lampu kota menyala satu per satu: ${daftar}.`,
+      ...kesan,
       `Warga yang kamu temui sepanjang perjalanan kini punya kota yang lebih layak huni. "Kamu tidak hanya membangun kota, ${nama}," kata ${MENTOR}. "Kamu belajar menilai keputusanmu sendiri. Itu yang membuat perencana terus berkembang."`,
       'Lihat kembali kota-kotamu di Peta Wilayah, atau bermain bebas di Kota Bebas.',
     ],
