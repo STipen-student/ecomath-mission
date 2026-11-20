@@ -231,6 +231,11 @@ export class CityScene extends Phaser.Scene {
    * berada di tengah pulau berhutan di laut, bukan papan yang melayang.
    * Hanya dekorasi: tidak bisa diketuk dan tidak dihitung di mana pun.
    */
+  /** Urutkan gedung, warga, dan bus menurut y tiap frame (tumpukan isometrik). */
+  update(): void {
+    if (this.wargaJalan.length > 0 || this.busBerjalan.length > 0) this.lapisanBangunan.sort('y');
+  }
+
   private gambarHutanPulau(jangkar: number): void {
     const pusat = (GRID - 1) / 2;
     // Lahan terbuka bulat untuk kota; di luarnya hutan lebat sejauh pandang.
@@ -493,6 +498,9 @@ export class CityScene extends Phaser.Scene {
             .rectangle(awal.x, awal.y - 3, 3, 5, WARNA_WARGA[i % WARNA_WARGA.length])
             .setDepth(40)
             .setStrokeStyle(1, 0x16323f);
+      // Masuk ke lapisan bangunan dan diurutkan menurut y, supaya warga yang
+      // lewat di belakang gedung tertutup gedung itu.
+      this.lapisanBangunan.add(warga);
       this.wargaJalan.push(warga);
       const jalankan = (): void => {
         // Lanjut lurus bila bisa; di persimpangan kadang berbelok; berbalik
@@ -622,6 +630,7 @@ export class CityScene extends Phaser.Scene {
     const mulai = Math.floor(Math.random() * (rute.length - 1));
     const awal = rute[mulai]!;
     const bus = this.add.image(awal.x, awal.y + 4, asal.texture.key).setOrigin(0.5, 1).setScale(0.6).setDepth(42).setAlpha(0);
+    this.lapisanBangunan.add(bus);
     this.busBerjalan.push(bus);
     this.tweens.add({ targets: bus, alpha: 1, duration: 300 });
 
