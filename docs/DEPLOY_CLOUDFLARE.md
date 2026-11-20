@@ -53,20 +53,42 @@ npm run worker:deploy
 Catat URL yang muncul, misalnya `https://ecomath-mission-api.<akun>.workers.dev`.
 Buka `URL/health`; harus menjawab `{"status":"ok", ...}`.
 
-### 5. Deploy frontend (Cloudflare Pages)
+### 5. Deploy frontend
 
-Di dashboard Cloudflare: Workers & Pages → Create → Pages → Connect to Git.
+Cloudflare kini mengalihkan proyek Pages baru ke Workers dan mencoba memasang
+plugin Vite otomatis, yang gagal di proyek ini ("could not find a valid plugins
+array"). Karena itu frontend dikirim sebagai Worker berisi file statis saja.
 
-- Root directory: `client`
-- Build command: `npm run build`
-- Output directory: `dist`
-- Environment variable: `VITE_API_URL` = URL Worker dari langkah 4
-- Branch produksi: pilih branch yang ingin dipakai siswa
+Isi alamat backend di `client/.env.production`:
+
+```
+VITE_API_URL=https://ecomath-mission-api.<akun>.workers.dev
+```
+
+Lalu dari folder `client/`:
+
+```bash
+npm run deploy:cf
+```
+
+Alamatnya, misalnya `https://ecomath-mission.<akun>.workers.dev`, adalah yang
+dibagikan ke siswa. Jalankan perintah yang sama setiap kali tampilan berubah.
 
 ### 6. Sambungkan keduanya
 
-Ubah `CORS_ORIGIN` di `server/wrangler.jsonc` menjadi URL Pages (tanpa garis miring
-di akhir), lalu jalankan `npm run worker:deploy` lagi.
+Ubah `CORS_ORIGIN` di `server/wrangler.jsonc` menjadi alamat frontend (tanpa
+garis miring di akhir), lalu jalankan `npm run worker:deploy` lagi dari
+`server/`. Untuk pengembangan lokal, `server/.dev.vars` tetap berisi
+`CORS_ORIGIN=http://localhost:5173`.
+
+### Alamat yang sedang dipakai
+
+- Frontend: https://ecomath-mission.hudathoni.workers.dev
+- Backend: https://ecomath-mission-api.hudathoni.workers.dev
+
+**Penting:** semua perintah `npm run worker:*` dijalankan dari `server/`, dan
+`npm run deploy:cf` dari `client/`. Dijalankan dari folder akar akan muncul
+"Missing script".
 
 ## Uji lokal sebelum deploy
 
