@@ -129,6 +129,7 @@ export class CityScene extends Phaser.Scene {
     this.lapisanBangunan = this.add.container(0, 0);
 
     this.gambarDasar();
+    this.pasangAwan();
     this.siapkanBangunan();
     this.siapkanPenanda();
     this.siapkanSentuhan();
@@ -230,6 +231,31 @@ export class CityScene extends Phaser.Scene {
    * berada di tengah pulau berhutan di laut, bukan papan yang melayang.
    * Hanya dekorasi: tidak bisa diketuk dan tidak dihitung di mana pun.
    */
+  /** Barisan gunung bersalju di belakang hutan (paling jauh dari pandangan). */
+  private gambarGunung(lebar: number): void {
+    void lebar;
+    // Gunung berdiri di hutan tepat di belakang lahan kota agar terlihat.
+    const kiri = toIso(-4, GRID - 4).x;
+    const kanan = toIso(GRID - 4, -4).x;
+    const kaki = toIso(-5, -5).y + 10;
+    const g = this.add.graphics();
+    const jumlah = 7;
+    for (let i = 0; i < jumlah; i++) {
+      const cx = kiri + ((kanan - kiri) * (i + 0.5)) / jumlah;
+      const tinggi = 60 + ((i * 37) % 40);
+      const alas = 70;
+      const puncakY = kaki - tinggi;
+      g.fillStyle(i % 2 ? 0x6d7f8c : 0x5d6e7a, 1);
+      g.fillTriangle(cx - alas, kaki, cx + alas, kaki, cx, puncakY);
+      g.fillStyle(0x4c5a64, 1); // sisi bayangan
+      g.fillTriangle(cx, puncakY, cx + alas, kaki, cx + alas * 0.35, kaki);
+      g.fillStyle(0xf4f7f8, 1); // salju di puncak
+      g.fillTriangle(cx - alas * 0.25, puncakY + tinggi * 0.25, cx + alas * 0.25, puncakY + tinggi * 0.25, cx, puncakY);
+    }
+    g.setData('dekor', true);
+    this.lapisanDasar.addAt(g, 0);
+  }
+
   private gambarHutanPulau(jangkar: number): void {
     const pusat = (GRID - 1) / 2;
     // Lahan terbuka bulat untuk kota; di luarnya hutan lebat sejauh pandang.
@@ -241,6 +267,7 @@ export class CityScene extends Phaser.Scene {
       [`${-2},${Math.round(pusat)}`, 'sk_perpustakaan'],
       [`${Math.round(pusat)},${GRID + 1}`, 'sk_sekolah'],
     ]);
+    this.gambarGunung(lebar);
     const petak: Array<{ col: number; row: number }> = [];
     for (let row = -lebar; row < GRID + lebar; row++) {
       for (let col = -lebar; col < GRID + lebar; col++) {
@@ -256,8 +283,11 @@ export class CityScene extends Phaser.Scene {
       const { x, y } = toIso(col, row);
       const depan = col >= GRID || row >= GRID;
       const diLahan = Math.hypot(col - pusat, row - pusat) <= jari;
-      const tanah = this.add.image(x, y, 'tile_rumput').setOrigin(0.5, jangkar);
-      if (!diLahan) tanah.setTint(0x7fa37a); // lantai hutan lebih gelap
+      // Sungai berkelok dari pegunungan di belakang, menyusuri hutan sisi kiri.
+      const alurSungai = -lebar + 4 + Math.round(1.5 * Math.sin(row / 2.5));
+      const sungai = !diLahan && (col === alurSungai || col === alurSungai + 1);
+      const tanah = this.add.image(x, y, sungai ? 'tile_air_ul' : 'tile_rumput').setOrigin(0.5, jangkar).setData('dekor', true);
+      if (!diLahan && !sungai) tanah.setTint(0x7fa37a); // lantai hutan lebih gelap
       if (depan) tanah.setDepth(1 + (col + row) / 1000);
       else this.lapisanDasar.addAt(tanah, urutBelakang++);
 
@@ -265,7 +295,7 @@ export class CityScene extends Phaser.Scene {
       let skala = 1;
       if (diLahan) {
         kunci = fasilitas.get(`${col},${row}`) ?? null;
-      } else if (adaPohon) {
+      } else if (adaPohon && !sungai) {
         kunci = 'sk_pohon';
         skala = 0.75 + Math.random() * 0.3;
       }
@@ -273,7 +303,8 @@ export class CityScene extends Phaser.Scene {
       const benda = this.add
         .image(x + (diLahan ? 0 : (Math.random() - 0.5) * 6), y + TILE_H / 2, kunci)
         .setOrigin(0.5, 1)
-        .setScale(skala);
+        .setScale(skala)
+        .setData('dekor', true);
       if (depan) benda.setDepth(1.5 + (col + row) / 1000);
       else this.lapisanDasar.add(benda);
     }
@@ -440,6 +471,8 @@ export class CityScene extends Phaser.Scene {
     const rona = view.feasible ? 0xffffff : 0xffc9bd;
     for (const lapisan of [this.lapisanDasar, this.lapisanBangunan]) {
       lapisan.iterate((anak: Phaser.GameObjects.GameObject) => {
+        // Dekorasi alam (hutan, sungai, gunung) tidak ikut diwarnai status kota.
+        if (anak.getData('dekor') || !('setTint' in anak)) return true;
         (anak as Phaser.GameObjects.Image).setTint(rona);
         return true;
       });
@@ -868,6 +901,8 @@ export class CityScene extends Phaser.Scene {
     const rona = feasible ? 0xffffff : 0xffc9bd;
     for (const lapisan of [this.lapisanDasar, this.lapisanBangunan]) {
       lapisan.iterate((anak: Phaser.GameObjects.GameObject) => {
+        // Dekorasi alam (hutan, sungai, gunung) tidak ikut diwarnai status kota.
+        if (anak.getData('dekor') || !('setTint' in anak)) return true;
         (anak as Phaser.GameObjects.Image).setTint(rona);
         return true;
       });
