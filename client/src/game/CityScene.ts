@@ -80,7 +80,8 @@ const PALET_VISUAL: Record<VariableVisual, { top: string; left: string; right: s
 const PALET = {
   // Langit cerah; saat kendala dilanggar berubah ke jingga-merah muda hangat -
   // menandakan bahaya tanpa membuat peta jadi suram.
-  langit: 0x7cc4dd,
+  // Laut lepas di sekeliling pulau (bukan langit), supaya kota tidak tampak melayang.
+  langit: 0x2f86ad,
   langitBahaya: 0xd98b7a,
   air: { base: '#4bb3e0', light: '#6ecdf0', dark: '#3a9ac9', soil: '#2f7fa8', wave: true },
   pasir: '#f2dfa8',
@@ -217,6 +218,45 @@ export class CityScene extends Phaser.Scene {
 
         this.lapisanDasar.add(this.add.image(x, y, kunci).setOrigin(0.5, jangkar));
       }
+    }
+    this.gambarHutanPulau(jangkar);
+  }
+
+  /**
+   * Pulau bulat: di luar kisi kota (yang tidak berubah) ditambahkan cincin
+   * daratan berbentuk lingkaran yang ditumbuhi hutan, sehingga kota tampak
+   * berada di tengah pulau berhutan di laut, bukan papan yang melayang.
+   * Hanya dekorasi: tidak bisa diketuk dan tidak dihitung di mana pun.
+   */
+  private gambarHutanPulau(jangkar: number): void {
+    const pusat = (GRID - 1) / 2;
+    const jari = Math.hypot(pusat, pusat) + 1.2;
+    const lebar = 5;
+    const petak: Array<{ col: number; row: number }> = [];
+    for (let row = -lebar; row < GRID + lebar; row++) {
+      for (let col = -lebar; col < GRID + lebar; col++) {
+        const diKisi = col >= 0 && row >= 0 && col < GRID && row < GRID;
+        if (diKisi || Math.hypot(col - pusat, row - pusat) > jari) continue;
+        petak.push({ col, row });
+      }
+    }
+    // Urut dari belakang ke depan agar tumpukan isometrik benar.
+    petak.sort((a, b) => a.col + a.row - (b.col + b.row));
+    const adaPohon = this.textures.exists('sk_pohon');
+    let urutBelakang = 0;
+    for (const { col, row } of petak) {
+      const { x, y } = toIso(col, row);
+      const depan = col >= GRID || row >= GRID;
+      const tanah = this.add.image(x, y, 'tile_rumput').setOrigin(0.5, jangkar);
+      if (depan) tanah.setDepth(1 + (col + row) / 1000);
+      else this.lapisanDasar.addAt(tanah, urutBelakang++);
+      if (!adaPohon) continue;
+      const pohon = this.add
+        .image(x + (Math.random() - 0.5) * 6, y + TILE_H / 2, 'sk_pohon')
+        .setOrigin(0.5, 1)
+        .setScale(0.9 + Math.random() * 0.3);
+      if (depan) pohon.setDepth(1.5 + (col + row) / 1000);
+      else this.lapisanDasar.add(pohon);
     }
   }
 
@@ -628,12 +668,27 @@ export class CityScene extends Phaser.Scene {
     const kanan = toIso(GRID - 1, 0).x + 120;
     const atas = toIso(0, 0).y - 20;
     const bawah = toIso(GRID - 1, GRID - 1).y;
-    for (let i = 0; i < 6; i++) {
-      const y = atas + ((bawah - atas) * i) / 6;
+    // Riak ombak di laut sekitar pulau: garis putih tipis yang timbul-tenggelam.
+    for (let i = 0; i < 40; i++) {
+      const ox = kiri - 200 + Math.random() * (kanan - kiri + 400);
+      const oy = atas - 120 + Math.random() * (bawah - atas + 240);
+      const riak = this.add.rectangle(ox, oy, 8 + Math.random() * 8, 1.5, 0xbfe6f5).setDepth(-5).setAlpha(0);
+      this.tweens.add({
+        targets: riak,
+        alpha: 0.6,
+        x: ox + 6,
+        duration: 1400 + Math.random() * 1200,
+        yoyo: true,
+        repeat: -1,
+        delay: Math.random() * 2000,
+      });
+    }
+    for (let i = 0; i < 4; i++) {
+      const y = atas + ((bawah - atas) * i) / 4;
       const awan = this.add
         .image(kiri + Math.random() * (kanan - kiri), y, 'sk_awan')
         .setDepth(70)
-        .setAlpha(0.7)
+        .setAlpha(0.45)
         .setScale(1.2 + Math.random() * 0.8);
       const melintas = (): void => {
         const durasi = 26000 + Math.random() * 16000;
