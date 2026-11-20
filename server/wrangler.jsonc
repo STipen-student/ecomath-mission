@@ -1,26 +1,27 @@
 {
-  // Backend Ecomath Mission di Cloudflare Workers + D1 (branch cloudflare-workers).
-  "name": "ecomath-mission-api",
-  "main": "src/worker.ts",
-  "compatibility_date": "2026-11-14",
-  "compatibility_flags": ["nodejs_compat"],
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "ecomath",
-      // Ganti dengan ID dari `npx wrangler d1 create ecomath`.
-      "database_id": "GANTI-DENGAN-ID-D1",
-      "migrations_dir": "migrations-d1"
-    }
-  ],
-  "vars": {
-    "NODE_ENV": "production",
-    // Tidak dipakai di Workers (koneksi lewat binding DB), tetapi wajib ada untuk validasi config.
-    "DATABASE_URL": "d1",
-    // Ganti dengan URL Cloudflare Pages, tanpa garis miring di akhir.
-    "CORS_ORIGIN": "http://localhost:5173",
-    "ADAPTIVE_MODE": "false"
-  }
-  // ADMIN_API_KEY diisi sebagai secret: `npx wrangler secret put ADMIN_API_KEY`.
-  // Untuk wrangler dev lokal, isi di berkas .dev.vars (tidak di-commit).
+	// Backend Ecomath Mission di Cloudflare Workers + D1 (branch cloudflare-workers).
+	"name": "ecomath-mission-api",
+	"main": "src/worker.ts",
+	"compatibility_date": "2026-11-14",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "ecomath",
+			"database_id": "f09285b7-e235-4d1c-9599-ac7d87130d06",
+			"migrations_dir": "migrations-d1"
+		}
+	],
+	"vars": {
+		"NODE_ENV": "production",
+		// Tidak dipakai di Workers (koneksi lewat binding DB), tetapi wajib ada untuk validasi config.
+		"DATABASE_URL": "d1",
+		// Ganti dengan URL Cloudflare Pages, tanpa garis miring di akhir.
+		"CORS_ORIGIN": "http://localhost:5173",
+		"ADAPTIVE_MODE": "false"
+	}
+	// ADMIN_API_KEY diisi sebagai secret: `npx wrangler secret put ADMIN_API_KEY`.
+	// Untuk wrangler dev lokal, isi di berkas .dev.vars (tidak di-commit).
 }
