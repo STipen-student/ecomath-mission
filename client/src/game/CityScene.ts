@@ -210,7 +210,9 @@ export class CityScene extends Phaser.Scene {
 
         let kunci = 'tile_rumput';
         if (jenis === 'water') {
-          kunci = `tile_air_${this.sisiPantai(col, row)}`;
+          // Tepi kisi dulu berupa parit air; kini daratan, karena kota berada
+          // di tengah pulau dan parit membuatnya tampak tenggelam.
+          kunci = 'tile_rumput';
         } else if (jenis === 'road') {
           const bentuk = roadShape(col, row);
           kunci = bentuk.alongCol && bentuk.alongRow ? 'jalan_x' : bentuk.alongCol ? 'jalan_col' : 'jalan_row';
@@ -230,8 +232,8 @@ export class CityScene extends Phaser.Scene {
    */
   private gambarHutanPulau(jangkar: number): void {
     const pusat = (GRID - 1) / 2;
-    const jari = Math.hypot(pusat, pusat) + 1.2;
-    const lebar = 5;
+    const jari = Math.hypot(pusat, pusat) + 0.6;
+    const lebar = 4;
     const petak: Array<{ col: number; row: number }> = [];
     for (let row = -lebar; row < GRID + lebar; row++) {
       for (let col = -lebar; col < GRID + lebar; col++) {
@@ -250,11 +252,16 @@ export class CityScene extends Phaser.Scene {
       const tanah = this.add.image(x, y, 'tile_rumput').setOrigin(0.5, jangkar);
       if (depan) tanah.setDepth(1 + (col + row) / 1000);
       else this.lapisanDasar.addAt(tanah, urutBelakang++);
-      if (!adaPohon) continue;
+      // Pohon hanya di cincin tengah: satu petak rumput di dekat kota dan di
+      // pantai luar dibiarkan terbuka, dan pohonnya pendek, agar kota tidak
+      // tampak terbenam di antara pepohonan.
+      const keKisi = Math.max(-col, -row, col - (GRID - 1), row - (GRID - 1));
+      const keTepi = jari - Math.hypot(col - pusat, row - pusat);
+      if (!adaPohon || keKisi < 2 || keTepi < 1) continue;
       const pohon = this.add
         .image(x + (Math.random() - 0.5) * 6, y + TILE_H / 2, 'sk_pohon')
         .setOrigin(0.5, 1)
-        .setScale(0.9 + Math.random() * 0.3);
+        .setScale(0.55 + Math.random() * 0.2);
       if (depan) pohon.setDepth(1.5 + (col + row) / 1000);
       else this.lapisanDasar.add(pohon);
     }
