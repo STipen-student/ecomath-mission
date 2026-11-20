@@ -468,18 +468,23 @@ export class CityScene extends Phaser.Scene {
       this.jumlahWargaTertunda = jumlah;
       return;
     }
-    const jalan: Array<{ x: number; y: number }> = [];
+    // Warga dan pesepeda bergerak petak demi petak HANYA di ubin jalan,
+    // berbelok di persimpangan, sehingga tidak pernah menembus gedung.
+    const jalan: Array<{ col: number; row: number }> = [];
     for (let row = 0; row < GRID; row++) {
       for (let col = 0; col < GRID; col++) {
-        if (tileKind(col, row) === 'road') jalan.push(toIso(col, row));
+        if (tileKind(col, row) === 'road') jalan.push({ col, row });
       }
     }
     if (jalan.length < 2) return;
     this.pasangAwan();
-    const acak = () => jalan[Math.floor(Math.random() * jalan.length)]!;
+    const diJalan = (c: number, r: number): boolean => c >= 0 && r >= 0 && c < GRID && r < GRID && tileKind(c, r) === 'road';
+    const ARAH = [[1, 0], [-1, 0], [0, 1], [0, -1]] as const;
 
     for (let i = 0; i < jumlah; i++) {
-      const awal = acak();
+      let pos = jalan[Math.floor(Math.random() * jalan.length)]!;
+      let arah: readonly [number, number] = ARAH[Math.floor(Math.random() * 4)]!;
+      const awal = toIso(pos.col, pos.row);
       // Kira-kira sepertiga warga berkeliling kota dengan sepeda.
       const bersepeda = i % 3 === 0;
       const warga: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image = bersepeda
@@ -490,15 +495,22 @@ export class CityScene extends Phaser.Scene {
             .setStrokeStyle(1, 0x16323f);
       this.wargaJalan.push(warga);
       const jalankan = (): void => {
-        const tujuan = acak();
-        const jarak = Math.hypot(tujuan.x - warga.x, tujuan.y - warga.y);
+        // Lanjut lurus bila bisa; di persimpangan kadang berbelok; berbalik
+        // hanya bila jalan buntu.
+        const pilihan = ARAH.filter(([dc, dr]) => diJalan(pos.col + dc, pos.row + dr) && !(dc === -arah[0] && dr === -arah[1]));
+        const lurus = pilihan.find(([dc, dr]) => dc === arah[0] && dr === arah[1]);
+        if (lurus && (pilihan.length === 1 || Math.random() < 0.7)) arah = lurus;
+        else if (pilihan.length > 0) arah = pilihan[Math.floor(Math.random() * pilihan.length)]!;
+        else arah = [-arah[0], -arah[1]];
+        if (diJalan(pos.col + arah[0], pos.row + arah[1])) pos = { col: pos.col + arah[0], row: pos.row + arah[1] };
+        const tujuan = toIso(pos.col, pos.row);
         if (bersepeda) (warga as Phaser.GameObjects.Image).setFlipX(tujuan.x < warga.x);
         this.tweens.add({
           targets: warga,
           x: tujuan.x,
           y: tujuan.y - 3,
-          duration: Math.max(bersepeda ? 700 : 1200, jarak * (bersepeda ? 12 : 28)),
-          delay: Math.random() * 800,
+          duration: bersepeda ? 260 : 620,
+          delay: Math.random() < 0.05 ? 600 : 0,
           ease: 'Linear',
           onComplete: jalankan,
         });
