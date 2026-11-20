@@ -617,15 +617,13 @@ export class PlayScreen {
       el(
         'p',
         { class: 'hint' },
-        'Titik pojok di bawah dihitung dari kendala yang SUDAH kamu tulis di panel "Kendala" - bukan dari jawaban sebenarnya. Bila hasilnya terasa aneh, periksa kembali tulisanmu, bukan titik pojoknya.',
-      ),
-      el(
-        'p',
-        { class: 'hint' },
         this.objective.type === 'none'
-          ? 'Periksa titik-titik ini untuk memastikan pemahamanmu terhadap daerah penyelesaian.'
-          : 'Hitung nilai Z pada tiap titik pojok untuk menemukan yang paling menguntungkan.',
+          ? 'Soal ini adalah sistem pertidaksamaan tanpa fungsi tujuan, jadi yang dicari adalah HIMPUNAN PENYELESAIAN: semua pasangan (x, y) yang memenuhi setiap kendala. Uji beberapa titik untuk melihat apakah titik itu termasuk anggota himpunan penyelesaian menurut kendala yang SUDAH kamu tulis di panel "Perda".'
+          : 'Titik pojok di bawah dihitung dari kendala yang SUDAH kamu tulis di panel "Kendala" - bukan dari jawaban sebenarnya. Bila hasilnya terasa aneh, periksa kembali tulisanmu, bukan titik pojoknya.',
       ),
+      ...(this.objective.type === 'none'
+        ? []
+        : [el('p', { class: 'hint' }, 'Hitung nilai Z pada tiap titik pojok untuk menemukan yang paling menguntungkan.')]),
       this.panelPojok,
     );
   }
@@ -938,9 +936,14 @@ export class PlayScreen {
         el(
           'p',
           { class: 'hint' },
-          `Baru ${this.tulisanKendala.filter((k) => k !== null).length} dari ${this.tulisanKendala.length} kendala yang kamu tulis. Titik di bawah bisa berubah setelah kamu melengkapinya.`,
+          `Baru ${this.tulisanKendala.filter((k) => k !== null).length} dari ${this.tulisanKendala.length} kendala yang kamu tulis. ${this.objective.type === 'none' ? 'Hasil uji titik bisa berubah setelah kamu melengkapinya.' : 'Titik di bawah bisa berubah setelah kamu melengkapinya.'}`,
         ),
       );
+    }
+
+    if (this.objective.type === 'none') {
+      this.panelPojok.append(this.ujiHimpunan());
+      return;
     }
 
     if (kandidat.length === 0) {
@@ -948,7 +951,7 @@ export class PlayScreen {
       return;
     }
 
-    if (this.objective.type !== 'none') this.panelPojok.append(this.labelRekor);
+    this.panelPojok.append(this.labelRekor);
 
     for (const p of kandidat) {
       const hasilZ = el('span', { class: 'corner-z' }, '—');
@@ -976,6 +979,62 @@ export class PlayScreen {
         el('div', { class: 'corner-row' }, el('code', { class: 'corner-coord' }, `(${num(p.x)}, ${num(p.y)})`), hasilZ, hitung, pakai),
       );
     }
+  }
+
+  /**
+   * Uji keanggotaan himpunan penyelesaian (soal SPtLDV tanpa fungsi tujuan).
+   * Siswa memasukkan sembarang (x, y) dan sistem menjawab apakah titik itu
+   * memenuhi SETIAP kendala tulisannya. Dicatat sebagai check_corner_point
+   * (z = null) seperti sebelumnya, sehingga mesin skoring tidak berubah.
+   */
+  private ujiHimpunan(): HTMLElement {
+    const t = this.ctx.task;
+    const masukan = (label: string, nilai: number, max: number): HTMLInputElement =>
+      el('input', { type: 'number', min: '0', max: String(max), step: 'any', value: String(nilai), ariaLabel: label, class: 'uji-hp-input' });
+    const inX = masukan('Nilai x', this.x, t.variables.x.max);
+    const inY = masukan('Nilai y', this.y, t.variables.y.max);
+    const hasil = el('p', { class: 'hint' }, 'Masukkan titik, lalu tekan Uji.');
+    const riwayat = el('ul', { class: 'uji-hp-riwayat' });
+
+    const uji = el('button', { class: 'btn btn-tiny' }, 'Uji');
+    uji.addEventListener('click', () => {
+      const x = Number(inX.value);
+      const y = Number(inY.value);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        hasil.textContent = 'Isi x dan y dengan angka.';
+        return;
+      }
+      if (this.tulisanKendala.every((k) => k === null)) {
+        hasil.textContent = 'Tulis dulu kendalamu di panel "Perda", baru uji titiknya.';
+        hasil.className = 'hint';
+        return;
+      }
+      const kendala = this.tulisanUntukPerhitungan();
+      const ev = evaluate(kendala, x, y);
+      const dilanggar = kendala.filter((k) => ev.violated.has(k.id)).map((k) => k.label);
+      const teks = ev.feasible
+        ? `(${num(x)}, ${num(y)}) ∈ HP: memenuhi semua kendala yang kamu tulis.`
+        : `(${num(x)}, ${num(y)}) ∉ HP: tidak memenuhi ${dilanggar.join(', ')}.`;
+      hasil.textContent = teks;
+      hasil.className = ev.feasible ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad';
+      riwayat.prepend(el('li', {}, teks));
+      this.cb.onCheckCorner(x, y, null);
+      this.tandaiSelesai('pojok');
+    });
+
+    const pakaiSekarang = el('button', { class: 'btn btn-tiny btn-ghost' }, 'Isi dari peta');
+    pakaiSekarang.addEventListener('click', () => {
+      inX.value = String(this.x);
+      inY.value = String(this.y);
+    });
+
+    return el(
+      'div',
+      { class: 'uji-hp' },
+      el('div', { class: 'uji-hp-baris' }, el('span', {}, 'x ='), inX, el('span', {}, 'y ='), inY, uji, pakaiSekarang),
+      hasil,
+      riwayat,
+    );
   }
 
   /**

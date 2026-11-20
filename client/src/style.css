@@ -3235,3 +3235,22 @@ body {
   font-size: 0.8rem;
   color: #1d3640;
 }
+
+/* Uji himpunan penyelesaian (SPtLDV tanpa fungsi tujuan) */
+.uji-hp-baris {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.uji-hp-input {
+  width: 72px;
+  padding: 4px 6px;
+}
+
+.uji-hp-riwayat {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
