@@ -100,6 +100,10 @@ interface Keadaan {
   bangunanKota: Array<{ seed: number; jenis: string }>;
   /** Perbaikan kota hasil tanggapan protes yang tepat ('ganti-listrik' | 'tambah-hijau'). */
   perbaikanKota: string[];
+  /** Tiket Kotak Kejutan, didapat dari MENGIKUTI kegiatan AaL (bukan dari isinya). */
+  tiketGacha: number;
+  /** Kartu warga yang sudah dikumpulkan dari Kotak Kejutan. */
+  koleksi: string[];
 }
 
 const kosong = (): Keadaan => ({
@@ -112,7 +116,43 @@ const kosong = (): Keadaan => ({
   perpustakaanTerbuka: false,
   bangunanKota: [],
   perbaikanKota: [],
+  tiketGacha: 0,
+  koleksi: [],
 });
+
+/**
+ * Kotak Kejutan (gacha). Peluangnya ditampilkan apa adanya kepada siswa.
+ * Isinya hanya koin dan kartu warga koleksi: tidak ada yang memengaruhi
+ * skor K1-K4, level, atau data AaL. Tidak ada uang sungguhan.
+ */
+export const KARTU_WARGA = [
+  { id: 'bu-sari', nama: 'Bu Sari, pesepeda pagi', ikon: '🚲', langka: false },
+  { id: 'pak-darto', nama: 'Pak Darto, sopir bus listrik', ikon: '🚌', langka: false },
+  { id: 'nina', nama: 'Nina, perawat taman', ikon: '🌷', langka: false },
+  { id: 'dimas', nama: 'Dimas, pelajar SD', ikon: '🎒', langka: false },
+  { id: 'oma-reni', nama: 'Oma Reni, penjaga perpustakaan', ikon: '📚', langka: false },
+  { id: 'mbak-lusi', nama: 'Mbak Lusi, teknisi panel surya', ikon: '☀️', langka: true },
+  { id: 'bu-laras', nama: 'Bu Laras, Kepala Perencanaan', ikon: '🗺️', langka: true },
+  { id: 'dr-andi', nama: 'dr. Andi, dokter rumah sakit kota', ikon: '🩺', langka: true },
+] as const;
+
+export const HARGA_GACHA_KOIN = 40;
+
+/** Peluang tiap hasil (jumlah = 100). Ditampilkan di layar. */
+export const PELUANG_GACHA = [
+  { hasil: '10 koin', persen: 35 },
+  { hasil: '25 koin', persen: 20 },
+  { hasil: '60 koin', persen: 5 },
+  { hasil: 'Kartu warga biasa', persen: 30 },
+  { hasil: 'Kartu warga langka', persen: 10 },
+] as const;
+
+export interface HasilGacha {
+  ok: boolean;
+  pesan: string;
+  ikon?: string;
+  langka?: boolean;
+}
 
 /** Hasil sebuah aksi: misi yang baru selesai beserta koinnya. */
 export interface HadiahBaru {
@@ -236,6 +276,55 @@ export class Progres {
     this.k.bukaMisi++;
     this.simpan();
     return this.k.bukaMisi >= 3 ? this.selesaikan('penjelajah-misi') : { misi: [], koin: 0 };
+  }
+
+  get tiketGacha(): number {
+    return this.k.tiketGacha;
+  }
+
+  koleksi(): string[] {
+    return [...this.k.koleksi];
+  }
+
+  /**
+   * Satu tiket untuk setiap kegiatan AaL yang DIIKUTI (penilaian diri,
+   * tanggapan protes, refleksi akhir). Isi jawaban tidak dibaca sama sekali,
+   * jadi tidak ada alasan menilai diri lebih tinggi atau lebih rendah.
+   */
+  beriTiket(): void {
+    this.k.tiketGacha++;
+    this.simpan();
+  }
+
+  /** Buka satu Kotak Kejutan dengan tiket (bila ada) atau koin. */
+  tarikGacha(pakai: 'tiket' | 'koin'): HasilGacha {
+    if (pakai === 'tiket') {
+      if (this.k.tiketGacha < 1) return { ok: false, pesan: 'Tiketmu habis. Ikuti kegiatan refleksi untuk mendapat tiket.' };
+      this.k.tiketGacha--;
+    } else {
+      if (this.k.koin < HARGA_GACHA_KOIN) return { ok: false, pesan: `Koin kurang: perlu ${HARGA_GACHA_KOIN} 🪙.` };
+      this.k.koin -= HARGA_GACHA_KOIN;
+    }
+    const r = Math.random() * 100;
+    let hasil: HasilGacha;
+    if (r < 60) {
+      const koin = r < 35 ? 10 : r < 55 ? 25 : 60;
+      this.k.koin += koin;
+      hasil = { ok: true, pesan: `Kamu mendapat ${koin} koin!`, ikon: '🪙', langka: koin === 60 };
+    } else {
+      const langka = r >= 90;
+      const kumpulan = KARTU_WARGA.filter((k) => k.langka === langka);
+      const kartu = kumpulan[Math.floor(Math.random() * kumpulan.length)]!;
+      if (this.k.koleksi.includes(kartu.id)) {
+        this.k.koin += 15;
+        hasil = { ok: true, pesan: `Kartu ${kartu.nama} sudah kamu punya, ditukar 15 koin.`, ikon: kartu.ikon, langka };
+      } else {
+        this.k.koleksi.push(kartu.id);
+        hasil = { ok: true, pesan: `Kartu baru${langka ? ' LANGKA' : ''}: ${kartu.nama}!`, ikon: kartu.ikon, langka };
+      }
+    }
+    this.simpan();
+    return hasil;
   }
 
   /** Beli barang dengan koin. Mengembalikan pesan untuk ditampilkan. */

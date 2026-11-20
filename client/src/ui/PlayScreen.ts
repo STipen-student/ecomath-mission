@@ -1320,15 +1320,17 @@ export class PlayScreen {
    * menyesuaikan penilaiannya.
    */
   private bukaPenilaianDiri(closedOptionId: string | undefined, openText: string | undefined): void {
-    const isi = formPenilaianDiri(this.ctx.task, this.ctx.target ?? null, (skor) =>
-      this.cb.onFinish({
+    const isi = formPenilaianDiri(this.ctx.task, this.ctx.target ?? null, (skor) => {
+      // Tiket Kotak Kejutan karena MENGIKUTI penilaian diri; isi skor tidak dibaca.
+      progresAktif()?.beriTiket();
+      return this.cb.onFinish({
         finalX: this.x,
         finalY: this.y,
         reflectionClosedOptionId: closedOptionId,
         reflectionOpenText: openText,
         selfAssessment: skor,
-      }),
-    );
+      });
+    });
 
     this.laci.set('nilai-diri', {
       id: 'nilai-diri',

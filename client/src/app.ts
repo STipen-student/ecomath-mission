@@ -45,6 +45,7 @@ export class App {
    */
   private async catatTanggapanProtes(t: TanggapanProtes): Promise<void> {
     logger.record('aal_tanggapan_protes', { ...t }, true);
+    this.progres?.beriTiket();
     await logger.flush();
   }
 
@@ -390,6 +391,7 @@ export class App {
             // log masih menunjuk ke task itu. Disaring dari skoring di server.
             async (refleksi) => {
               logger.record('learning_reflection', { ...refleksi }, true);
+              this.progres?.beriTiket();
               await logger.flush();
               logger.stop();
               this.refleksiTercatat = true;

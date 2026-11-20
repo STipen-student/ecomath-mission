@@ -90,3 +90,19 @@ narasinya.
 **Batas.** Kegiatan ini opsional dan hanya muncul bila ada protes, jadi tidak
 semua siswa mengerjakannya. Datanya cocok untuk analisis deskriptif kemandirian
 belajar, bukan untuk dibandingkan antarsiswa seperti skor K1–K4.
+
+## Kotak Kejutan (gacha)
+
+Di panel Misi & Hadiah ada **Kotak Kejutan**. Sekali buka memakai 1 tiket atau
+40 koin, dan hasilnya acak dengan peluang yang ditampilkan ke siswa: 10 koin
+(35%), 25 koin (20%), 60 koin (5%), kartu warga biasa (30%), atau kartu warga
+langka (10%). Kartu ganda ditukar 15 koin. Ada 8 kartu warga untuk dikoleksi.
+
+**Tiket** didapat setiap kali siswa **mengikuti** kegiatan AaL: penilaian diri
+di akhir level, tanggapan protes warga, dan refleksi akhir sesi. Isi jawaban
+tidak dibaca sama sekali, jadi tidak ada insentif menilai diri lebih tinggi atau
+lebih rendah, dan data kalibrasi AaL tetap jujur.
+
+**Batas.** Tidak ada uang sungguhan. Hasil gacha hanya koin dan kartu koleksi,
+disimpan di perangkat (localStorage), tidak dikirim ke server, dan tidak
+memengaruhi skor K1–K4, pemilihan soal, atau event yang dinilai.

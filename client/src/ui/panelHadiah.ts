@@ -3,7 +3,8 @@
  * Hanya tampilan; aturan dan batasnya ada di game/progres.ts.
  */
 
-import { BARANG, MISI, type HadiahBaru, type Progres } from '../game/progres.js';
+import { BARANG, HARGA_GACHA_KOIN, KARTU_WARGA, MISI, PELUANG_GACHA, type HadiahBaru, type Progres } from '../game/progres.js';
+import { bunyikan } from '../game/suara.js';
 import { el } from './dom.js';
 
 /** Spanduk hadiah yang baru didapat. Null bila tidak ada hadiah baru. */
@@ -89,6 +90,7 @@ export function panelMisi(progres: Progres, opsi: { toko: boolean } = { toko: tr
         'Penilaian dirimu tidak pernah memengaruhi hadiah, jadi nilai dirimu dengan jujur. Hampir semua hadiah juga tidak bergantung pada skor; hanya satu misi tersembunyi yang terbuka saat skormu tinggi.',
       ),
       el('ul', { class: 'hadiah-daftar' }, ...daftar),
+      kotakKejutan(progres, gambar),
       ...toko,
       ...(pesan ? [el('p', { class: 'note' }, pesan)] : []),
     );
@@ -178,4 +180,50 @@ export function tombolPerpustakaan(progres: Progres | undefined): HTMLElement | 
   const b = el('button', { class: 'btn btn-block' }, progres.sudah('bantu-perpustakaan') ? '📚  PERPUSTAKAAN KOTA' : '📚  BU RANI BUTUH BANTUAN!');
   b.addEventListener('click', () => bukaPerpustakaan(progres));
   return b;
+}
+
+/** Kotak Kejutan (gacha): koin dan kartu warga koleksi. Tidak memengaruhi skor. */
+function kotakKejutan(progres: Progres, gambarUlang: (pesan?: string) => void): HTMLElement {
+  const hasil = el('p', { class: 'gacha-hasil' }, '');
+  const buka = (pakai: 'tiket' | 'koin'): void => {
+    const h = progres.tarikGacha(pakai);
+    if (!h.ok) {
+      hasil.textContent = h.pesan;
+      return;
+    }
+    bunyikan('terima');
+    gambarUlang(`${h.ikon ?? '🎁'} ${h.pesan}`);
+  };
+  const tTiket = el('button', { class: 'btn btn-small' }, `🎟 Buka dengan tiket (${progres.tiketGacha})`);
+  tTiket.disabled = progres.tiketGacha < 1;
+  tTiket.addEventListener('click', () => buka('tiket'));
+  const tKoin = el('button', { class: 'btn btn-small btn-ghost' }, `Buka dengan ${HARGA_GACHA_KOIN} 🪙`);
+  tKoin.disabled = progres.koin < HARGA_GACHA_KOIN;
+  tKoin.addEventListener('click', () => buka('koin'));
+
+  const punya = new Set(progres.koleksi());
+  return el(
+    'div',
+    { class: 'gacha' },
+    el('h4', {}, '🎁 KOTAK KEJUTAN'),
+    el(
+      'p',
+      { class: 'hint' },
+      'Dapatkan 1 tiket setiap kali kamu MENGIKUTI kegiatan refleksi: penilaian diri, tanggapan protes warga, dan refleksi akhir. Isi jawabanmu tidak memengaruhi tiket, jadi jawablah dengan jujur.',
+    ),
+    el('div', { class: 'gacha-tombol' }, tTiket, tKoin),
+    hasil,
+    el('small', { class: 'hint' }, `Peluang: ${PELUANG_GACHA.map((p) => `${p.hasil} ${p.persen}%`).join(' · ')}. Kartu ganda ditukar 15 koin.`),
+    el(
+      'div',
+      { class: 'gacha-koleksi' },
+      ...KARTU_WARGA.map((k) =>
+        el(
+          'span',
+          { class: `gacha-kartu${punya.has(k.id) ? ' is-punya' : ''}${k.langka ? ' is-langka' : ''}`, ariaLabel: punya.has(k.id) ? k.nama : 'Kartu belum didapat' },
+          punya.has(k.id) ? k.ikon : '❔',
+        ),
+      ),
+    ),
+  );
 }

@@ -3270,3 +3270,52 @@ body {
 .panduan-isi p {
   margin: 4px 0;
 }
+
+/* Kotak Kejutan (gacha) */
+.gacha {
+  margin: 12px 0;
+  padding: 10px;
+  border: 2px dashed #c58a00;
+  border-radius: 8px;
+  background: #fff8e1;
+}
+
+.gacha-tombol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gacha-hasil {
+  font-weight: 700;
+  min-height: 1em;
+}
+
+.gacha-koleksi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.gacha-kartu {
+  width: 34px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  border: 2px solid #1d3640;
+  border-radius: 6px;
+  background: #e8e2d2;
+  opacity: 0.5;
+}
+
+.gacha-kartu.is-punya {
+  opacity: 1;
+  background: #ffffff;
+}
+
+.gacha-kartu.is-langka.is-punya {
+  border-color: #c58a00;
+  box-shadow: 0 0 0 2px #f5c542;
+}
