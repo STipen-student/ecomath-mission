@@ -217,15 +217,17 @@ export function bukaPetaWilayah(
       const jenisSemua = (): string[] => [...g.petak.values()].map(jenisDariKode);
       const hijauKini = (): number => jenisSemua().filter((j) => JENIS_HIJAU.has(j)).length;
       const hunian = [...g.petak].filter(([, k]) => JENIS_HUNIAN.has(jenisDariKode(k))).map(([s]) => s);
+      // Hanya petak bangun (bukan jalan/air) yang masih kosong, terdekat ke hunian dulu.
+      const jarak = (seed: number): number =>
+        Math.min(...hunian.map((h) => Math.hypot((h % GRID) - (seed % GRID), Math.floor(h / GRID) - Math.floor(seed / GRID))));
+      const kosong = plotTiles()
+        .map((t) => t.seed)
+        .filter((seed) => !g.petak.has(seed))
+        .sort((a, b) => jarak(a) - jarak(b));
       let i = 0;
-      outer: for (const s of hunian) {
-        for (const d of [1, -1, GRID, -GRID, GRID + 1, GRID - 1, -GRID + 1, -GRID - 1]) {
-          if (hijauKini() / g.petak.size >= 0.25) break outer;
-          const t = s + d;
-          if (t < 0 || t >= GRID * GRID || g.petak.has(t) || Math.abs((t % GRID) - (s % GRID)) > 1) continue;
-          g.petak.set(t, i++ % 2 ? 's:taman-kota' : 's:pohon');
-          g.hijau++;
-        }
+      for (const seed of kosong) {
+        if (hunian.length === 0 || hijauKini() / g.petak.size >= 0.25) break;
+        g.petak.set(seed, i++ % 2 ? 's:taman-kota' : 's:pohon');
       }
     }
     // Hitung ulang indeks dari isi peta akhir, sehingga pembelian bangunan hijau
