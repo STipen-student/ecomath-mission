@@ -42,6 +42,7 @@ import {
   TILE_W,
 } from './pixel/textures.js';
 import { buatSpriteKota, kunciSprite, SPRITE_BERASAP, type SpriteKota } from './pixel/spriteKota.js';
+import { bunyiProtes } from './suara.js';
 import { JENIS_BERASAP, JENIS_HUNIAN, jenisDariKode, periksaStandar, SERUAN } from './standarSdg.js';
 
 export interface AllocationView {
@@ -687,9 +688,10 @@ export class CityScene extends Phaser.Scene {
     }
 
     const zoom = Math.max(0.25, this.kamera.zoom);
+    bunyiProtes();
     const seruan = SERUAN[p.sdg][Math.floor(Math.random() * SERUAN[p.sdg].length)]!;
     const teks = this.add
-      .text(sasaran.x, sasaran.y - 16, `📢 SDG ${p.sdg}: ${seruan}`, {
+      .text(sasaran.x, sasaran.y - 16, `📢 ${seruan}`, {
         fontFamily: 'system-ui, sans-serif',
         fontSize: `${Math.round(11 / zoom)}px`,
         color: '#ffffff',

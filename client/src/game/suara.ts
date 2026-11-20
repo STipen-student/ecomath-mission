@@ -139,3 +139,16 @@ export function pasangBunyiKlik(): void {
     { capture: true },
   );
 }
+
+/** Suara notifikasi protes warga (file rekaman di public/suara/protes.mp3). */
+let rekamanProtes: HTMLAudioElement | null = null;
+export function bunyiProtes(): void {
+  if (sedangBisu()) return;
+  try {
+    rekamanProtes ??= new Audio(`${import.meta.env.BASE_URL}suara/protes.mp3`);
+    rekamanProtes.currentTime = 0;
+    void rekamanProtes.play().catch(() => {});
+  } catch {
+    // Audio tidak didukung: diam saja.
+  }
+}

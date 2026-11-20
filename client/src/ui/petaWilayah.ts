@@ -336,6 +336,7 @@ export function bukaPetaWilayah(
               return kotak;
             })();
       })(),
+      kabarWarga(g.petak, persenHijau),
       el(
         'ul',
         { class: 'peta-wilayah-daftar' },
@@ -397,4 +398,40 @@ export function tombolPetaWilayah(
   const b = el('button', { class: 'btn btn-block' }, `🗺  PETA WILAYAH (${kota.length} kota)`);
   b.addEventListener('click', () => bukaPetaWilayah(kota, progres, onTanggapan));
   return b;
+}
+
+/**
+ * "Kabar Warga": linimasa pendek unggahan warga yang bereaksi terhadap kota
+ * akhir (kepuasan, keluhan, tren). Hanya tampilan; tidak mencatat event dan
+ * tidak memengaruhi skor.
+ */
+const NAMA_WARGA = ['@bu_sari', '@raka.gowes', '@pak_darto', '@nina_taman', '@ojik_bus', '@mbak_lusi', '@dimas.kecil', '@oma_reni'];
+
+function kabarWarga(petak: Map<number, string>, persenHijau: number): HTMLElement {
+  const jenis = new Set([...petak.values()].map(jenisDariKode));
+  const ada = (j: string): boolean => jenis.has(j);
+  const unggahan: Array<{ teks: string; suka: boolean }> = [];
+  if (ada('bus-konvensional')) unggahan.push({ teks: 'Nunggu di halte, asap busnya bikin batuk terus. 😷', suka: false });
+  if (ada('mesin-fosil') || ada('pabrik')) unggahan.push({ teks: 'Siang ini kotanya panas banget, langitnya abu-abu. 🥵', suka: false });
+  if (persenHijau < 50) unggahan.push({ teks: 'Pohonnya sedikit, mau berteduh saja susah. 🌡️', suka: false });
+  if (ada('bus-listrik')) unggahan.push({ teks: 'Naik bus listrik pagi ini, sepi suaranya dan adem. 🚌⚡', suka: true });
+  if (ada('surya') || ada('turbin')) unggahan.push({ teks: 'Listrik dari panel surya dan kincir angin, tagihan jadi hemat! ☀️🌬️', suka: true });
+  if (ada('sepeda') || ada('trotoar')) unggahan.push({ teks: 'Gowes ke sekolah lewat jalur sepeda, aman dan cepat. 🚲', suka: true });
+  if (persenHijau >= 50) unggahan.push({ teks: 'Sore-sore jalan di taman, udaranya segar. 🌳', suka: true });
+  if (ada('perpustakaan')) unggahan.push({ teks: 'Perpustakaan kota ramai, ada pojok buku tentang iklim. 📚', suka: true });
+  if (ada('pabrik-hijau') || ada('toko')) unggahan.push({ teks: 'Toko dan pabrik baru buka, tetangga dapat kerja. 💼', suka: true });
+
+  return el(
+    'div',
+    { class: 'kabar-warga' },
+    el('strong', {}, '📱 Kabar Warga'),
+    ...unggahan.slice(0, 6).map((u, i) =>
+      el(
+        'div',
+        { class: `kabar-warga-item ${u.suka ? 'suka' : 'keluh'}` },
+        el('span', { class: 'kabar-warga-nama' }, NAMA_WARGA[i % NAMA_WARGA.length]!),
+        el('span', {}, u.teks),
+      ),
+    ),
+  );
 }

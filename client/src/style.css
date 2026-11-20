@@ -3201,3 +3201,37 @@ body {
   padding-top: 8px;
   border-top: 2px dashed #d9534f;
 }
+
+/* Kabar Warga: linimasa unggahan warga di Peta Wilayah */
+.kabar-warga {
+  margin: 8px 0;
+  padding: 8px 10px;
+  background: #fff;
+  border: 2px solid #1d3640;
+  border-radius: 8px;
+  font-family: var(--font-read);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kabar-warga-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  border-left: 4px solid #4caf50;
+  background: #f3faf2;
+  border-radius: 4px;
+}
+
+.kabar-warga-item.keluh {
+  border-left-color: #d9534f;
+  background: #fdecea;
+}
+
+.kabar-warga-nama {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #1d3640;
+}

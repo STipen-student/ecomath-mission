@@ -54,6 +54,6 @@ export function periksaStandar(jenisDaftar: string[]): Pelanggaran[] {
 
 /** Seruan protes warga per SDG. */
 export const SERUAN: Record<11 | 13, string[]> = {
-  13: ['Tolak asap!', 'Kami butuh udara bersih!', 'Ganti ke energi bersih!', 'Stop polusi!'],
-  11: ['Kami butuh taman!', 'Mana ruang hijaunya?', 'Kota untuk warga, bukan beton!'],
+  13: ['Kotanya makin panas!', 'Asapnya bikin sesak napas!', 'Udaranya kotor, anak-anak batuk!', 'Langit jadi abu-abu!', 'Ganti ke energi bersih!'],
+  11: ['Panas, tidak ada pohon!', 'Anak-anak main di mana?', 'Kota untuk warga, bukan beton!', 'Kami butuh taman!', 'Tidak ada tempat berteduh!'],
 };
