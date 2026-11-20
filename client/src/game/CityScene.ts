@@ -231,31 +231,6 @@ export class CityScene extends Phaser.Scene {
    * berada di tengah pulau berhutan di laut, bukan papan yang melayang.
    * Hanya dekorasi: tidak bisa diketuk dan tidak dihitung di mana pun.
    */
-  /** Barisan gunung bersalju di belakang hutan (paling jauh dari pandangan). */
-  private gambarGunung(lebar: number): void {
-    void lebar;
-    // Gunung berdiri di hutan tepat di belakang lahan kota agar terlihat.
-    const kiri = toIso(-4, GRID - 4).x;
-    const kanan = toIso(GRID - 4, -4).x;
-    const kaki = toIso(-5, -5).y + 10;
-    const g = this.add.graphics();
-    const jumlah = 7;
-    for (let i = 0; i < jumlah; i++) {
-      const cx = kiri + ((kanan - kiri) * (i + 0.5)) / jumlah;
-      const tinggi = 60 + ((i * 37) % 40);
-      const alas = 70;
-      const puncakY = kaki - tinggi;
-      g.fillStyle(i % 2 ? 0x6d7f8c : 0x5d6e7a, 1);
-      g.fillTriangle(cx - alas, kaki, cx + alas, kaki, cx, puncakY);
-      g.fillStyle(0x4c5a64, 1); // sisi bayangan
-      g.fillTriangle(cx, puncakY, cx + alas, kaki, cx + alas * 0.35, kaki);
-      g.fillStyle(0xf4f7f8, 1); // salju di puncak
-      g.fillTriangle(cx - alas * 0.25, puncakY + tinggi * 0.25, cx + alas * 0.25, puncakY + tinggi * 0.25, cx, puncakY);
-    }
-    g.setData('dekor', true);
-    this.lapisanDasar.addAt(g, 0);
-  }
-
   private gambarHutanPulau(jangkar: number): void {
     const pusat = (GRID - 1) / 2;
     // Lahan terbuka bulat untuk kota; di luarnya hutan lebat sejauh pandang.
@@ -267,7 +242,6 @@ export class CityScene extends Phaser.Scene {
       [`${-2},${Math.round(pusat)}`, 'sk_perpustakaan'],
       [`${Math.round(pusat)},${GRID + 1}`, 'sk_sekolah'],
     ]);
-    this.gambarGunung(lebar);
     const petak: Array<{ col: number; row: number }> = [];
     for (let row = -lebar; row < GRID + lebar; row++) {
       for (let col = -lebar; col < GRID + lebar; col++) {
