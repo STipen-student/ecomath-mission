@@ -251,6 +251,31 @@ export function buatSpriteKota(scene: Phaser.Scene): void {
     kotak(c, 14, ALAS_Y - 5, 4, 5, '#8a6a3c'); // pintu
   });
 
+  // Sekolah: gedung krem beratap merah, jam dan tiang bendera.
+  gambar('sk_sekolah', (c) => {
+    alas(c, '#d8d2c4', '#bfb8a8');
+    kotak(c, 4, ALAS_Y - 11, 24, 11, '#f3e2b3');
+    for (const x of [6, 10, 20, 24]) kotak(c, x, ALAS_Y - 8, 2, 3, '#7fb6e6');
+    for (let i = 0; i < 4; i++) kotak(c, 4 + i, ALAS_Y - 12 - i, 24 - i * 2, 1, '#c0392b');
+    kotak(c, 14, ALAS_Y - 15, 4, 4, '#ffffff'); // jam
+    kotak(c, 15, ALAS_Y - 14, 1, 2, '#1d3640');
+    kotak(c, 14, ALAS_Y - 5, 4, 5, '#8a6a3c'); // pintu
+    kotak(c, 29, ALAS_Y - 18, 1, 18, '#7a7a7a'); // tiang bendera
+    kotak(c, 30, ALAS_Y - 18, 4, 2, '#d62828');
+    kotak(c, 30, ALAS_Y - 16, 4, 2, '#ffffff');
+  });
+
+  // Rumah sakit: gedung putih bertingkat dengan tanda palang merah.
+  gambar('sk_rumah-sakit', (c) => {
+    alas(c, '#d8d2c4', '#bfb8a8');
+    kotak(c, 6, ALAS_Y - 18, 20, 18, '#f7f7f2');
+    kotak(c, 6, ALAS_Y - 19, 20, 1, '#9fb3bd');
+    for (const y of [ALAS_Y - 15, ALAS_Y - 10]) for (const x of [8, 12, 20, 23]) kotak(c, x, y, 2, 3, '#7fb6e6');
+    kotak(c, 15, ALAS_Y - 17, 2, 6, '#d62828'); // palang merah
+    kotak(c, 13, ALAS_Y - 15, 6, 2, '#d62828');
+    kotak(c, 13, ALAS_Y - 5, 6, 5, '#9fd3e6'); // pintu kaca
+  });
+
   // Awan: gumpalan putih untuk langit yang bergerak.
   {
     const key = 'sk_awan';

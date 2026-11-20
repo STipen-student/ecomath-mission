@@ -80,8 +80,8 @@ const PALET_VISUAL: Record<VariableVisual, { top: string; left: string; right: s
 const PALET = {
   // Langit cerah; saat kendala dilanggar berubah ke jingga-merah muda hangat -
   // menandakan bahaya tanpa membuat peta jadi suram.
-  // Laut lepas di sekeliling pulau (bukan langit), supaya kota tidak tampak melayang.
-  langit: 0x2f86ad,
+  // Hamparan hutan lebat di sekeliling kota (bukan langit), agar kota tidak tampak melayang.
+  langit: 0x2e5e34,
   langitBahaya: 0xd98b7a,
   air: { base: '#4bb3e0', light: '#6ecdf0', dark: '#3a9ac9', soil: '#2f7fa8', wave: true },
   pasir: '#f2dfa8',
@@ -232,13 +232,19 @@ export class CityScene extends Phaser.Scene {
    */
   private gambarHutanPulau(jangkar: number): void {
     const pusat = (GRID - 1) / 2;
-    const jari = Math.hypot(pusat, pusat) + 0.6;
-    const lebar = 4;
+    // Lahan terbuka bulat untuk kota; di luarnya hutan lebat sejauh pandang.
+    const jari = Math.hypot(pusat, pusat) + 1.5;
+    const lebar = 12;
+    const fasilitas = new Map<string, string>([
+      [`${Math.round(pusat)},${-2}`, 'sk_sekolah'],
+      [`${GRID + 1},${Math.round(pusat)}`, 'sk_rumah-sakit'],
+      [`${-2},${Math.round(pusat)}`, 'sk_perpustakaan'],
+      [`${Math.round(pusat)},${GRID + 1}`, 'sk_sekolah'],
+    ]);
     const petak: Array<{ col: number; row: number }> = [];
     for (let row = -lebar; row < GRID + lebar; row++) {
       for (let col = -lebar; col < GRID + lebar; col++) {
-        const diKisi = col >= 0 && row >= 0 && col < GRID && row < GRID;
-        if (diKisi || Math.hypot(col - pusat, row - pusat) > jari) continue;
+        if (col >= 0 && row >= 0 && col < GRID && row < GRID) continue;
         petak.push({ col, row });
       }
     }
@@ -249,23 +255,30 @@ export class CityScene extends Phaser.Scene {
     for (const { col, row } of petak) {
       const { x, y } = toIso(col, row);
       const depan = col >= GRID || row >= GRID;
+      const diLahan = Math.hypot(col - pusat, row - pusat) <= jari;
       const tanah = this.add.image(x, y, 'tile_rumput').setOrigin(0.5, jangkar);
+      if (!diLahan) tanah.setTint(0x7fa37a); // lantai hutan lebih gelap
       if (depan) tanah.setDepth(1 + (col + row) / 1000);
       else this.lapisanDasar.addAt(tanah, urutBelakang++);
-      // Pohon hanya di cincin tengah: satu petak rumput di dekat kota dan di
-      // pantai luar dibiarkan terbuka, dan pohonnya pendek, agar kota tidak
-      // tampak terbenam di antara pepohonan.
-      const keKisi = Math.max(-col, -row, col - (GRID - 1), row - (GRID - 1));
-      const keTepi = jari - Math.hypot(col - pusat, row - pusat);
-      if (!adaPohon || keKisi < 2 || keTepi < 1) continue;
-      const pohon = this.add
-        .image(x + (Math.random() - 0.5) * 6, y + TILE_H / 2, 'sk_pohon')
+
+      let kunci: string | null = null;
+      let skala = 1;
+      if (diLahan) {
+        kunci = fasilitas.get(`${col},${row}`) ?? null;
+      } else if (adaPohon) {
+        kunci = 'sk_pohon';
+        skala = 0.75 + Math.random() * 0.3;
+      }
+      if (!kunci || !this.textures.exists(kunci)) continue;
+      const benda = this.add
+        .image(x + (diLahan ? 0 : (Math.random() - 0.5) * 6), y + TILE_H / 2, kunci)
         .setOrigin(0.5, 1)
-        .setScale(0.55 + Math.random() * 0.2);
-      if (depan) pohon.setDepth(1.5 + (col + row) / 1000);
-      else this.lapisanDasar.add(pohon);
+        .setScale(skala);
+      if (depan) benda.setDepth(1.5 + (col + row) / 1000);
+      else this.lapisanDasar.add(benda);
     }
   }
+
 
   private siapkanBangunan(): void {
     for (const petak of plotTiles()) {
@@ -675,21 +688,6 @@ export class CityScene extends Phaser.Scene {
     const kanan = toIso(GRID - 1, 0).x + 120;
     const atas = toIso(0, 0).y - 20;
     const bawah = toIso(GRID - 1, GRID - 1).y;
-    // Riak ombak di laut sekitar pulau: garis putih tipis yang timbul-tenggelam.
-    for (let i = 0; i < 40; i++) {
-      const ox = kiri - 200 + Math.random() * (kanan - kiri + 400);
-      const oy = atas - 120 + Math.random() * (bawah - atas + 240);
-      const riak = this.add.rectangle(ox, oy, 8 + Math.random() * 8, 1.5, 0xbfe6f5).setDepth(-5).setAlpha(0);
-      this.tweens.add({
-        targets: riak,
-        alpha: 0.6,
-        x: ox + 6,
-        duration: 1400 + Math.random() * 1200,
-        yoyo: true,
-        repeat: -1,
-        delay: Math.random() * 2000,
-      });
-    }
     for (let i = 0; i < 4; i++) {
       const y = atas + ((bawah - atas) * i) / 4;
       const awan = this.add
