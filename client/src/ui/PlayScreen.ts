@@ -995,6 +995,12 @@ export class PlayScreen {
     const inY = masukan('Nilai y', this.y, t.variables.y.max);
     const hasil = el('p', { class: 'hint' }, 'Masukkan titik, lalu tekan Uji.');
     const riwayat = el('ul', { class: 'uji-hp-riwayat' });
+    const diuji: Array<{ x: number; y: number; ok: boolean }> = [];
+    const grafik = el('div', { class: 'uji-hp-grafik' });
+    const gambar = (): void => {
+      grafik.innerHTML = grafikHimpunan(this.tulisanUntukPerhitungan(), t.variables.x.max, t.variables.y.max, diuji, t.variables.x.label, t.variables.y.label);
+    };
+    gambar();
 
     const uji = el('button', { class: 'btn btn-tiny' }, 'Uji');
     uji.addEventListener('click', () => {
@@ -1018,6 +1024,8 @@ export class PlayScreen {
       hasil.textContent = teks;
       hasil.className = ev.feasible ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad';
       riwayat.prepend(el('li', {}, teks));
+      diuji.push({ x, y, ok: ev.feasible });
+      gambar();
       this.cb.onCheckCorner(x, y, null);
       this.tandaiSelesai('pojok');
     });
@@ -1028,9 +1036,26 @@ export class PlayScreen {
       inY.value = String(this.y);
     });
 
+    // Ketuk grafik untuk menguji titik di situ.
+    grafik.addEventListener('click', (e) => {
+      const svg = grafik.querySelector('svg');
+      if (!svg) return;
+      const r = svg.getBoundingClientRect();
+      const px = ((e.clientX - r.left) / r.width) * GRAF.w;
+      const py = ((e.clientY - r.top) / r.height) * GRAF.h;
+      const x = ((px - GRAF.kiri) / (GRAF.w - GRAF.kiri - GRAF.kanan)) * t.variables.x.max;
+      const y = ((GRAF.h - GRAF.bawah - py) / (GRAF.h - GRAF.bawah - GRAF.atas)) * t.variables.y.max;
+      if (x < 0 || y < 0 || x > t.variables.x.max || y > t.variables.y.max) return;
+      inX.value = String(Math.round(x));
+      inY.value = String(Math.round(y));
+      uji.click();
+    });
+
     return el(
       'div',
       { class: 'uji-hp' },
+      grafik,
+      el('p', { class: 'hint' }, 'Daerah berarsir = himpunan penyelesaian menurut kendala tulisanmu. Ketuk grafik atau isi x dan y untuk menguji titik.'),
       el('div', { class: 'uji-hp-baris' }, el('span', {}, 'x ='), inX, el('span', {}, 'y ='), inY, uji, pakaiSekarang),
       hasil,
       riwayat,
@@ -1332,4 +1357,82 @@ export class PlayScreen {
     if (k === 'SDG13') return 'SDG 13';
     return 'SDG 11 & 13';
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Grafik himpunan penyelesaian (SVG)                                  */
+/* ------------------------------------------------------------------ */
+
+const GRAF = { w: 340, h: 260, kiri: 34, kanan: 12, atas: 12, bawah: 30 };
+
+/** Potong poligon dengan setengah bidang a*x + b*y (op) c (Sutherland-Hodgman). */
+function potong(poli: Array<[number, number]>, k: ConstraintDto): Array<[number, number]> {
+  const f = (p: [number, number]): number => {
+    const v = k.a * p[0] + k.b * p[1] - k.c;
+    return k.op === '>=' || k.op === '>' ? -v : v; // <= 0 berarti di dalam
+  };
+  const hasil: Array<[number, number]> = [];
+  for (let i = 0; i < poli.length; i++) {
+    const p = poli[i]!;
+    const q = poli[(i + 1) % poli.length]!;
+    const fp = f(p);
+    const fq = f(q);
+    if (fp <= 1e-9) hasil.push(p);
+    if ((fp < -1e-9 && fq > 1e-9) || (fp > 1e-9 && fq < -1e-9)) {
+      const t = fp / (fp - fq);
+      hasil.push([p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]);
+    }
+  }
+  return hasil;
+}
+
+function grafikHimpunan(
+  kendala: ConstraintDto[],
+  xMax: number,
+  yMax: number,
+  titik: Array<{ x: number; y: number; ok: boolean }>,
+  labelX: string,
+  labelY: string,
+): string {
+  const { w, h, kiri, kanan, atas, bawah } = GRAF;
+  const sx = (x: number): number => kiri + (x / xMax) * (w - kiri - kanan);
+  const sy = (y: number): number => h - bawah - (y / yMax) * (h - bawah - atas);
+  const aktif = kendala.filter((k) => k.kind !== 'bounding_box');
+
+  let poli: Array<[number, number]> = [[0, 0], [xMax, 0], [xMax, yMax], [0, yMax]];
+  for (const k of aktif) poli = potong(poli, k);
+
+  const bagian: string[] = [];
+  // Kisi dan sumbu
+  for (let i = 0; i <= 5; i++) {
+    const gx = sx((xMax * i) / 5);
+    const gy = sy((yMax * i) / 5);
+    bagian.push(`<line x1="${gx}" y1="${atas}" x2="${gx}" y2="${h - bawah}" stroke="#d8e2e6"/>`);
+    bagian.push(`<line x1="${kiri}" y1="${gy}" x2="${w - kanan}" y2="${gy}" stroke="#d8e2e6"/>`);
+    bagian.push(`<text x="${gx}" y="${h - bawah + 13}" font-size="10" text-anchor="middle" fill="#1d3640">${Math.round((xMax * i) / 5)}</text>`);
+    bagian.push(`<text x="${kiri - 4}" y="${gy + 3}" font-size="10" text-anchor="end" fill="#1d3640">${Math.round((yMax * i) / 5)}</text>`);
+  }
+  if (aktif.length > 0 && poli.length >= 3) {
+    bagian.push(`<polygon points="${poli.map((p) => `${sx(p[0])},${sy(p[1])}`).join(' ')}" fill="#4caf50" fill-opacity="0.35" stroke="#2e7d32" stroke-width="1.5"/>`);
+  }
+  // Garis batas tiap kendala
+  const warna = ['#1565c0', '#c62828', '#6a1b9a', '#ef6c00'];
+  aktif.forEach((k, i) => {
+    const garis = potong(potong([[0, 0], [xMax, 0], [xMax, yMax], [0, yMax]], k), { ...k, a: -k.a, b: -k.b, c: -k.c });
+    if (garis.length >= 2) {
+      const [p, q] = [garis[0]!, garis[garis.length - 1]!];
+      bagian.push(`<line x1="${sx(p[0])}" y1="${sy(p[1])}" x2="${sx(q[0])}" y2="${sy(q[1])}" stroke="${warna[i % warna.length]}" stroke-width="2"/>`);
+    }
+  });
+  bagian.push(`<line x1="${kiri}" y1="${h - bawah}" x2="${w - kanan}" y2="${h - bawah}" stroke="#1d3640" stroke-width="1.5"/>`);
+  bagian.push(`<line x1="${kiri}" y1="${atas}" x2="${kiri}" y2="${h - bawah}" stroke="#1d3640" stroke-width="1.5"/>`);
+  bagian.push(`<text x="${(w + kiri) / 2}" y="${h - 3}" font-size="10" text-anchor="middle" fill="#1d3640">x · ${labelX}</text>`);
+  bagian.push(`<text x="10" y="${(h - bawah + atas) / 2}" font-size="10" text-anchor="middle" fill="#1d3640" transform="rotate(-90 10 ${(h - bawah + atas) / 2})">y · ${labelY}</text>`);
+  for (const p of titik) {
+    bagian.push(`<circle cx="${sx(Math.min(xMax, p.x))}" cy="${sy(Math.min(yMax, p.y))}" r="4" fill="${p.ok ? '#2e7d32' : '#d9534f'}" stroke="#fff" stroke-width="1"/>`);
+  }
+  if (aktif.length === 0) {
+    bagian.push(`<text x="${(w + kiri) / 2}" y="${(h - bawah + atas) / 2}" font-size="11" text-anchor="middle" fill="#5b6b72">Tulis kendala di panel "Perda" untuk melihat daerahnya</text>`);
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="max-width:420px;cursor:crosshair;background:#fff;border:2px solid #1d3640;border-radius:8px" role="img" aria-label="Grafik himpunan penyelesaian">${bagian.join('')}</svg>`;
 }
