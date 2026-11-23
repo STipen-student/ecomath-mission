@@ -12,7 +12,7 @@ import type { DistractorResponse, Klaim, SkorKlaim, SubmitResponse, TargetBelaja
 import { logger } from './logging/logger.js';
 import { el } from './ui/dom.js';
 import { renderLayarTarget, type LevelSebelumnya } from './ui/asesmenDiri.js';
-import { progresUntuk, type IdRahasia, type Progres } from './game/progres.js';
+import { progresUntuk, type IdRahasia, type Progres, type SnapshotKota } from './game/progres.js';
 import { umumkanHadiah } from './ui/panelHadiah.js';
 import { babak, epilog, prolog, renderAdegan } from './ui/cerita.js';
 import type { KotaLevel } from './ui/petaWilayah.js';
@@ -47,6 +47,30 @@ export class App {
     logger.record('aal_tanggapan_protes', { ...t }, true);
     this.progres?.beriTiket();
     await logger.flush();
+  }
+
+  /**
+   * Kirim keadaan kota (kota_snapshot) lewat /api/log pada percobaan level
+   * terakhir. Event ini non-evidence: disaring dari skoring di server.
+   */
+  private kirimKota(snap: SnapshotKota): void {
+    const taskId = this.kasusTerakhir()?.taskId;
+    if (!taskId || !this.sessionId) return;
+    void api
+      .sendLogs([
+        {
+          session_id: this.sessionId,
+          task_id: taskId,
+          // Snapshot terjadi setelah level selesai; waktunya ditandai di batas
+          // atas skema agar tidak tercampur dengan urutan event pengerjaan.
+          timestamp_ms: 24 * 60 * 60 * 1000,
+          event_type: 'kota_snapshot',
+          payload: { ...snap },
+          is_valid_at_time: true,
+          duration_since_last_event_ms: 0,
+        },
+      ])
+      .catch(() => undefined);
   }
 
   /** Kasus yang terakhir selesai, untuk menyambung cerita ke kasus berikutnya. */
@@ -107,6 +131,9 @@ export class App {
         this.sessionId = sesi.sessionId;
         this.studentName = sesi.studentName;
         this.progres = progresUntuk(sesi.sessionId);
+        // Kirim keadaan kota ke server setiap kali berubah, agar guru dapat
+        // melihat kota yang dibangun siswa. Gagal kirim tidak mengganggu siswa.
+        this.progres.dengarKota((snap) => this.kirimKota(snap));
         // Misi tersembunyi dari dalam permainan (mis. lencana level diketuk lima kali).
         window.addEventListener('ecomath:rahasia', (ev) => {
           const id = (ev as CustomEvent<IdRahasia>).detail;

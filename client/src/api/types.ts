@@ -195,7 +195,8 @@ export type EventType =
   | 'goal_set'
   | 'learning_reflection'
   | 'aal_tanggapan_protes'
-  | 'gambar_grafik';
+  | 'gambar_grafik'
+  | 'kota_snapshot';
 
 /** Satu baris log, mengikuti skema Bagian 5.1 dokumen ECD. */
 export interface LogEvent {

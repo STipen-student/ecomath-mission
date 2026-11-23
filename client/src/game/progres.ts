@@ -152,6 +152,13 @@ export const KARTU_WARGA = [
 
 export const HARGA_GACHA_KOIN = 40;
 
+/** Keadaan kota yang dikirim ke server agar guru dapat melihatnya. */
+export interface SnapshotKota {
+  bangunan: Array<{ seed: number; jenis: string }>;
+  perbaikan: string[];
+  koin: number;
+}
+
 /** Peluang tiap hasil (jumlah = 100). Ditampilkan di layar. */
 export const PELUANG_GACHA = [
   { hasil: '10 koin', persen: 35 },
@@ -177,6 +184,7 @@ export interface HadiahBaru {
 export class Progres {
   private k: Keadaan;
   private readonly pendengar = new Set<(h: HadiahBaru) => void>();
+  private readonly pendengarKota = new Set<(s: SnapshotKota) => void>();
 
   constructor(private readonly kunci: string) {
     this.k = kosong();
@@ -262,6 +270,23 @@ export class Progres {
     if (this.k.perbaikanKota.includes(id)) return;
     this.k.perbaikanKota.push(id);
     this.simpan();
+    this.beritahuKota();
+  }
+
+  /** Keadaan kota saat ini (bangunan koin dan perbaikan), untuk dikirim ke guru. */
+  snapshotKota(): SnapshotKota {
+    return { bangunan: [...this.k.bangunanKota], perbaikan: [...this.k.perbaikanKota], koin: this.k.koin };
+  }
+
+  /** Dipanggil setiap kali kota berubah karena pembelian atau perbaikan. */
+  dengarKota(fn: (s: SnapshotKota) => void): () => void {
+    this.pendengarKota.add(fn);
+    return () => this.pendengarKota.delete(fn);
+  }
+
+  private beritahuKota(): void {
+    const s = this.snapshotKota();
+    for (const fn of this.pendengarKota) fn(s);
   }
 
   perbaikanKota(): string[] {
@@ -313,6 +338,7 @@ export class Progres {
     this.k.koin -= harga;
     this.k.bangunanKota.push({ seed, jenis });
     this.simpan();
+    this.beritahuKota();
     return { ok: true, pesan: `${nama} dibangun.` };
   }
 

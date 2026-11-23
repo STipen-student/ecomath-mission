@@ -44,6 +44,7 @@ export const EVENT_TYPES = [
   'kota_aksi',
   'aal_tanggapan_protes',
   'gambar_grafik',
+  'kota_snapshot',
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
@@ -71,6 +72,9 @@ export const NON_EVIDENCE_EVENTS: ReadonlySet<EventType> = new Set<EventType>([
   // Siswa menggambar garis batas dan memilih sisi arsiran pada soal
   // pertidaksamaan linear (Level 1). Data proses; belum menjadi bukti rubrik.
   'gambar_grafik',
+  // Isi kota hasil pembelian koin dan perbaikan protes, untuk tampilan guru.
+  // Hanya ekonomi permainan; bukan bukti rubrik.
+  'kota_snapshot',
 ]);
 
 /** Satu baris log mentah sesuai Bagian 5.1. */

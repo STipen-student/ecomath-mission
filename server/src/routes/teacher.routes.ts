@@ -248,6 +248,22 @@ teacherRouter.get(
     });
     const akhirPerAttempt = new Map<string, (typeof submitRows)[number]>();
     for (const r of submitRows) akhirPerAttempt.set(r.attemptId, r);
+    // Bangunan yang dibeli dengan koin dan perbaikan dari tanggapan protes:
+    // keadaan terakhir yang dikirim client (event kota_snapshot).
+    const snapshotRow = await prisma.eventLog.findFirst({
+      where: { sessionId: session.id, eventType: 'kota_snapshot' },
+      orderBy: { receivedAt: 'desc' },
+    });
+    const snapshot = snapshotRow ? (parseJson(snapshotRow.payload) as { bangunan?: unknown; perbaikan?: unknown; koin?: unknown }) : null;
+    const kotaSiswa = snapshot
+      ? {
+          bangunan: Array.isArray(snapshot.bangunan) ? snapshot.bangunan : [],
+          perbaikan: Array.isArray(snapshot.perbaikan) ? snapshot.perbaikan.map(String) : [],
+          koin: Number(snapshot.koin) || 0,
+          diperbarui: snapshotRow!.receivedAt.toISOString(),
+        }
+      : null;
+
     const kota = session.attempts.flatMap((a) => {
       const akhir = akhirPerAttempt.get(a.id);
       const task = getTaskById(a.taskId);
@@ -281,6 +297,7 @@ teacherRouter.get(
       studentId: session.studentId ?? '',
       classCode: session.classCode,
       kota,
+      kotaSiswa,
       startedAt: session.startedAt.toISOString(),
       finishedAt: session.finishedAt ? session.finishedAt.toISOString() : null,
       sessionComposite: session.sessionComposite,

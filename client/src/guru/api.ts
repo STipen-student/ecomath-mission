@@ -277,6 +277,8 @@ export interface LaporanSiswa {
   classCode: string;
   /** Kota rancangan akhir tiap level, untuk Peta Wilayah (tampilan guru). */
   kota?: KotaLevel[];
+  /** Bangunan koin dan perbaikan protes terakhir yang dikirim siswa. */
+  kotaSiswa?: { bangunan: Array<{ seed: number; jenis: string }>; perbaikan: string[]; koin: number; diperbarui: string } | null;
   startedAt: string;
   finishedAt: string | null;
   sessionComposite: number | null;

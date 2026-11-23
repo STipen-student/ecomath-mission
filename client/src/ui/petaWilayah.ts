@@ -131,6 +131,8 @@ export function bukaPetaWilayah(
   kota: KotaLevel[],
   progres?: Progres,
   onTanggapan?: (t: TanggapanProtes) => Promise<void> | void,
+  /** Untuk tampilan guru: keadaan kota siswa yang dikirim ke server. */
+  kotaSiswa?: { bangunan: Array<{ seed: number; jenis: string }>; perbaikan: string[] } | null,
 ): void {
   if (kota.length === 0) return;
 
@@ -194,13 +196,13 @@ export function bukaPetaWilayah(
     peta = mountCity(wadahPeta);
     const g = susunGabungan(kota);
     // Bangunan yang dibeli dengan koin ikut tampil dan ikut dihitung.
-    for (const b of progres?.bangunanKota() ?? []) {
+    for (const b of progres?.bangunanKota() ?? kotaSiswa?.bangunan ?? []) {
       g.petak.set(b.seed, `s:${b.jenis}`);
       if (SPRITE_HIJAU.has(b.jenis as SpriteKota)) g.hijau++;
       else g.lainnya++;
     }
     // Perbaikan kota dari tanggapan protes yang tepat (AaL): kota ikut berubah.
-    const perbaikan = progres?.perbaikanKota() ?? [];
+    const perbaikan = progres?.perbaikanKota() ?? kotaSiswa?.perbaikan ?? [];
     if (perbaikan.includes('ganti-listrik')) {
       const GANTI: Record<string, string> = { 'bus-konvensional': 'bus-listrik', 'mesin-fosil': 'surya', pabrik: 'pabrik-hijau' };
       for (const [seed, kode] of g.petak) {

@@ -225,6 +225,16 @@ export function narrateEvent(taskId: string, eventType: string, payloadJson: str
       };
     }
 
+    case 'kota_snapshot': {
+      const bangunan = Array.isArray(p.bangunan) ? p.bangunan.length : 0;
+      const perbaikan = Array.isArray(p.perbaikan) ? p.perbaikan.map(String).join(', ') : '';
+      return {
+        ...KOSONG,
+        catatan: perbaikan,
+        keterangan: `Keadaan kota: ${bangunan} bangunan dibeli dengan koin${perbaikan ? `, perbaikan: ${perbaikan}` : ''}`,
+      };
+    }
+
     case 'learning_reflection': {
       const klaim = teks(p.mostImprovedClaim);
       const terbuka = teks(p.openText);

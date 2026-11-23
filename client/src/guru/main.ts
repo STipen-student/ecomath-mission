@@ -568,7 +568,7 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
     tombolKota.disabled = true;
     try {
       const { bukaPetaWilayah } = await import('../ui/petaWilayah.js');
-      bukaPetaWilayah(kota);
+      bukaPetaWilayah(kota, undefined, undefined, lap.kotaSiswa ?? null);
     } finally {
       tombolKota.disabled = false;
     }
