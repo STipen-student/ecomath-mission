@@ -104,6 +104,8 @@ interface Keadaan {
   tiketGacha: number;
   /** Kartu warga yang sudah dikumpulkan dari Kotak Kejutan. */
   koleksi: string[];
+  /** Waktu (ms) terakhir kas kota dikumpulkan; 0 = belum mulai. */
+  kasTerakhir: number;
 }
 
 const kosong = (): Keadaan => ({
@@ -118,7 +120,19 @@ const kosong = (): Keadaan => ({
   perbaikanKota: [],
   tiketGacha: 0,
   koleksi: [],
+  kasTerakhir: 0,
 });
+
+/** Pendapatan kas kota per menit dari bangunan yang dibangun dengan koin. */
+export const PENDAPATAN_BANGUNAN: Record<string, number> = {
+  toko: 3,
+  'pabrik-hijau': 4,
+  surya: 1,
+  turbin: 1,
+};
+/** Pendapatan dasar per menit, dan batas akumulasi (menit) agar tidak menumpuk tanpa batas. */
+export const PENDAPATAN_DASAR = 1;
+export const BATAS_KAS_MENIT = 60;
 
 /**
  * Kotak Kejutan (gacha). Peluangnya ditampilkan apa adanya kepada siswa.
@@ -252,6 +266,37 @@ export class Progres {
 
   perbaikanKota(): string[] {
     return [...this.k.perbaikanKota];
+  }
+
+  /**
+   * Kas kota: koin bertambah seiring waktu dari bangunan produktif (toko,
+   * pabrik ramah lingkungan, energi bersih) plus bonus bila warga puas.
+   * Hanya ekonomi permainan; tidak memengaruhi skor.
+   */
+  pendapatanPerMenit(wargaPuas: boolean): number {
+    let n = PENDAPATAN_DASAR + (wargaPuas ? 2 : 0);
+    for (const b of this.k.bangunanKota) n += PENDAPATAN_BANGUNAN[b.jenis] ?? 0;
+    return n;
+  }
+
+  /** Koin yang sudah terkumpul di kas dan siap diambil. */
+  kasTersedia(perMenit: number, sekarang = Date.now()): number {
+    if (this.k.kasTerakhir === 0) {
+      this.k.kasTerakhir = sekarang;
+      this.simpan();
+      return 0;
+    }
+    const menit = Math.min(BATAS_KAS_MENIT, (sekarang - this.k.kasTerakhir) / 60000);
+    return Math.floor(menit * perMenit);
+  }
+
+  ambilKas(perMenit: number, sekarang = Date.now()): number {
+    const koin = this.kasTersedia(perMenit, sekarang);
+    if (koin <= 0) return 0;
+    this.k.koin += koin;
+    this.k.kasTerakhir = sekarang;
+    this.simpan();
+    return koin;
   }
 
   bangunanKota(): Array<{ seed: number; jenis: string }> {

@@ -127,3 +127,21 @@ kegiatan uji titik dan kesulitan menggambar tidak boleh menurunkannya.
 
 Bila kemampuan menggambar grafik hendak dinilai (misalnya bagian dari K3 di
 Level 1), rubrik dan `SCORING_VERSION` perlu diubah dan divalidasi ulang.
+
+## Kas kota (koin bertambah di kota)
+
+Di Peta Wilayah gabungan ada **Kas kota**. Koin bertambah setiap menit, lalu
+siswa mengambilnya dengan tombol **Ambil kas**:
+
+| Sumber | Koin per menit |
+|---|---|
+| Pendapatan dasar | 1 |
+| Bonus warga puas (tidak ada protes) | 2 |
+| Tiap toko | 3 |
+| Tiap pabrik ramah lingkungan | 4 |
+| Tiap panel surya atau kincir angin | 1 |
+
+Kas menampung paling banyak 60 menit pendapatan, jadi koin tidak menumpuk tanpa
+batas. Mekanisme ini mendorong siswa membangun kota yang hijau dan membuat
+warga puas. Seperti koin lainnya, kas kota disimpan di perangkat dan tidak
+memengaruhi skor K1–K4 maupun data AaL.

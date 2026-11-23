@@ -11,7 +11,7 @@ import { SPRITE_BERASAP, type SpriteKota } from '../game/pixel/spriteKota.js';
 import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
-import type { Progres } from '../game/progres.js';
+import { BATAS_KAS_MENIT, PENDAPATAN_BANGUNAN, PENDAPATAN_DASAR, type Progres } from '../game/progres.js';
 import { JENIS_HIJAU, JENIS_HUNIAN, jenisDariKode, periksaStandar } from '../game/standarSdg.js';
 import { formTanggapanProtes, type TanggapanProtes } from './tanggapanProtes.js';
 
@@ -355,6 +355,12 @@ export function bukaPetaWilayah(
       el('p', { class: 'hint' }, 'Tiap distrik adalah kota dari satu kasus. Kepadatan bangunan menggambarkan seberapa penuh nilai yang kamu pilih, bukan jumlah sebenarnya.'),
       ...(progres
         ? [
+            kasKota(progres, periksaStandar([...g.petak.values()].map(jenisDariKode)).length === 0, () => {
+              const posisi = (wadahPeta.closest('.peta-wilayah-panel') as HTMLElement | null)?.scrollTop ?? 0;
+              tampilkanGabungan();
+              const panel = wadahPeta.closest('.peta-wilayah-panel') as HTMLElement | null;
+              if (panel) panel.scrollTop = posisi;
+            }),
             el('h3', {}, `BANGUN DENGAN KOIN · ${progres.koin} 🪙`),
             el('p', { class: 'hint' }, 'Percantik dan lestarikan kotamu. Bangunan ini hanya hiasan dan tidak memengaruhi skor.'),
             palet,
@@ -434,6 +440,41 @@ function kabarWarga(petak: Map<number, string>, persenHijau: number): HTMLElemen
         el('span', { class: 'kabar-warga-nama' }, NAMA_WARGA[i % NAMA_WARGA.length]!),
         el('span', {}, u.teks),
       ),
+    ),
+  );
+}
+
+/**
+ * Kas kota: koin bertambah tiap menit dari toko, pabrik ramah lingkungan,
+ * panel surya, dan kincir angin yang dibangun, plus bonus bila warga puas.
+ * Siswa mengambilnya dengan tombol. Hanya ekonomi permainan.
+ */
+function kasKota(progres: Progres, wargaPuas: boolean, segarkan: () => void): HTMLElement {
+  const perMenit = progres.pendapatanPerMenit(wargaPuas);
+  const angka = el('strong', {}, '0 🪙');
+  const tombol = el('button', { class: 'btn btn-small' }, '💰 Ambil kas');
+  const perbarui = (): void => {
+    const ada = progres.kasTersedia(perMenit);
+    angka.textContent = `${ada} 🪙`;
+    tombol.disabled = ada <= 0;
+  };
+  tombol.addEventListener('click', () => {
+    if (progres.ambilKas(perMenit) > 0) segarkan();
+  });
+  perbarui();
+  const pewaktu = window.setInterval(() => {
+    if (!tombol.isConnected) window.clearInterval(pewaktu);
+    else perbarui();
+  }, 5000);
+
+  return el(
+    'div',
+    { class: 'kas-kota' },
+    el('div', { class: 'kas-kota-baris' }, el('span', {}, '🏦 Kas kota: '), angka, tombol),
+    el(
+      'small',
+      { class: 'hint' },
+      `Pendapatan ${perMenit} 🪙/menit: dasar ${PENDAPATAN_DASAR}${wargaPuas ? ', bonus warga puas +2' : ''}, toko +${PENDAPATAN_BANGUNAN.toko}, pabrik ramah lingkungan +${PENDAPATAN_BANGUNAN['pabrik-hijau']}, panel surya dan kincir angin +1 per bangunan. Kas menampung paling banyak ${BATAS_KAS_MENIT} menit pendapatan.`,
     ),
   );
 }

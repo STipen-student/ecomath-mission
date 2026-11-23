@@ -3387,3 +3387,19 @@ textarea {
 .uji-hp-grafik svg {
   cursor: var(--kursor-bidik, crosshair) !important;
 }
+
+/* Kas kota di Peta Wilayah */
+.kas-kota {
+  margin: 10px 0;
+  padding: 8px 10px;
+  border: 2px solid #c58a00;
+  border-radius: 8px;
+  background: #fff8e1;
+}
+
+.kas-kota-baris {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
