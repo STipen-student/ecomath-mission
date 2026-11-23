@@ -111,7 +111,7 @@ export class TutorialScreen {
 
     this.play = new PlayScreen(
       this.root,
-      { studentName: this.studentName, level: 1, totalLevels: 4, task: TUTORIAL_TASK },
+      { studentName: this.studentName, level: 1, totalLevels: 4, task: TUTORIAL_TASK, bukaMisiOtomatis: false },
       {
         onIdentifyVariable: (variabel, optionId) => {
           const benar =

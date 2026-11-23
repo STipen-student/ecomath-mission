@@ -67,6 +67,8 @@ export interface PlayContext {
   level: number;
   totalLevels: number;
   task: TaskDto;
+  /** Buka panel Misi otomatis saat level dimulai (bawaan: ya; tutorial: tidak). */
+  bukaMisiOtomatis?: boolean;
   /** Target belajar yang ditetapkan siswa sebelum level; null di tutorial. */
   target?: TargetBelajar | null;
 }
@@ -215,7 +217,9 @@ export class PlayScreen {
 
     // Misi dibuka otomatis: siswa harus membaca soal sebelum apa pun, dan pada
     // layar HP panel yang tertutup mudah luput dari perhatian.
-    this.bukaLaci('misi');
+    // Tutorial mematikannya: langkah pertamanya menggeser penggeser di kiri
+    // bawah, dan panel Misi yang terbuka justru menutupi penggeser itu.
+    if (this.ctx.bukaMisiOtomatis !== false) this.bukaLaci('misi');
     this.toast(`Level ${this.ctx.level}: ${t.title}`, 'info', 4200);
   }
 
