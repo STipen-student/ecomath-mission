@@ -88,6 +88,31 @@ export interface SessionResponse {
   startedAt: string;
 }
 
+/** Satu level yang sudah dinilai, dikembalikan saat siswa login lagi. */
+export interface LevelSelesaiDto {
+  level: number;
+  taskId: string;
+  rawSum: number;
+  scores: SkorKlaim;
+  feedback: StudentFeedback[];
+  overallMessage: string;
+  assessmentAsLearning: AsesmenSebagaiBelajar | null;
+}
+
+export interface LoginResponse extends SessionResponse {
+  /** True bila sesi baru dibuat (login pertama). */
+  baru: boolean;
+  lanjutan: {
+    levelSelesai: LevelSelesaiDto[];
+    /** Bentuknya sama dengan KotaLevel di ui/petaWilayah.ts. */
+    kota: Array<Record<string, unknown>>;
+    tutorialSelesai: boolean;
+    refleksiSelesai: boolean;
+    sessionComposite: number | null;
+    progres: string | null;
+  };
+}
+
 export interface DistractorResponse {
   eventId: string;
   narrative: string;

@@ -8,7 +8,7 @@
  */
 
 import { api, ApiError } from './api/client.js';
-import type { DistractorResponse, Klaim, SkorKlaim, SubmitResponse, TargetBelajar, TaskDto } from './api/types.js';
+import type { DistractorResponse, Klaim, LoginResponse, SkorKlaim, SubmitResponse, TargetBelajar, TaskDto } from './api/types.js';
 import { logger } from './logging/logger.js';
 import { el } from './ui/dom.js';
 import { renderLayarTarget, type LevelSebelumnya } from './ui/asesmenDiri.js';
@@ -127,10 +127,15 @@ export class App {
     renderLoginScreen(
       this.root,
       async (data) => {
-        const sesi = await api.createSession(data);
+        const sesi = await api.login(data);
         this.sessionId = sesi.sessionId;
         this.studentName = sesi.studentName;
         this.progres = progresUntuk(sesi.sessionId);
+        const lanjut = sesi.lanjutan;
+        // Progres permainan dari server (mis. login di perangkat lain), lalu
+        // setiap perubahan dikirim balik agar tidak hilang.
+        if (lanjut.progres) this.progres.impor(lanjut.progres);
+        this.progres.dengarSimpan((json) => this.simpanProgres(json));
         // Kirim keadaan kota ke server setiap kali berubah, agar guru dapat
         // melihat kota yang dibangun siswa. Gagal kirim tidak mengganggu siswa.
         this.progres.dengarKota((snap) => this.kirimKota(snap));
@@ -139,10 +144,66 @@ export class App {
           const id = (ev as CustomEvent<IdRahasia>).detail;
           if (this.progres) umumkanHadiah(this.progres.selesaikan(id));
         });
-        this.mulaiTutorial();
+        this.lanjutkanDari(sesi.baru, lanjut);
       },
       () => this.tampilkanHalamanDepan(),
     );
+  }
+
+  /** Kirim progres ke server, ditunda sebentar agar tidak setiap klik. */
+  private tundaProgres: number | null = null;
+  private simpanProgres(json: string): void {
+    if (!this.sessionId) return;
+    if (this.tundaProgres !== null) window.clearTimeout(this.tundaProgres);
+    this.tundaProgres = window.setTimeout(() => {
+      void api.simpanProgres(this.sessionId, json).catch(() => undefined);
+    }, 1500);
+  }
+
+  /**
+   * Setelah login: mulai dari awal (siswa baru) atau lanjutkan dari level
+   * pertama yang belum dinilai. Level yang sudah dinilai tidak diulang (satu
+   * percobaan per level); riwayat skor, target berikutnya, dan kotanya
+   * dipulihkan dari server.
+   */
+  private lanjutkanDari(baru: boolean, lanjut: LoginResponse['lanjutan']): void {
+    this.riwayat = lanjut.levelSelesai.map((l) => ({
+      level: l.level,
+      rawSum: l.rawSum,
+      feedback: l.feedback,
+      aal: l.assessmentAsLearning ?? undefined,
+    }));
+    const terakhir = lanjut.levelSelesai[lanjut.levelSelesai.length - 1];
+    this.sebelumnya = terakhir
+      ? {
+          level: terakhir.level,
+          scores: terakhir.scores,
+          feedback: terakhir.feedback,
+          suggestedNextFocus: terakhir.assessmentAsLearning?.suggestedNextFocus ?? 'K1',
+        }
+      : null;
+    this.kotaHasil = lanjut.kota as unknown as KotaLevel[];
+    if (lanjut.sessionComposite !== null) this.sessionComposite = lanjut.sessionComposite;
+
+    const selesai = new Set(lanjut.levelSelesai.map((l) => l.level));
+    const berikut = LEVELS.findIndex((lv) => !selesai.has(lv));
+    if (berikut === -1) {
+      // Semua level sudah dikerjakan: langsung ke ringkasan akhir.
+      this.levelIndex = LEVELS.length - 1;
+      this.refleksiTercatat = lanjut.refleksiSelesai;
+      const taskTerakhir = terakhir?.taskId;
+      if (!this.refleksiTercatat && taskTerakhir) logger.start(this.sessionId, taskTerakhir);
+      this.tampilkanSelesai();
+      return;
+    }
+    this.levelIndex = berikut;
+    if (baru || (!lanjut.tutorialSelesai && berikut === 0)) {
+      this.mulaiTutorial();
+    } else {
+      // Prolog hanya untuk siswa yang belum pernah memulai.
+      this.prologTampil = berikut > 0;
+      void this.mulaiLevel();
+    }
   }
 
   private get levelSaatIni(): number {
@@ -465,7 +526,15 @@ export class App {
         kota: this.kotaHasil,
         onTanggapanProtes: (t) => this.catatTanggapanProtes(t),
       },
-      async () => undefined,
+      this.refleksiTercatat
+        ? async () => undefined
+        : async (refleksi) => {
+            logger.record('learning_reflection', { ...refleksi }, true);
+            this.progres?.beriTiket();
+            await logger.flush();
+            logger.stop();
+            this.refleksiTercatat = true;
+          },
       () => this.mulaiKotaBebas(),
       this.refleksiTercatat,
       this.progres ?? undefined,

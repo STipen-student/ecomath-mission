@@ -58,6 +58,25 @@ function malas(buat: () => RequestHandler): RequestHandler {
   };
 }
 
+/**
+ * Pembatas percobaan login, dihitung per NIS + kode kelas (bukan per IP):
+ * satu sekolah sering keluar lewat satu alamat IP, sehingga batas per IP akan
+ * menghalangi satu kelas yang login bersamaan. Dengan kunci NIS + kelas,
+ * menebak PIN satu siswa dibatasi tanpa mengganggu siswa lain.
+ */
+export const loginLimiter = malas(() =>
+  rateLimit({
+    ...base,
+    windowMs: 10 * 60 * 1000,
+    limit: 8,
+    keyGenerator: (req) => {
+      const b = (req.body ?? {}) as { studentId?: unknown; classCode?: unknown };
+      return `login:${String(b.studentId ?? '').trim()}|${String(b.classCode ?? '').trim().toUpperCase()}`;
+    },
+    message: { error: 'Terlalu banyak percobaan login. Tunggu 10 menit, atau minta guru mereset PIN-mu.' },
+  }),
+);
+
 export const submitLimiter = malas(() =>
   rateLimit({
     ...base,

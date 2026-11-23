@@ -25,6 +25,8 @@ import { getTaskById } from '../tasks/index.js';
 import { SCORING_VERSION } from '../scoring/thresholds.js';
 import { buildSessionConclusion, JUDUL_KLAIM, type ClaimProfile } from '../scoring/index.js';
 import { effectiveScore } from '../lib/scoreView.js';
+import { kotaPerLevel } from '../lib/riwayatSiswa.js';
+import { PIN_DIRESET } from '../lib/pin.js';
 
 export const teacherRouter = Router();
 teacherRouter.use(requireAdmin);
@@ -170,6 +172,23 @@ teacherRouter.get(
  * diulang di sini - masih tersedia lewat GET /attempt/:attemptId per level bila
  * guru ingin menyelami satu percobaan tertentu.
  */
+/**
+ * POST /api/admin/student/:sessionId/reset-pin - guru mereset PIN siswa yang
+ * lupa. Pada login berikutnya, PIN yang diketik siswa menjadi PIN barunya dan
+ * pekerjaannya tetap dilanjutkan.
+ */
+teacherRouter.post(
+  '/student/:sessionId/reset-pin',
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.sessionId);
+    const session = await prisma.session.findUnique({ where: { id }, select: { id: true, pinHash: true } });
+    if (!session) throw new HttpError(404, 'Sesi siswa tidak ditemukan');
+    if (session.pinHash === null) throw new HttpError(400, 'Sesi ini dibuat tanpa login PIN.');
+    await prisma.session.update({ where: { id }, data: { pinHash: PIN_DIRESET } });
+    res.json({ ok: true });
+  }),
+);
+
 teacherRouter.get(
   '/student/:sessionId',
   asyncHandler(async (req, res) => {
@@ -239,15 +258,6 @@ teacherRouter.get(
     });
     const tanggapanProtes = tanggapanRows.map((r) => parseJson(r.payload));
 
-    // Kota yang dibangun siswa di tiap level: rancangan akhir (attempt_submit
-    // terakhir per percobaan) beserta wujud variabel dari bank soal, sehingga
-    // guru dapat melihat Peta Wilayah yang sama dengan yang dilihat siswa.
-    const submitRows = await prisma.eventLog.findMany({
-      where: { sessionId: session.id, eventType: 'attempt_submit' },
-      orderBy: { timestampMs: 'asc' },
-    });
-    const akhirPerAttempt = new Map<string, (typeof submitRows)[number]>();
-    for (const r of submitRows) akhirPerAttempt.set(r.attemptId, r);
     // Bangunan yang dibeli dengan koin dan perbaikan dari tanggapan protes:
     // keadaan terakhir yang dikirim client (event kota_snapshot).
     const snapshotRow = await prisma.eventLog.findFirst({
@@ -264,32 +274,7 @@ teacherRouter.get(
         }
       : null;
 
-    const kota = session.attempts.flatMap((a) => {
-      const akhir = akhirPerAttempt.get(a.id);
-      const task = getTaskById(a.taskId);
-      if (!akhir || !task) return [];
-      const p = parseJson(akhir.payload) as { x?: unknown; y?: unknown };
-      return [
-        {
-          level: a.level,
-          taskId: a.taskId,
-          judul: task.title,
-          x: Number(p.x) || 0,
-          y: Number(p.y) || 0,
-          xMax: task.variables.x.max,
-          yMax: task.variables.y.max,
-          labelX: task.variables.x.label,
-          labelY: task.variables.y.label,
-          unitX: task.variables.x.unit,
-          unitY: task.variables.y.unit,
-          visualX: task.variables.x.visual,
-          visualY: task.variables.y.visual,
-          spriteX: task.variables.x.sprite,
-          spriteY: task.variables.y.sprite,
-          layak: akhir.isValidAtTime,
-        },
-      ];
-    });
+    const kota = await kotaPerLevel(session.id);
 
     res.json({
       sessionId: session.id,

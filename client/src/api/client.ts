@@ -9,6 +9,7 @@ import type {
   DistractorResponse,
   LogEvent,
   SessionResponse,
+  LoginResponse,
   SkorKlaim,
   SubmitResponse,
   TaskResponse,
@@ -70,6 +71,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   baseUrl: API_URL,
+
+  /** Login NIS + kode kelas + PIN: membuat sesi baru atau melanjutkan sesi lama. */
+  login(input: { studentName?: string; studentId: string; classCode: string; pin: string }): Promise<LoginResponse> {
+    return request<LoginResponse>('/api/session/login', {
+      method: 'POST',
+      body: JSON.stringify({ ...input, instrumentVersion: INSTRUMENT_VERSION }),
+    });
+  },
+
+  /** Simpan progres permainan (koin, misi, bangunan) agar ikut ke perangkat lain. */
+  simpanProgres(sessionId: string, progres: string): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/api/session/${sessionId}/progres`, {
+      method: 'PUT',
+      body: JSON.stringify({ progres }),
+    });
+  },
 
   createSession(input: { studentName: string; studentId?: string; classCode: string }): Promise<SessionResponse> {
     // Versi instrumen ikut dikirim agar setiap sesi dapat dipilah menurut

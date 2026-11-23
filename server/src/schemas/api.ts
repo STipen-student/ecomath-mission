@@ -23,6 +23,20 @@ export const CreateSessionSchema = z.object({
 });
 export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
 
+/** Login siswa: NIS + kode kelas + PIN 4-6 angka. Nama hanya wajib saat pertama masuk. */
+export const LoginSchema = z.object({
+  studentName: z.string().trim().max(SHORT_TEXT).optional(),
+  studentId: z.string().trim().min(1, 'NIS wajib diisi').max(SHORT_TEXT),
+  classCode: z.string().trim().min(1, 'Kode kelas wajib diisi').max(SHORT_TEXT),
+  pin: z.string().regex(/^\d{4,6}$/, 'PIN harus 4 sampai 6 angka'),
+  instrumentVersion: z.string().trim().max(40).optional(),
+});
+
+/** Progres permainan (koin, misi, bangunan) sebagai JSON; dibatasi ukurannya. */
+export const ProgresSchema = z.object({
+  progres: z.string().max(30000),
+});
+
 export const TaskQuerySchema = z.object({
   sessionId: z.string().trim().min(1).max(SHORT_TEXT).optional(),
   /** Memaksa task tertentu - dipakai untuk desain penelitian terkontrol dan demo. */

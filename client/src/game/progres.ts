@@ -215,10 +215,31 @@ export class Progres {
   }
 
   private simpan(): void {
+    const json = JSON.stringify(this.k);
     try {
-      localStorage.setItem(this.kunci, JSON.stringify(this.k));
+      localStorage.setItem(this.kunci, json);
     } catch {
       // Diblokir: progres tetap ada selama halaman terbuka.
+    }
+    for (const fn of this.pendengarSimpan) fn(json);
+  }
+
+  private readonly pendengarSimpan = new Set<(json: string) => void>();
+
+  /** Dipanggil setiap progres disimpan, misalnya untuk mengirimnya ke server. */
+  dengarSimpan(fn: (json: string) => void): () => void {
+    this.pendengarSimpan.add(fn);
+    return () => this.pendengarSimpan.delete(fn);
+  }
+
+  /** Muat progres dari server (login di perangkat lain). Data rusak diabaikan. */
+  impor(json: string): void {
+    try {
+      const data = JSON.parse(json) as Partial<Keadaan>;
+      this.k = { ...kosong(), ...data };
+      localStorage.setItem(this.kunci, JSON.stringify(this.k));
+    } catch {
+      // Tetap memakai progres lokal.
     }
   }
 

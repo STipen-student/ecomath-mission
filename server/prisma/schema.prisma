@@ -58,9 +58,17 @@ model Session {
   tutorialMissteps   Int?
   tutorialSteps      Int?
 
+  /// Hash PIN login (NIS + kode kelas + PIN). NULL = sesi lama tanpa login;
+  /// 'RESET' = PIN direset guru dan ditetapkan ulang saat login berikutnya.
+  pinHash String?
+  /// JSON keadaan permainan (koin, misi, bangunan), agar ikut ke perangkat lain.
+  /// Hanya ekonomi permainan; tidak dibaca mesin skoring.
+  progres String?
+
   attempts TaskAttempt[]
 
   @@index([classCode])
+  @@index([studentId, classCode])
   @@index([startedAt])
 }
 

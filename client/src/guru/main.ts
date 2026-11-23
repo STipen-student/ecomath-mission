@@ -561,6 +561,21 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
 
   // Kota yang dibangun siswa: Peta Wilayah yang sama dengan milik siswa,
   // dimuat saat diminta karena memuat mesin peta (Phaser).
+  // Reset PIN untuk siswa yang lupa; pekerjaannya tetap tersimpan.
+  const pesanPin = el('p', { class: 'hint' });
+  const tombolResetPin = el('button', { class: 'btn btn-small btn-ghost' }, '🔑 Reset PIN');
+  tombolResetPin.addEventListener('click', async () => {
+    if (!window.confirm(`Reset PIN ${lap.studentName}? Pada login berikutnya, PIN yang ia ketik menjadi PIN barunya. Pekerjaannya tidak hilang.`)) return;
+    tombolResetPin.disabled = true;
+    try {
+      await adminApi.resetPin(kunci, lap.sessionId);
+      pesanPin.textContent = '✓ PIN direset. Minta siswa masuk lagi dengan NIS, kode kelas, dan PIN baru pilihannya.';
+    } catch (err) {
+      pesanPin.textContent = err instanceof Error ? err.message : 'Gagal mereset PIN.';
+      tombolResetPin.disabled = false;
+    }
+  });
+
   const kota = lap.kota ?? [];
   const tombolKota = el('button', { class: 'btn btn-small' }, `🗺 Lihat kota siswa (${kota.length} level)`);
   tombolKota.disabled = kota.length === 0;
@@ -591,7 +606,8 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
           { class: 'sub' },
           `${lap.classCode}${lap.studentId ? ` · NIS ${lap.studentId}` : ''} · ${rentangWaktu}`,
         ),
-        tombolKota,
+        el('div', { class: 'guru-aksi-siswa' }, tombolKota, tombolResetPin),
+        pesanPin,
       ),
       tombolTutup,
     ),

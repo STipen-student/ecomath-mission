@@ -1,17 +1,18 @@
 /**
  * Layar masuk bergaya papan judul game.
  *
- * Tidak ada kata sandi maupun pendaftaran akun - identitas siswa cukup
- * ditentukan kode kelas, sesuai permintaan dan sejalan dengan catatan etika
- * pada Panduan Deployment yang menyarankan meminimalkan data pengenal langsung.
+ * Siswa masuk dengan NIS + kode kelas + PIN 4-6 angka. Pada login pertama PIN
+ * yang diketik menjadi PIN siswa; pada login berikutnya siswa melanjutkan
+ * pekerjaannya. PIN tidak pernah disimpan sebagai teks (server/src/lib/pin.ts).
  */
 
 import { el } from './dom.js';
 
 export interface LoginData {
-  studentName: string;
-  studentId?: string;
+  studentName?: string;
+  studentId: string;
   classCode: string;
+  pin: string;
 }
 
 export function renderLoginScreen(
@@ -29,7 +30,7 @@ export function renderLoginScreen(
   const inputNis = el('input', {
     class: 'field',
     type: 'text',
-    placeholder: 'Boleh dikosongkan',
+    placeholder: 'Nomor induk siswa',
     maxLength: 30,
     ariaLabel: 'Nomor induk siswa',
   });
@@ -41,15 +42,31 @@ export function renderLoginScreen(
     ariaLabel: 'Kode kelas',
   });
 
+  const inputPin = el('input', {
+    class: 'field',
+    type: 'password',
+    placeholder: '4 sampai 6 angka',
+    maxLength: 6,
+    ariaLabel: 'PIN',
+  });
+  inputPin.inputMode = 'numeric';
+  inputPin.autocomplete = 'current-password';
+
   const pesan = el('p', { class: 'form-error' });
   const tombol = el('button', { class: 'btn btn-primary btn-block' }, '▶  MULAI MISI');
 
   async function kirim(): Promise<void> {
     const nama = inputNama.value.trim();
+    const nis = inputNis.value.trim();
     const kelas = inputKelas.value.trim();
+    const pin = inputPin.value.trim();
 
-    if (!nama || !kelas) {
-      pesan.textContent = 'Nama dan kode kelas wajib diisi.';
+    if (!nis || !kelas) {
+      pesan.textContent = 'NIS dan kode kelas wajib diisi.';
+      return;
+    }
+    if (!/^\d{4,6}$/.test(pin)) {
+      pesan.textContent = 'PIN harus 4 sampai 6 angka.';
       return;
     }
 
@@ -59,9 +76,10 @@ export function renderLoginScreen(
 
     try {
       await onSubmit({
-        studentName: nama,
-        studentId: inputNis.value.trim() || undefined,
+        studentName: nama || undefined,
+        studentId: nis,
         classCode: kelas,
+        pin,
       });
     } catch (err) {
       pesan.textContent = err instanceof Error ? err.message : 'Gagal memulai sesi.';
@@ -71,7 +89,7 @@ export function renderLoginScreen(
   }
 
   tombol.addEventListener('click', () => void kirim());
-  for (const input of [inputNama, inputNis, inputKelas]) {
+  for (const input of [inputNama, inputNis, inputKelas, inputPin]) {
     input.addEventListener('keydown', (ev) => {
       if ((ev as KeyboardEvent).key === 'Enter') void kirim();
     });
@@ -96,12 +114,19 @@ export function renderLoginScreen(
           { class: 'prose' },
           'Kamu adalah perencana kota. Setiap keputusan alokasi lahanmu harus memenuhi kendala anggaran, kapasitas, dan lingkungan yang berlaku di kota tersebut.',
         ),
-        el('label', { class: 'label' }, 'Nama / inisial'),
-        inputNama,
         el('label', { class: 'label' }, 'NIS'),
         inputNis,
         el('label', { class: 'label' }, 'Kode kelas'),
         inputKelas,
+        el('label', { class: 'label' }, 'PIN'),
+        inputPin,
+        el('label', { class: 'label' }, 'Nama / inisial (wajib saat pertama kali masuk)'),
+        inputNama,
+        el(
+          'p',
+          { class: 'hint' },
+          'Pertama kali masuk? Buat PIN 4–6 angka dan ingat baik-baik. Lain kali, masuk dengan NIS, kode kelas, dan PIN yang sama untuk melanjutkan pekerjaanmu. Lupa PIN? Minta guru mereset.',
+        ),
         pesan,
         tombol,
         onKembali ? tombolKembali(onKembali) : null,
@@ -114,7 +139,7 @@ export function renderLoginScreen(
     ),
   );
 
-  inputNama.focus();
+  inputNis.focus();
 }
 
 function tombolKembali(onKembali: () => void): HTMLElement {

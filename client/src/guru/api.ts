@@ -343,6 +343,18 @@ export const adminApi = {
     return (await res.json()) as { k4: number; rawSum: number; weightedComposite: number; overridden: boolean };
   },
 
+  /** Reset PIN siswa: PIN yang diketik pada login berikutnya menjadi PIN barunya. */
+  async resetPin(kunci: string, sessionId: string): Promise<void> {
+    const res = await fetch(`${API_URL}/api/admin/student/${encodeURIComponent(sessionId)}/reset-pin`, {
+      method: 'POST',
+      headers: { 'x-admin-key': kunci },
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new AdminError(res.status, body.error ?? `Gagal mereset PIN (${res.status})`);
+    }
+  },
+
   /** Keadaan saklar Activity Selection adaptif. */
   async statusAdaptif(kunci: string): Promise<StatusAdaptif> {
     return minta<StatusAdaptif>('/api/admin/adaptive', kunci);
