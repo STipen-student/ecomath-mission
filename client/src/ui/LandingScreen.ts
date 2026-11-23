@@ -187,7 +187,7 @@ function bukaPanduan(root: HTMLElement): void {
           el('li', {}, el('strong', {}, '🔎 Kenali zona.'), ' Tentukan apa arti x dan y beserta satuannya.'),
           el('li', {}, el('strong', {}, '🎯 Mandat.'), ' Pilih tujuan soal: memaksimumkan, meminimumkan, atau (Level 1) cukup memenuhi semua batasan.'),
           el('li', {}, el('strong', {}, '📐 Perda.'), ' Tulis tiap batasan sebagai pertidaksamaan, misalnya 2x + 3y ≤ 60.'),
-          el('li', {}, el('strong', {}, '📍 Simulasi.'), ' Soal tanpa fungsi tujuan: lihat grafik himpunan penyelesaian dan uji titik. Soal optimasi: hitung nilai Z di tiap titik pojok.'),
+          el('li', {}, el('strong', {}, '📍 Simulasi.'), ' Soal pertidaksamaan (tanpa fungsi tujuan): gambar sendiri grafiknya, yaitu garis batas tiap kendala dan sisi yang diarsir, lalu uji titik. Soal optimasi: hitung nilai Z di tiap titik pojok.'),
           el('li', {}, el('strong', {}, 'Bangun di peta.'), ' Geser slider atau ketuk petak. Meter di atas layar menunjukkan batasan yang terpenuhi atau dilanggar.'),
           el('li', {}, el('strong', {}, '▶ Ajukan.'), ' Nilai dirimu dulu (0–3 per tahap), baru lihat skor dari sistem dan bandingkan.'),
           el('li', {}, el('strong', {}, 'Refleksi.'), ' Jelaskan alasanmu. Di Level 4 aturan kota bisa berubah mendadak, jadi revisi rencanamu.'),
