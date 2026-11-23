@@ -19,7 +19,7 @@
 		// Tidak dipakai di Workers (koneksi lewat binding DB), tetapi wajib ada untuk validasi config.
 		"DATABASE_URL": "d1",
 		// Ganti dengan URL Cloudflare Pages, tanpa garis miring di akhir.
-		"CORS_ORIGIN": "https://ecomath-mission.hudathoni.workers.dev",
+		"CORS_ORIGIN": "https://ecomath-mission.ecomath-mission.workers.dev",
 		"ADAPTIVE_MODE": "false"
 	}
 	// ADMIN_API_KEY diisi sebagai secret: `npx wrangler secret put ADMIN_API_KEY`.

@@ -83,8 +83,8 @@ garis miring di akhir), lalu jalankan `npm run worker:deploy` lagi dari
 
 ### Alamat yang sedang dipakai
 
-- Frontend: https://ecomath-mission.hudathoni.workers.dev
-- Backend: https://ecomath-mission-api.hudathoni.workers.dev
+- Frontend: https://ecomath-mission.ecomath-mission.workers.dev
+- Backend: https://ecomath-mission-api.ecomath-mission.workers.dev
 
 **Penting:** semua perintah `npm run worker:*` dijalankan dari `server/`, dan
 `npm run deploy:cf` dari `client/`. Dijalankan dari folder akar akan muncul
