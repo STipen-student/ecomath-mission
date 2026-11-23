@@ -11,6 +11,8 @@ import '@fontsource/archivo-black/400.css';
 import './style.css';
 import { App } from './app.js';
 import { pasangBunyiKlik } from './game/suara.js';
+import { pasangKursor } from './game/kursor.js';
+pasangKursor();
 
 const root = document.getElementById('app');
 

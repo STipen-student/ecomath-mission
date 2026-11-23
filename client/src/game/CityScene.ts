@@ -43,6 +43,7 @@ import {
 } from './pixel/textures.js';
 import { buatSpriteKota, kunciSprite, SPRITE_BERASAP, type SpriteKota } from './pixel/spriteKota.js';
 import { bunyiProtes } from './suara.js';
+import { KURSOR_BIDIK, KURSOR_PANAH } from './kursor.js';
 import { JENIS_BERASAP, JENIS_HUNIAN, jenisDariKode, periksaStandar, SERUAN } from './standarSdg.js';
 
 export interface AllocationView {
@@ -356,7 +357,7 @@ export class CityScene extends Phaser.Scene {
   /** Nyalakan atau matikan mode pilih pusat zona. */
   aturModePilih(handler: ((petak: ZoneCenter, seret: boolean) => void) | null): void {
     this.onPilihPetak = handler;
-    this.input.setDefaultCursor(handler ? 'crosshair' : 'default');
+    this.input.setDefaultCursor(handler ? KURSOR_BIDIK : KURSOR_PANAH);
   }
 
   /** Tekstur yang mewakili sebuah petak; stabil terhadap seed. */

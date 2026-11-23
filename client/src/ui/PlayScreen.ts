@@ -1549,5 +1549,5 @@ function grafikHimpunan(
   for (const p of titik) {
     bagian.push(`<circle cx="${sx(Math.min(xMax, p.x))}" cy="${sy(Math.min(yMax, p.y))}" r="4" fill="${p.ok ? '#2e7d32' : '#d9534f'}" stroke="#fff" stroke-width="1"/>`);
   }
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="max-width:420px;cursor:crosshair;background:#fff;border:2px solid #1d3640;border-radius:8px" role="img" aria-label="Bidang gambar grafik pertidaksamaan">${bagian.join('')}</svg>`;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="max-width:420px;background:#fff;border:2px solid #1d3640;border-radius:8px" role="img" aria-label="Bidang gambar grafik pertidaksamaan">${bagian.join('')}</svg>`;
 }
