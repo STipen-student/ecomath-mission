@@ -3319,3 +3319,44 @@ body {
   border-color: #c58a00;
   box-shadow: 0 0 0 2px #f5c542;
 }
+
+/* Tujuan pembelajaran dan cara penilaian di halaman depan */
+.info-asesmen {
+  margin: 16px auto;
+  padding: 16px 20px;
+  max-width: 1100px;
+  font-family: var(--font-read);
+  line-height: 1.55;
+}
+
+.info-asesmen h2 {
+  margin: 8px 0 6px;
+  font-size: 1.15rem;
+}
+
+.info-asesmen h3 {
+  margin: 12px 0 4px;
+  font-size: 1rem;
+}
+
+.info-asesmen-daftar {
+  margin: 4px 0 8px;
+  padding-left: 22px;
+}
+
+.info-asesmen-tahap {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.info-asesmen-kartu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 2px solid #1d3640;
+  border-radius: 8px;
+  background: #fffdf5;
+}

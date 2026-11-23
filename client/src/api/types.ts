@@ -194,7 +194,8 @@ export type EventType =
   | 'set_zone_center'
   | 'goal_set'
   | 'learning_reflection'
-  | 'aal_tanggapan_protes';
+  | 'aal_tanggapan_protes'
+  | 'gambar_grafik';
 
 /** Satu baris log, mengikuti skema Bagian 5.1 dokumen ECD. */
 export interface LogEvent {

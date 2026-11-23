@@ -43,6 +43,7 @@ export const EVENT_TYPES = [
   'learning_reflection',
   'kota_aksi',
   'aal_tanggapan_protes',
+  'gambar_grafik',
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
@@ -67,6 +68,9 @@ export const NON_EVIDENCE_EVENTS: ReadonlySet<EventType> = new Set<EventType>([
   // Tanggapan siswa atas protes warga di Peta Wilayah (AaL): diagnosis,
   // rencana, kaitan dengan kendala, dan keyakinan diri. Bukan bukti K1-K4.
   'aal_tanggapan_protes',
+  // Siswa menggambar garis batas dan memilih sisi arsiran pada soal
+  // pertidaksamaan linear (Level 1). Data proses; belum menjadi bukti rubrik.
+  'gambar_grafik',
 ]);
 
 /** Satu baris log mentah sesuai Bagian 5.1. */

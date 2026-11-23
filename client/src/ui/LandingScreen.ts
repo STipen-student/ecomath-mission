@@ -10,6 +10,7 @@
  * mainkan, dan tampilannya tidak mungkin melenceng dari permainan sesungguhnya.
  */
 
+import { infoAsesmen } from './infoAsesmen.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el } from './dom.js';
 
@@ -136,6 +137,9 @@ export function renderLandingScreen(root: HTMLElement, aksi: LandingActions): La
       ),
     ),
   );
+
+  // Tujuan pembelajaran dan cara penilaian, dibaca siswa sebelum mulai.
+  root.querySelector('.landing')?.append(infoAsesmen());
 
   // Kota contoh: alokasi tetap, tanpa interaksi. Angkanya sengaja memenuhi
   // kendala agar peta tampil dalam keadaan sehat (bukan rona merah pelanggaran).

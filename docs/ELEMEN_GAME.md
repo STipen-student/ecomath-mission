@@ -106,3 +106,24 @@ lebih rendah, dan data kalibrasi AaL tetap jujur.
 **Batas.** Tidak ada uang sungguhan. Hasil gacha hanya koin dan kartu koleksi,
 disimpan di perangkat (localStorage), tidak dikirim ke server, dan tidak
 memengaruhi skor K1–K4, pemilihan soal, atau event yang dinilai.
+
+## Menggambar grafik pertidaksamaan (Level 1)
+
+Pada soal pertidaksamaan linear tanpa fungsi tujuan, grafik tidak lagi digambar
+otomatis. Di panel Simulasi, siswa menggambar sendiri dari kendala yang ia tulis:
+
+1. Untuk tiap pertidaksamaan, ketuk **dua titik** yang dilalui garis batasnya
+   (titik ditempel ke kisi satuan). Bila salah, siswa diberi petunjuk mencari
+   titik potong sumbu dan mencoba lagi.
+2. Ketuk **satu titik di sisi yang memenuhi** pertidaksamaan. Bila salah,
+   siswa diminta menyubstitusikan titiknya.
+3. Setelah semua garis dan sisi benar, daerah himpunan penyelesaian diarsir.
+
+Setiap garis dan sisi dicatat sebagai event `gambar_grafik` (slot, tahap,
+titik, benar/belum). Event ini masuk `NON_EVIDENCE_EVENTS`, jadi **belum**
+memengaruhi skor K1–K4 dan rubrik yang sudah divalidasi tidak berubah. Uji
+titik lewat kolom x dan y tetap tersedia sejak awal, karena rubrik K2 membaca
+kegiatan uji titik dan kesulitan menggambar tidak boleh menurunkannya.
+
+Bila kemampuan menggambar grafik hendak dinilai (misalnya bagian dari K3 di
+Level 1), rubrik dan `SCORING_VERSION` perlu diubah dan divalidasi ulang.

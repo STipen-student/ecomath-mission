@@ -19,7 +19,7 @@ import type { KotaLevel } from './ui/petaWilayah.js';
 import type { TanggapanProtes } from './ui/tanggapanProtes.js';
 import { renderLandingScreen, type LandingHandle } from './ui/LandingScreen.js';
 import { renderLoginScreen } from './ui/LoginScreen.js';
-import { PlayScreen } from './ui/PlayScreen.js';
+import { PlayScreen, type GambarGrafikEvent } from './ui/PlayScreen.js';
 import { renderFinishScreen, renderResultScreen, type RiwayatLevel } from './ui/ResultScreen.js';
 import { TutorialScreen, type HasilTutorial } from './ui/TutorialScreen.js';
 
@@ -254,6 +254,9 @@ export class App {
        * Dicatat sebagai data proses, TIDAK dipakai rubrik mana pun - letak zona
        * adalah pilihan tata kota dan tidak memengaruhi nilai x maupun y.
        */
+      onGambarGrafik: (data: GambarGrafikEvent): void => {
+        logger.record('gambar_grafik', { ...data }, data.benar);
+      },
       onSetZoneCenter: (variable: 'x' | 'y', col: number, row: number): void => {
         logger.record('set_zone_center', { variable, col, row }, true);
         this.jumlahPusatDipindah++;

@@ -214,6 +214,17 @@ export function narrateEvent(taskId: string, eventType: string, payloadJson: str
       };
     }
 
+    case 'gambar_grafik': {
+      const tahap = p.tahap === 'arsir' ? 'memilih sisi arsiran' : 'menggambar garis batas';
+      const slot = Number(p.slot ?? 0) + 1;
+      const titik = Array.isArray(p.titik) ? p.titik.map((t) => (Array.isArray(t) ? `(${t.join(', ')})` : '')).join(' dan ') : '';
+      return {
+        ...KOSONG,
+        catatan: titik,
+        keterangan: `Grafik kendala ke-${slot}: ${tahap} ${titik} - ${p.benar ? 'benar' : 'belum benar'}`,
+      };
+    }
+
     case 'learning_reflection': {
       const klaim = teks(p.mostImprovedClaim);
       const terbuka = teks(p.openText);
