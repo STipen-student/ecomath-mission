@@ -1018,11 +1018,25 @@ export class PlayScreen {
     const kunci = (k: ConstraintDto): string => `${k.a}|${k.b}|${k.op}|${k.c}`;
     const keadaan = (k: ConstraintDto): GambarKendala => {
       const id = kunci(k);
-      if (!this.gambarSiswa.has(id)) this.gambarSiswa.set(id, { titik: [], garisBenar: false, sisi: null, sisiBenar: false });
+      if (!this.gambarSiswa.has(id)) this.gambarSiswa.set(id, { titik: [], garisBenar: false, sisi: null, sisiBenar: false, dilewati: false });
       return this.gambarSiswa.get(id)!;
     };
     const aktif = (): { slot: number; k: ConstraintDto } | undefined =>
-      tulisan.find(({ k }) => !keadaan(k).garisBenar || !keadaan(k).sisiBenar);
+      tulisan.find(({ k }) => !keadaan(k).dilewati && (!keadaan(k).garisBenar || !keadaan(k).sisiBenar));
+    // Apakah garis batas kendala melewati bidang gambar (0..xMax, 0..yMax)?
+    const kotakBidang = (): Array<[number, number]> => [[0, 0], [xMax, 0], [xMax, yMax], [0, yMax]];
+    const diBidang = (k: ConstraintDto): boolean => {
+      const ruas = potong(potong(kotakBidang(), k), { ...k, a: -k.a, b: -k.b, c: -k.c });
+      return ruas.some((p) => ruas.some((q) => Math.hypot(p[0] - q[0], p[1] - q[1]) > 1e-6));
+    };
+    const titikPotong = (k: ConstraintDto): string => {
+      const bagian: string[] = [];
+      if (k.a !== 0) bagian.push(`sumbu x di x = ${num(k.c / k.a)}`);
+      if (k.b !== 0) bagian.push(`sumbu y di y = ${num(k.c / k.b)}`);
+      return bagian.join(' dan ');
+    };
+    const tombolLewati = el('button', { class: 'btn btn-tiny btn-ghost' }, 'Lewati garis ini');
+    tombolLewati.hidden = true;
     const simbol = (op: string): string => (op === '>=' ? '≥' : op === '<=' ? '≤' : op);
     const persamaan = (k: ConstraintDto, op = '='): string =>
       `${num(k.a)}x + ${num(k.b)}y ${op} ${num(k.c)}`.replace('+ -', '- ');
@@ -1056,10 +1070,18 @@ export class PlayScreen {
         petunjuk.textContent = 'Tulis dulu kendalamu di panel "Perda". Setelah itu kamu menggambar grafiknya di sini.';
       } else if (sekarang) {
         const g = keadaan(sekarang.k);
-        petunjuk.textContent = !g.garisBenar
+        const luar = !g.garisBenar && !diBidang(sekarang.k);
+        tombolLewati.hidden = !luar;
+        petunjuk.textContent = luar
+          ? `Kendala ke-${sekarang.slot + 1}: garis ${persamaan(sekarang.k)} memotong ${titikPotong(sekarang.k)}, jadi tidak melewati bidang gambar ini (x sampai ${num(xMax)}, y sampai ${num(yMax)}). Biasanya ini tanda angka atau satuan kendalanya keliru. Periksa lagi kendala ke-${sekarang.slot + 1} di panel "Perda", atau lewati garis ini.`
+          : !g.garisBenar
           ? `Kendala ke-${sekarang.slot + 1}: gambar garis ${persamaan(sekarang.k)}. Ketuk DUA titik di grafik yang dilalui garis itu (titik ${g.titik.length + 1} dari 2).`
           : `Kendala ke-${sekarang.slot + 1}: garisnya sudah benar. Sekarang ketuk satu titik di sisi yang memenuhi ${persamaan(sekarang.k, simbol(sekarang.k.op))}.`;
+      } else if (tulisan.some(({ k }) => keadaan(k).dilewati)) {
+        tombolLewati.hidden = true;
+        petunjuk.textContent = 'Garis yang bisa digambar sudah selesai. Ada garis yang kamu lewati karena berada di luar bidang gambar; periksa lagi kendala itu di panel "Perda". Daerah hijau dihitung dari semua kendala yang kamu tulis.';
       } else {
+        tombolLewati.hidden = true;
         petunjuk.textContent = '✓ Grafikmu lengkap. Daerah berarsir hijau adalah himpunan penyelesaian. Ketuk grafik atau isi x dan y untuk menguji titik.';
       }
     };
@@ -1146,6 +1168,16 @@ export class PlayScreen {
       gambar();
     });
 
+    tombolLewati.addEventListener('click', () => {
+      const sekarang = aktif();
+      if (!sekarang) return;
+      keadaan(sekarang.k).dilewati = true;
+      this.cb.onGambarGrafik?.({ slot: sekarang.slot, tahap: 'garis', titik: [], benar: false });
+      hasil.className = 'hint';
+      hasil.textContent = `Garis kendala ke-${sekarang.slot + 1} dilewati.`;
+      gambar();
+    });
+
     const ulangi = el('button', { class: 'btn btn-tiny btn-ghost' }, '↺ Ulangi gambar');
     ulangi.addEventListener('click', () => {
       for (const { k } of tulisan) this.gambarSiswa.delete(kunci(k));
@@ -1155,7 +1187,7 @@ export class PlayScreen {
     });
 
     gambar();
-    return el('div', { class: 'uji-hp' }, petunjuk, grafik, barisUji, el('div', { class: 'uji-hp-baris' }, ulangi), hasil, riwayat);
+    return el('div', { class: 'uji-hp' }, petunjuk, grafik, barisUji, el('div', { class: 'uji-hp-baris' }, tombolLewati, ulangi), hasil, riwayat);
   }
 
   /**
@@ -1486,6 +1518,8 @@ function potong(poli: Array<[number, number]>, k: ConstraintDto): Array<[number,
 
 interface GambarKendala {
   titik: Array<[number, number]>;
+  /** Garis berada di luar bidang gambar dan siswa memilih melewatinya. */
+  dilewati: boolean;
   garisBenar: boolean;
   sisi: [number, number] | null;
   sisiBenar: boolean;
