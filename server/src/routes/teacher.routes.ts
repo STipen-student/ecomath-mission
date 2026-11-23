@@ -239,11 +239,48 @@ teacherRouter.get(
     });
     const tanggapanProtes = tanggapanRows.map((r) => parseJson(r.payload));
 
+    // Kota yang dibangun siswa di tiap level: rancangan akhir (attempt_submit
+    // terakhir per percobaan) beserta wujud variabel dari bank soal, sehingga
+    // guru dapat melihat Peta Wilayah yang sama dengan yang dilihat siswa.
+    const submitRows = await prisma.eventLog.findMany({
+      where: { sessionId: session.id, eventType: 'attempt_submit' },
+      orderBy: { timestampMs: 'asc' },
+    });
+    const akhirPerAttempt = new Map<string, (typeof submitRows)[number]>();
+    for (const r of submitRows) akhirPerAttempt.set(r.attemptId, r);
+    const kota = session.attempts.flatMap((a) => {
+      const akhir = akhirPerAttempt.get(a.id);
+      const task = getTaskById(a.taskId);
+      if (!akhir || !task) return [];
+      const p = parseJson(akhir.payload) as { x?: unknown; y?: unknown };
+      return [
+        {
+          level: a.level,
+          taskId: a.taskId,
+          judul: task.title,
+          x: Number(p.x) || 0,
+          y: Number(p.y) || 0,
+          xMax: task.variables.x.max,
+          yMax: task.variables.y.max,
+          labelX: task.variables.x.label,
+          labelY: task.variables.y.label,
+          unitX: task.variables.x.unit,
+          unitY: task.variables.y.unit,
+          visualX: task.variables.x.visual,
+          visualY: task.variables.y.visual,
+          spriteX: task.variables.x.sprite,
+          spriteY: task.variables.y.sprite,
+          layak: akhir.isValidAtTime,
+        },
+      ];
+    });
+
     res.json({
       sessionId: session.id,
       studentName: session.studentName,
       studentId: session.studentId ?? '',
       classCode: session.classCode,
+      kota,
       startedAt: session.startedAt.toISOString(),
       finishedAt: session.finishedAt ? session.finishedAt.toISOString() : null,
       sessionComposite: session.sessionComposite,

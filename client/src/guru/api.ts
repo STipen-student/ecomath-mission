@@ -1,3 +1,4 @@
+import type { KotaLevel } from '../ui/petaWilayah.js';
 /**
  * Pemanggilan API admin dari halaman guru.
  *
@@ -274,6 +275,8 @@ export interface LaporanSiswa {
   studentName: string;
   studentId: string;
   classCode: string;
+  /** Kota rancangan akhir tiap level, untuk Peta Wilayah (tampilan guru). */
+  kota?: KotaLevel[];
   startedAt: string;
   finishedAt: string | null;
   sessionComposite: number | null;

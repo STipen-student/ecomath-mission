@@ -309,7 +309,9 @@ export function bukaPetaWilayah(
         })()),
         el('strong', {}, `${persenHijau}%`),
       ),
-      persenHijau < 100
+      !progres
+        ? el('span', {})
+        : persenHijau < 100
         ? el('p', { class: 'hint' }, '🌱 Naikkan indeks hijau: bangun pohon, taman, panel surya, kincir angin, atau pabrik ramah lingkungan dengan koin di bawah, atau tanggapi protes warga dengan tepat lalu terapkan rencanamu.')
         : el('p', { class: 'peta-wilayah-status ok' }, '🏆 Indeks hijau penuh!'),
       el('p', { class: g.berasap === 0 ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad' }, status),

@@ -559,6 +559,21 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
   const tombolTutup = el('button', { class: 'btn btn-small', ariaLabel: 'Tutup laporan' }, '✕');
   tombolTutup.addEventListener('click', tutup);
 
+  // Kota yang dibangun siswa: Peta Wilayah yang sama dengan milik siswa,
+  // dimuat saat diminta karena memuat mesin peta (Phaser).
+  const kota = lap.kota ?? [];
+  const tombolKota = el('button', { class: 'btn btn-small' }, `🗺 Lihat kota siswa (${kota.length} level)`);
+  tombolKota.disabled = kota.length === 0;
+  tombolKota.addEventListener('click', async () => {
+    tombolKota.disabled = true;
+    try {
+      const { bukaPetaWilayah } = await import('../ui/petaWilayah.js');
+      bukaPetaWilayah(kota);
+    } finally {
+      tombolKota.disabled = false;
+    }
+  });
+
   const rentangWaktu = lap.finishedAt
     ? `${new Date(lap.startedAt).toLocaleString('id-ID')} - ${new Date(lap.finishedAt).toLocaleString('id-ID')}`
     : `Dimulai ${new Date(lap.startedAt).toLocaleString('id-ID')} - belum selesai`;
@@ -576,6 +591,7 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
           { class: 'sub' },
           `${lap.classCode}${lap.studentId ? ` · NIS ${lap.studentId}` : ''} · ${rentangWaktu}`,
         ),
+        tombolKota,
       ),
       tombolTutup,
     ),
