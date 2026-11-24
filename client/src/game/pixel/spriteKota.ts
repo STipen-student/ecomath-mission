@@ -13,6 +13,9 @@ import { makeBuilding, makeTree, TILE_H, TILE_W } from './textures.js';
 
 /** Jenis sprite yang dipakai variabel soal. Harus sama dengan server/src/domain/types.ts. */
 export type SpriteKota =
+  | 'air-mancur'
+  | 'lampu-kota'
+  | 'bendera-kota'
   | 'pabrik-hijau'
   | 'toko'
   | 'pencakar-a'
@@ -138,6 +141,35 @@ export function buatSpriteKota(scene: Phaser.Scene): void {
     fn(ctx);
     selesai(scene, key);
   };
+
+  // Hiasan dari Toko Perlengkapan: hanya mempercantik kota.
+  gambar('sk_air-mancur', (c) => {
+    alas(c, '#d8d2c4', '#bfb8a8');
+    kotak(c, 8, ALAS_Y - 5, 16, 5, '#a9a39a'); // kolam batu
+    kotak(c, 9, ALAS_Y - 4, 14, 3, '#5fb4e3'); // air kolam
+    kotak(c, 15, ALAS_Y - 12, 2, 8, '#a9a39a'); // tiang
+    kotak(c, 12, ALAS_Y - 14, 8, 2, '#8fd3f4'); // semburan
+    kotak(c, 11, ALAS_Y - 12, 2, 3, '#8fd3f4');
+    kotak(c, 19, ALAS_Y - 12, 2, 3, '#8fd3f4');
+    kotak(c, 15, ALAS_Y - 17, 2, 3, '#cbeefc');
+  });
+
+  gambar('sk_lampu-kota', (c) => {
+    alas(c, '#9fcf7a', '#86b862');
+    kotak(c, 11, ALAS_Y - 4, 10, 4, '#ffe9a6'); // cahaya di tanah
+    kotak(c, 15, ALAS_Y - 18, 2, 18, '#2f3b40'); // tiang
+    kotak(c, 12, ALAS_Y - 20, 8, 3, '#2f3b40'); // kepala lampu
+    kotak(c, 13, ALAS_Y - 17, 6, 2, '#ffd34d'); // bola lampu
+    kotak(c, 11, ALAS_Y - 15, 10, 1, '#fff2b3');
+  });
+
+  gambar('sk_bendera-kota', (c) => {
+    alas(c, '#d8d2c4', '#bfb8a8');
+    kotak(c, 12, ALAS_Y - 3, 8, 3, '#a9a39a'); // alas tiang
+    kotak(c, 15, ALAS_Y - 22, 1, 20, '#7a7a7a'); // tiang
+    kotak(c, 16, ALAS_Y - 22, 9, 3, '#d62828'); // merah
+    kotak(c, 16, ALAS_Y - 19, 9, 3, '#ffffff'); // putih
+  });
 
   gambar('sk_bus-listrik', (c) => {
     alas(c, '#b9b4a8');

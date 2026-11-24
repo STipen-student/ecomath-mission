@@ -23,7 +23,14 @@ const KATALOG: Array<{ jenis: SpriteKota; nama: string; ikon: string; harga: num
   { jenis: 'surya', nama: 'Panel surya', ikon: '☀️', harga: 35 },
   { jenis: 'turbin', nama: 'Kincir angin', ikon: '🌬️', harga: 45 },
   { jenis: 'pabrik-hijau', nama: 'Pabrik ramah lingkungan', ikon: '🏭', harga: 70 },
+  // Hiasan: mempercantik kota; tidak dihitung dalam indeks hijau.
+  { jenis: 'air-mancur', nama: 'Air mancur', ikon: '⛲', harga: 30 },
+  { jenis: 'lampu-kota', nama: 'Lampu kota', ikon: '🏮', harga: 15 },
+  { jenis: 'bendera-kota', nama: 'Bendera kota', ikon: '🚩', harga: 15 },
 ];
+
+/** Hiasan Toko Perlengkapan: dekorasi, tidak dihitung dalam indeks hijau. */
+const HIASAN: ReadonlySet<string> = new Set(['air-mancur', 'lampu-kota', 'bendera-kota']);
 
 /** Kota hasil satu level, disimpan saat level diajukan. */
 export interface KotaLevel {
@@ -198,6 +205,19 @@ export function bukaPetaWilayah(
     // Bangunan yang dibeli dengan koin ikut tampil dan ikut dihitung.
     // Sarana-prasarana yang dibeli dengan koin; yang kondisinya di bawah
     // BATAS_RUSAK tetap tampil (kusam) tetapi tidak dihitung sebagai ruang hijau.
+    // Hiasan dari Toko Perlengkapan berdiri di alun-alun, di petak kosong
+    // terdekat ke pusat kota. Dekorasi saja: tidak dihitung dalam indeks hijau.
+    const hiasan = progres?.hiasan() ?? [];
+    if (hiasan.length > 0) {
+      const tengah = (GRID - 1) / 2;
+      const kosongPusat = plotTiles()
+        .filter((t) => !g.petak.has(t.seed))
+        .sort((a, b) => Math.hypot(a.col - tengah, a.row - tengah) - Math.hypot(b.col - tengah, b.row - tengah));
+      hiasan.forEach((h, i) => {
+        const t = kosongPusat[i];
+        if (t) g.petak.set(t.seed, `s:${h.id}`);
+      });
+    }
     const sarpras = progres?.bangunanKota() ?? kotaSiswa?.bangunan ?? [];
     const rusak = new Set<number>();
     for (const b of sarpras) {
@@ -243,7 +263,7 @@ export function bukaPetaWilayah(
     g.lainnya = 0;
     for (const [seed, kode] of g.petak) {
       const j = jenisDariKode(kode);
-      if (j === 'perpustakaan' || j.startsWith('pencakar')) continue;
+      if (j === 'perpustakaan' || j.startsWith('pencakar') || HIASAN.has(j)) continue;
       if (rusak.has(seed)) g.lainnya++;
       else if (SPRITE_HIJAU.has(j as SpriteKota) || JENIS_HIJAU.has(j)) g.hijau++;
       else if (SPRITE_BERASAP.has(j as SpriteKota)) g.berasap++;
@@ -441,6 +461,9 @@ function kabarWarga(petak: Map<number, string>, persenHijau: number, jumlahRusak
   if (ada('surya') || ada('turbin')) unggahan.push({ teks: 'Listrik dari panel surya dan kincir angin, tagihan jadi hemat! ☀️🌬️', suka: true });
   if (ada('sepeda') || ada('trotoar')) unggahan.push({ teks: 'Gowes ke sekolah lewat jalur sepeda, aman dan cepat. 🚲', suka: true });
   if (persenHijau >= 50) unggahan.push({ teks: 'Sore-sore jalan di taman, udaranya segar. 🌳', suka: true });
+  if (ada('air-mancur')) unggahan.push({ teks: 'Sore-sore anak-anak main di dekat air mancur alun-alun. ⛲', suka: true });
+  if (ada('lampu-kota')) unggahan.push({ teks: 'Jalan pulang malam jadi terang dan aman berkat lampu kota. 🏮', suka: true });
+  if (ada('bendera-kota')) unggahan.push({ teks: 'Bendera di balai kota berkibar, bangga jadi warga sini! 🚩', suka: true });
   if (ada('perpustakaan')) unggahan.push({ teks: 'Perpustakaan kota ramai, ada pojok buku tentang iklim. 📚', suka: true });
   if (ada('pabrik-hijau') || ada('toko')) unggahan.push({ teks: 'Toko dan pabrik baru buka, tetangga dapat kerja. 💼', suka: true });
 

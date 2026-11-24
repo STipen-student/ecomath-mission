@@ -167,3 +167,11 @@ Kota Bebas memakai aturan protes yang sama dengan Peta Wilayah: pabrik berasap
 memicu protes SDG 13, dan permukiman tanpa cukup taman memicu protes SDG 11.
 Demo tampil di peta, dan alasannya ditulis di panel agar siswa tahu cara
 mengatasinya. Hanya tampilan; tidak mengubah ekonomi Kota Bebas maupun skor.
+
+## Hiasan di kota
+
+Hiasan dari Toko Perlengkapan (air mancur, lampu kota, bendera kota) kini berdiri
+di kota: di alun-alun Peta Wilayah gabungan dan di petak kosong terdekat ke pusat
+Kota Bebas. Hiasan yang sama juga bisa dibangun di petak mana saja lewat palet
+**Bangun dengan koin**. Warga menyebutnya di Kabar Warga. Hiasan tidak dihitung
+dalam indeks hijau dan tidak memengaruhi skor.

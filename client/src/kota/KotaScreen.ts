@@ -164,6 +164,19 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
 
     const peton = new Map<number, string>();
     petak.forEach((b, i) => { if (b) peton.set(i, kodeJenis(b)); });
+    // Hiasan yang dibeli tampil di petak kosong terdekat ke pusat peta. Bila
+    // petak itu dibangun, hiasan berpindah ke petak kosong berikutnya.
+    const hiasan = progres?.hiasan() ?? [];
+    if (hiasan.length > 0) {
+      const tengah = (GRID - 1) / 2;
+      const kosong = plotTiles()
+        .filter((t) => !peton.has(t.seed))
+        .sort((a, b) => Math.hypot(a.col - tengah, a.row - tengah) - Math.hypot(b.col - tengah, b.row - tengah));
+      hiasan.forEach((h, i) => {
+        const t = kosong[i];
+        if (t) peton.set(t.seed, `s:${h.id}`);
+      });
+    }
     kota.tampilkanKota(peton);
     // Warga berdemo bila kota tidak sesuai semangat SDG 11/13 (pabrik berasap,
     // atau permukiman tanpa cukup taman). Di peta, demo tampil di dekat
