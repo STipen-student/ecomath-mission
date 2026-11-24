@@ -864,7 +864,7 @@ export class CityScene extends Phaser.Scene {
    * DITARUH pemain pada tiap petak, bukan dari penggeser alokasi.
    * `petak` memetakan seed petak (row * GRID + col) ke jenis bangunan.
    */
-  tampilkanKota(petak: Map<number, string>, feasible = true): void {
+  tampilkanKota(petak: Map<number, string>, feasible = true, rusak: ReadonlySet<number> = new Set()): void {
     if (!this.siap) return;
     for (const penanda of [this.penandaX, this.penandaY]) penanda.setVisible(false);
     for (const [seed, sprite] of this.bangunan) {
@@ -903,6 +903,8 @@ export class CityScene extends Phaser.Scene {
         return true;
       });
     }
+    // Fasilitas yang rusak tampil kusam: perlu dirawat agar kembali berfungsi.
+    for (const seed of rusak) this.bangunan.get(seed)?.setTint(0x8a8a7a);
   }
 }
 

@@ -145,3 +145,25 @@ Kas menampung paling banyak 60 menit pendapatan, jadi koin tidak menumpuk tanpa
 batas. Mekanisme ini mendorong siswa membangun kota yang hijau dan membuat
 warga puas. Seperti koin lainnya, kas kota disimpan di perangkat dan tidak
 memengaruhi skor K1–K4 maupun data AaL.
+
+## Perawatan sarana-prasarana (indeks hijau bisa turun)
+
+Bangunan yang dibeli dengan koin di Peta Wilayah gabungan mengalami aus:
+kondisinya turun **2% per menit** sejak terakhir dibangun atau dirawat. Di bawah
+**40%** fasilitas dianggap rusak:
+
+- tampil kusam di peta;
+- tidak dihitung sebagai ruang hijau, sehingga **indeks hijau turun**;
+- toko dan pabrik ramah lingkungan tidak menghasilkan kas kota;
+- warga mengeluh di Kabar Warga.
+
+Tombol **🔧 Rawat semua** mengembalikan semua fasilitas ke 100%. Biayanya 30%
+dari harga beli dikali tingkat kerusakan. Bangunan hasil level (rancangan siswa)
+tidak aus, karena itu adalah jawaban yang dinilai.
+
+## Protes warga di Kota Bebas
+
+Kota Bebas memakai aturan protes yang sama dengan Peta Wilayah: pabrik berasap
+memicu protes SDG 13, dan permukiman tanpa cukup taman memicu protes SDG 11.
+Demo tampil di peta, dan alasannya ditulis di panel agar siswa tahu cara
+mengatasinya. Hanya tampilan; tidak mengubah ekonomi Kota Bebas maupun skor.

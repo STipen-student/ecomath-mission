@@ -11,7 +11,7 @@ import { SPRITE_BERASAP, type SpriteKota } from '../game/pixel/spriteKota.js';
 import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
-import { BATAS_KAS_MENIT, PENDAPATAN_BANGUNAN, PENDAPATAN_DASAR, type Progres } from '../game/progres.js';
+import { BATAS_KAS_MENIT, BATAS_RUSAK, biayaRawat, kondisiBangunan, PENDAPATAN_BANGUNAN, PENDAPATAN_DASAR, type BangunanKota, type Progres } from '../game/progres.js';
 import { JENIS_HIJAU, JENIS_HUNIAN, jenisDariKode, periksaStandar } from '../game/standarSdg.js';
 import { formTanggapanProtes, type TanggapanProtes } from './tanggapanProtes.js';
 
@@ -132,7 +132,7 @@ export function bukaPetaWilayah(
   progres?: Progres,
   onTanggapan?: (t: TanggapanProtes) => Promise<void> | void,
   /** Untuk tampilan guru: keadaan kota siswa yang dikirim ke server. */
-  kotaSiswa?: { bangunan: Array<{ seed: number; jenis: string }>; perbaikan: string[] } | null,
+  kotaSiswa?: { bangunan: BangunanKota[]; perbaikan: string[] } | null,
 ): void {
   if (kota.length === 0) return;
 
@@ -196,10 +196,13 @@ export function bukaPetaWilayah(
     peta = mountCity(wadahPeta);
     const g = susunGabungan(kota);
     // Bangunan yang dibeli dengan koin ikut tampil dan ikut dihitung.
-    for (const b of progres?.bangunanKota() ?? kotaSiswa?.bangunan ?? []) {
+    // Sarana-prasarana yang dibeli dengan koin; yang kondisinya di bawah
+    // BATAS_RUSAK tetap tampil (kusam) tetapi tidak dihitung sebagai ruang hijau.
+    const sarpras = progres?.bangunanKota() ?? kotaSiswa?.bangunan ?? [];
+    const rusak = new Set<number>();
+    for (const b of sarpras) {
       g.petak.set(b.seed, `s:${b.jenis}`);
-      if (SPRITE_HIJAU.has(b.jenis as SpriteKota)) g.hijau++;
-      else g.lainnya++;
+      if (kondisiBangunan(b) < BATAS_RUSAK) rusak.add(b.seed);
     }
     // Perbaikan kota dari tanggapan protes yang tepat (AaL): kota ikut berubah.
     const perbaikan = progres?.perbaikanKota() ?? kotaSiswa?.perbaikan ?? [];
@@ -238,17 +241,18 @@ export function bukaPetaWilayah(
     g.hijau = 0;
     g.berasap = 0;
     g.lainnya = 0;
-    for (const kode of g.petak.values()) {
+    for (const [seed, kode] of g.petak) {
       const j = jenisDariKode(kode);
       if (j === 'perpustakaan' || j.startsWith('pencakar')) continue;
-      if (SPRITE_HIJAU.has(j as SpriteKota) || JENIS_HIJAU.has(j)) g.hijau++;
+      if (rusak.has(seed)) g.lainnya++;
+      else if (SPRITE_HIJAU.has(j as SpriteKota) || JENIS_HIJAU.has(j)) g.hijau++;
       else if (SPRITE_BERASAP.has(j as SpriteKota)) g.berasap++;
       else g.lainnya++;
     }
     // Latar mengikuti keadaan wilayah akhir: hijau bila tidak ada protes warga
     // (bebas asap dan ruang hijau cukup), merah bila masih ada masalah.
     const wilayahSehat = periksaStandar([...g.petak.values()].map(jenisDariKode)).length === 0;
-    peta.tampilkanKota(g.petak, wilayahSehat);
+    peta.tampilkanKota(g.petak, wilayahSehat, rusak);
     peta.hidupkan(20 + kota.length * 6);
 
     // Palet "Bangun dengan koin": pilih bangunan, lalu ketuk petak kosong.
@@ -342,7 +346,7 @@ export function bukaPetaWilayah(
               return kotak;
             })();
       })(),
-      kabarWarga(g.petak, persenHijau),
+      kabarWarga(g.petak, persenHijau, rusak.size),
       el(
         'ul',
         { class: 'peta-wilayah-daftar' },
@@ -359,6 +363,12 @@ export function bukaPetaWilayah(
       el('p', { class: 'hint' }, 'Tiap distrik adalah kota dari satu kasus. Kepadatan bangunan menggambarkan seberapa penuh nilai yang kamu pilih, bukan jumlah sebenarnya.'),
       ...(progres
         ? [
+            perawatanSarpras(progres, sarpras, rusak.size, () => {
+              const posisi = (wadahPeta.closest('.peta-wilayah-panel') as HTMLElement | null)?.scrollTop ?? 0;
+              tampilkanGabungan();
+              const panel = wadahPeta.closest('.peta-wilayah-panel') as HTMLElement | null;
+              if (panel) panel.scrollTop = posisi;
+            }),
             kasKota(progres, periksaStandar([...g.petak.values()].map(jenisDariKode)).length === 0, () => {
               const posisi = (wadahPeta.closest('.peta-wilayah-panel') as HTMLElement | null)?.scrollTop ?? 0;
               tampilkanGabungan();
@@ -419,10 +429,11 @@ export function tombolPetaWilayah(
  */
 const NAMA_WARGA = ['@bu_sari', '@raka.gowes', '@pak_darto', '@nina_taman', '@ojik_bus', '@mbak_lusi', '@dimas.kecil', '@oma_reni'];
 
-function kabarWarga(petak: Map<number, string>, persenHijau: number): HTMLElement {
+function kabarWarga(petak: Map<number, string>, persenHijau: number, jumlahRusak = 0): HTMLElement {
   const jenis = new Set([...petak.values()].map(jenisDariKode));
   const ada = (j: string): boolean => jenis.has(j);
   const unggahan: Array<{ teks: string; suka: boolean }> = [];
+  if (jumlahRusak > 0) unggahan.push({ teks: `Taman dan fasilitas kota mulai rusak, ${jumlahRusak} tempat belum dirawat. Tolong diperbaiki! 🛠️`, suka: false });
   if (ada('bus-konvensional')) unggahan.push({ teks: 'Nunggu di halte, asap busnya bikin batuk terus. 😷', suka: false });
   if (ada('mesin-fosil') || ada('pabrik')) unggahan.push({ teks: 'Siang ini kotanya panas banget, langitnya abu-abu. 🥵', suka: false });
   if (persenHijau < 50) unggahan.push({ teks: 'Pohonnya sedikit, mau berteduh saja susah. 🌡️', suka: false });
@@ -480,5 +491,39 @@ function kasKota(progres: Progres, wargaPuas: boolean, segarkan: () => void): HT
       { class: 'hint' },
       `Pendapatan ${perMenit} 🪙/menit: dasar ${PENDAPATAN_DASAR}${wargaPuas ? ', bonus warga puas +2' : ''}, toko +${PENDAPATAN_BANGUNAN.toko}, pabrik ramah lingkungan +${PENDAPATAN_BANGUNAN['pabrik-hijau']}, panel surya dan kincir angin +1 per bangunan. Kas menampung paling banyak ${BATAS_KAS_MENIT} menit pendapatan.`,
     ),
+  );
+}
+
+/**
+ * Perawatan sarana-prasarana: kondisi bangunan koin menurun 2% per menit.
+ * Di bawah 40% fasilitas rusak: tidak dihitung ruang hijau, tidak menghasilkan
+ * kas, dan warga mengeluh. Siswa merawat semuanya sekaligus dengan koin.
+ */
+function perawatanSarpras(progres: Progres, sarpras: BangunanKota[], jumlahRusak: number, segarkan: () => void): HTMLElement {
+  if (sarpras.length === 0) return el('span', {});
+  const rerata = Math.round(sarpras.reduce((n, b) => n + kondisiBangunan(b), 0) / sarpras.length);
+  const biaya = sarpras.reduce((n, b) => n + biayaRawat(b), 0);
+  const pesan = el('p', { class: 'hint' });
+  const tombol = el('button', { class: 'btn btn-small' }, biaya > 0 ? `🔧 Rawat semua · ${biaya} 🪙` : '✓ Kondisi baik');
+  tombol.disabled = biaya <= 0 || progres.koin < biaya;
+  tombol.addEventListener('click', () => {
+    const h = progres.rawatSemua();
+    pesan.textContent = h.pesan;
+    if (h.ok) segarkan();
+  });
+  const isi = el('div', { class: 'profile-fill' });
+  isi.style.width = `${rerata}%`;
+  return el(
+    'div',
+    { class: `kas-kota sarpras${jumlahRusak > 0 ? ' is-rusak' : ''}` },
+    el('div', { class: 'kas-kota-baris' }, el('span', {}, '🛠️ Kondisi sarana-prasarana:'), el('div', { class: 'profile-bar' }, isi), el('strong', {}, `${rerata}%`), tombol),
+    el(
+      'small',
+      { class: 'hint' },
+      jumlahRusak > 0
+        ? `${jumlahRusak} fasilitas rusak (kondisi di bawah ${BATAS_RUSAK}%): tidak dihitung sebagai ruang hijau dan tidak menghasilkan kas. Rawat agar indeks hijau naik lagi.`
+        : `Kondisi fasilitas yang kamu bangun turun sedikit demi sedikit. Di bawah ${BATAS_RUSAK}% fasilitas rusak dan indeks hijau turun, jadi rawatlah secara berkala.`,
+    ),
+    pesan,
   );
 }

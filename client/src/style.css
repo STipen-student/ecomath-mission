@@ -3403,3 +3403,14 @@ textarea {
   align-items: center;
   gap: 8px;
 }
+
+/* Perawatan sarana-prasarana di Peta Wilayah */
+.sarpras .profile-bar {
+  flex: 1 1 120px;
+  min-width: 100px;
+}
+
+.sarpras.is-rusak {
+  border-color: #d9534f;
+  background: #fdecea;
+}

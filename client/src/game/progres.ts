@@ -97,7 +97,7 @@ interface Keadaan {
   /** Misi perpustakaan sudah terbuka (skor rubrik >= SKOR_BUKA_PERPUSTAKAAN). */
   perpustakaanTerbuka: boolean;
   /** Bangunan yang dibeli dengan koin dan ditaruh di wilayah gabungan. */
-  bangunanKota: Array<{ seed: number; jenis: string }>;
+  bangunanKota: BangunanKota[];
   /** Perbaikan kota hasil tanggapan protes yang tepat ('ganti-listrik' | 'tambah-hijau'). */
   perbaikanKota: string[];
   /** Tiket Kotak Kejutan, didapat dari MENGIKUTI kegiatan AaL (bukan dari isinya). */
@@ -152,9 +152,40 @@ export const KARTU_WARGA = [
 
 export const HARGA_GACHA_KOIN = 40;
 
+/**
+ * Sarana-prasarana yang dibangun dengan koin. Kondisinya menurun seiring waktu
+ * (lihat LAJU_AUS_PER_MENIT) dan perlu dirawat agar tetap berfungsi.
+ */
+export interface BangunanKota {
+  seed: number;
+  jenis: string;
+  /** Harga beli, dasar biaya perawatan. */
+  harga?: number;
+  /** Waktu (ms) terakhir dibangun atau dirawat. */
+  dirawat?: number;
+}
+
+/** Kondisi turun 2% per menit; di bawah BATAS_RUSAK fasilitas dianggap rusak. */
+export const LAJU_AUS_PER_MENIT = 2;
+export const BATAS_RUSAK = 40;
+
+/** Kondisi (0-100) satu bangunan pada waktu `sekarang`. */
+export function kondisiBangunan(b: BangunanKota, sekarang = Date.now()): number {
+  if (!b.dirawat) return 100;
+  const menit = Math.max(0, (sekarang - b.dirawat) / 60000);
+  return Math.max(0, Math.round(100 - menit * LAJU_AUS_PER_MENIT));
+}
+
+/** Biaya mengembalikan satu bangunan ke kondisi 100%: 30% harga beli dikali kerusakan. */
+export function biayaRawat(b: BangunanKota, sekarang = Date.now()): number {
+  const rusak = 100 - kondisiBangunan(b, sekarang);
+  if (rusak <= 0) return 0;
+  return Math.max(1, Math.ceil(((b.harga ?? 20) * 0.3 * rusak) / 100));
+}
+
 /** Keadaan kota yang dikirim ke server agar guru dapat melihatnya. */
 export interface SnapshotKota {
-  bangunan: Array<{ seed: number; jenis: string }>;
+  bangunan: BangunanKota[];
   perbaikan: string[];
   koin: number;
 }
@@ -191,6 +222,7 @@ export class Progres {
     try {
       const raw = localStorage.getItem(kunci);
       if (raw) this.k = { ...kosong(), ...(JSON.parse(raw) as Partial<Keadaan>) };
+      for (const b of this.k.bangunanKota) b.dirawat ??= Date.now();
     } catch {
       // Penyimpanan diblokir atau rusak: mulai dari kosong.
     }
@@ -321,7 +353,8 @@ export class Progres {
    */
   pendapatanPerMenit(wargaPuas: boolean): number {
     let n = PENDAPATAN_DASAR + (wargaPuas ? 2 : 0);
-    for (const b of this.k.bangunanKota) n += PENDAPATAN_BANGUNAN[b.jenis] ?? 0;
+    // Fasilitas yang rusak tidak menghasilkan apa-apa sampai dirawat.
+    for (const b of this.k.bangunanKota) if (kondisiBangunan(b) >= BATAS_RUSAK) n += PENDAPATAN_BANGUNAN[b.jenis] ?? 0;
     return n;
   }
 
@@ -345,7 +378,24 @@ export class Progres {
     return koin;
   }
 
-  bangunanKota(): Array<{ seed: number; jenis: string }> {
+  /** Total biaya merawat semua sarana-prasarana kembali ke 100%. */
+  biayaRawatSemua(sekarang = Date.now()): number {
+    return this.k.bangunanKota.reduce((n, b) => n + biayaRawat(b, sekarang), 0);
+  }
+
+  /** Rawat (perbarui) semua sarana-prasarana dengan koin. */
+  rawatSemua(sekarang = Date.now()): { ok: boolean; pesan: string } {
+    const biaya = this.biayaRawatSemua(sekarang);
+    if (biaya <= 0) return { ok: false, pesan: 'Semua fasilitas masih dalam kondisi baik.' };
+    if (this.k.koin < biaya) return { ok: false, pesan: `Koin kurang: perawatan butuh ${biaya} 🪙.` };
+    this.k.koin -= biaya;
+    for (const b of this.k.bangunanKota) b.dirawat = sekarang;
+    this.simpan();
+    this.beritahuKota();
+    return { ok: true, pesan: `🔧 Semua fasilitas dirawat (${biaya} 🪙). Kondisinya kembali 100%.` };
+  }
+
+  bangunanKota(): BangunanKota[] {
     return [...this.k.bangunanKota];
   }
 
@@ -357,7 +407,7 @@ export class Progres {
     if (this.k.bangunanKota.some((b) => b.seed === seed)) return { ok: false, pesan: 'Petak ini sudah terisi.' };
     if (this.k.koin < harga) return { ok: false, pesan: `Koin kurang: ${nama} seharga ${harga} 🪙.` };
     this.k.koin -= harga;
-    this.k.bangunanKota.push({ seed, jenis });
+    this.k.bangunanKota.push({ seed, jenis, harga, dirawat: Date.now() });
     this.simpan();
     this.beritahuKota();
     return { ok: true, pesan: `${nama} dibangun.` };

@@ -31,7 +31,7 @@ export interface CityHandle {
   /** Perayaan singkat setelah rancangan disahkan (tanpa event). */
   rayakan(): void;
   /** Mode kota: gambar bangunan per petak (seed -> jenis). */
-  tampilkanKota(petak: Map<number, string>, feasible?: boolean): void;
+  tampilkanKota(petak: Map<number, string>, feasible?: boolean, rusak?: ReadonlySet<number>): void;
   destroy(): void;
 }
 
@@ -102,10 +102,10 @@ export function mountCity(mount: HTMLElement): CityHandle {
       wargaDiminta = jumlah;
       scene?.hidupkan(jumlah);
     },
-    tampilkanKota(petak, feasible = true): void {
+    tampilkanKota(petak, feasible = true, rusak): void {
       kotaTerakhir = petak;
       kotaLayak = feasible;
-      scene?.tampilkanKota(petak, feasible);
+      scene?.tampilkanKota(petak, feasible, rusak);
     },
     destroy(): void {
       pengamat.disconnect();

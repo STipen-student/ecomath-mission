@@ -13,6 +13,7 @@ import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import type { Progres } from '../game/progres.js';
 import { umumkanHadiah } from '../ui/panelHadiah.js';
+import { periksaStandar } from '../game/standarSdg.js';
 
 const API_URL: string = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000';
 
@@ -164,6 +165,10 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
     const peton = new Map<number, string>();
     petak.forEach((b, i) => { if (b) peton.set(i, kodeJenis(b)); });
     kota.tampilkanKota(peton);
+    // Warga berdemo bila kota tidak sesuai semangat SDG 11/13 (pabrik berasap,
+    // atau permukiman tanpa cukup taman). Di peta, demo tampil di dekat
+    // bangunannya; di panel, alasannya ditulis agar siswa tahu cara mengatasinya.
+    const protes = periksaStandar([...peton.values()]);
 
     panel.replaceChildren(
       (() => {
@@ -172,6 +177,24 @@ export function mountKotaScreen(root: HTMLElement, opsi: OpsiKota = {}): void {
         p.textContent = pesan;
         return p;
       })(),
+      ...(protes.length > 0
+        ? [
+            (() => {
+              const kotak = document.createElement('div');
+              kotak.className = 'peta-protes';
+              const judul = document.createElement('strong');
+              judul.textContent = '📢 Warga berdemo:';
+              const daftar = document.createElement('ul');
+              for (const pr of protes) {
+                const li = document.createElement('li');
+                li.textContent = `${pr.alasan}.`;
+                daftar.append(li);
+              }
+              kotak.append(judul, daftar);
+              return kotak;
+            })(),
+          ]
+        : []),
     );
 
     bilah.replaceChildren(
