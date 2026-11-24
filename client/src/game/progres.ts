@@ -140,14 +140,46 @@ export const BATAS_KAS_MENIT = 60;
  * skor K1-K4, level, atau data AaL. Tidak ada uang sungguhan.
  */
 export const KARTU_WARGA = [
-  { id: 'bu-sari', nama: 'Bu Sari, pesepeda pagi', ikon: '🚲', langka: false },
-  { id: 'pak-darto', nama: 'Pak Darto, sopir bus listrik', ikon: '🚌', langka: false },
-  { id: 'nina', nama: 'Nina, perawat taman', ikon: '🌷', langka: false },
-  { id: 'dimas', nama: 'Dimas, pelajar SD', ikon: '🎒', langka: false },
-  { id: 'oma-reni', nama: 'Oma Reni, penjaga perpustakaan', ikon: '📚', langka: false },
-  { id: 'mbak-lusi', nama: 'Mbak Lusi, teknisi panel surya', ikon: '☀️', langka: true },
-  { id: 'bu-laras', nama: 'Bu Laras, Kepala Perencanaan', ikon: '🗺️', langka: true },
-  { id: 'dr-andi', nama: 'dr. Andi, dokter rumah sakit kota', ikon: '🩺', langka: true },
+  {
+    id: 'bu-sari', nama: 'Bu Sari, pesepeda pagi', ikon: '🚲', langka: false,
+    kisah: 'Setiap pagi Bu Sari bersepeda ke pasar. Makin banyak warga ikut bersepeda, jalanan tidak macet dan udara lebih bersih (SDG 11 dan 13).',
+    manfaat: 'Kas kota +1 🪙/menit',
+  },
+  {
+    id: 'pak-darto', nama: 'Pak Darto, sopir bus listrik', ikon: '🚌', langka: false,
+    kisah: 'Bus listrik Pak Darto senyap dan tanpa asap. Warga yang pindah ke transportasi umum mengurangi emisi kendaraan pribadi (SDG 13).',
+    manfaat: 'Kas kota +1 🪙/menit',
+  },
+  {
+    id: 'nina', nama: 'Nina, perawat taman', ikon: '🌷', langka: false,
+    kisah: 'Nina menyiram dan memangkas pohon kota. Ruang hijau yang terawat menyerap panas dan karbon (SDG 11.7).',
+    manfaat: 'Pohon dan taman aus 2× lebih lambat',
+  },
+  {
+    id: 'dimas', nama: 'Dimas, pelajar SD', ikon: '🎒', langka: false,
+    kisah: 'Dimas dan teman-temannya mengelola tabungan sampah daur ulang di sekolah, hasilnya masuk kas kota.',
+    manfaat: 'Kas kota menampung 90 menit, bukan 60',
+  },
+  {
+    id: 'oma-reni', nama: 'Oma Reni, penjaga perpustakaan', ikon: '📚', langka: false,
+    kisah: 'Oma Reni membagikan kupon membaca untuk anak-anak yang rajin merefleksikan belajarnya.',
+    manfaat: 'Langsung mendapat 1 tiket Kotak Kejutan',
+  },
+  {
+    id: 'mbak-lusi', nama: 'Mbak Lusi, teknisi panel surya', ikon: '☀️', langka: true,
+    kisah: 'Mbak Lusi membersihkan dan memeriksa panel surya serta kincir angin kota, agar energi bersih terus mengalir (SDG 7 dan 13).',
+    manfaat: 'Panel surya dan kincir angin tidak aus',
+  },
+  {
+    id: 'bu-laras', nama: 'Bu Laras, Kepala Perencanaan', ikon: '🗺️', langka: true,
+    kisah: 'Bu Laras menyusun jadwal perawatan rutin. Perencanaan yang baik membuat biaya perbaikan lebih murah.',
+    manfaat: 'Biaya perawatan sarana-prasarana −30%',
+  },
+  {
+    id: 'dr-andi', nama: 'dr. Andi, dokter rumah sakit kota', ikon: '🩺', langka: true,
+    kisah: 'Udara bersih dan ruang hijau membuat pasien dr. Andi berkurang. Warga yang sehat lebih bahagia dan produktif (SDG 3 dan 11).',
+    manfaat: 'Bonus warga puas di kas kota menjadi +4',
+  },
 ] as const;
 
 export const HARGA_GACHA_KOIN = 40;
@@ -170,10 +202,10 @@ export const LAJU_AUS_PER_MENIT = 2;
 export const BATAS_RUSAK = 40;
 
 /** Kondisi (0-100) satu bangunan pada waktu `sekarang`. */
-export function kondisiBangunan(b: BangunanKota, sekarang = Date.now()): number {
+export function kondisiBangunan(b: BangunanKota, sekarang = Date.now(), faktorLaju = 1): number {
   if (!b.dirawat) return 100;
   const menit = Math.max(0, (sekarang - b.dirawat) / 60000);
-  return Math.max(0, Math.round(100 - menit * LAJU_AUS_PER_MENIT));
+  return Math.max(0, Math.round(100 - menit * LAJU_AUS_PER_MENIT * faktorLaju));
 }
 
 /** Biaya mengembalikan satu bangunan ke kondisi 100%: 30% harga beli dikali kerusakan. */
@@ -352,10 +384,37 @@ export class Progres {
    * Hanya ekonomi permainan; tidak memengaruhi skor.
    */
   pendapatanPerMenit(wargaPuas: boolean): number {
-    let n = PENDAPATAN_DASAR + (wargaPuas ? 2 : 0);
+    let n = PENDAPATAN_DASAR + (wargaPuas ? (this.punyaKartu('dr-andi') ? 4 : 2) : 0);
+    if (this.punyaKartu('bu-sari')) n += 1;
+    if (this.punyaKartu('pak-darto')) n += 1;
     // Fasilitas yang rusak tidak menghasilkan apa-apa sampai dirawat.
-    for (const b of this.k.bangunanKota) if (kondisiBangunan(b) >= BATAS_RUSAK) n += PENDAPATAN_BANGUNAN[b.jenis] ?? 0;
+    for (const b of this.k.bangunanKota) if (this.kondisi(b) >= BATAS_RUSAK) n += PENDAPATAN_BANGUNAN[b.jenis] ?? 0;
     return n;
+  }
+
+  /** Kartu warga dimiliki? Kartu memberi manfaat kecil pada ekonomi kota. */
+  punyaKartu(id: string): boolean {
+    return this.k.koleksi.includes(id);
+  }
+
+  /** Kondisi bangunan dengan memperhitungkan manfaat kartu (Nina, Mbak Lusi). */
+  kondisi(b: BangunanKota, sekarang = Date.now()): number {
+    if (this.punyaKartu('mbak-lusi') && (b.jenis === 'surya' || b.jenis === 'turbin')) return 100;
+    const lambat = this.punyaKartu('nina') && (b.jenis === 'pohon' || b.jenis === 'taman-kota');
+    return kondisiBangunan(b, sekarang, lambat ? 0.5 : 1);
+  }
+
+  /** Biaya merawat satu bangunan, dengan potongan kartu Bu Laras. */
+  biayaRawat(b: BangunanKota, sekarang = Date.now()): number {
+    const rusak = 100 - this.kondisi(b, sekarang);
+    if (rusak <= 0) return 0;
+    const potongan = this.punyaKartu('bu-laras') ? 0.7 : 1;
+    return Math.max(1, Math.ceil(((b.harga ?? 20) * 0.3 * rusak * potongan) / 100));
+  }
+
+  /** Batas tampung kas kota (menit); kartu Dimas menambahnya. */
+  get batasKasMenit(): number {
+    return this.punyaKartu('dimas') ? 90 : BATAS_KAS_MENIT;
   }
 
   /** Koin yang sudah terkumpul di kas dan siap diambil. */
@@ -365,7 +424,7 @@ export class Progres {
       this.simpan();
       return 0;
     }
-    const menit = Math.min(BATAS_KAS_MENIT, (sekarang - this.k.kasTerakhir) / 60000);
+    const menit = Math.min(this.batasKasMenit, (sekarang - this.k.kasTerakhir) / 60000);
     return Math.floor(menit * perMenit);
   }
 
@@ -380,7 +439,7 @@ export class Progres {
 
   /** Total biaya merawat semua sarana-prasarana kembali ke 100%. */
   biayaRawatSemua(sekarang = Date.now()): number {
-    return this.k.bangunanKota.reduce((n, b) => n + biayaRawat(b, sekarang), 0);
+    return this.k.bangunanKota.reduce((n, b) => n + this.biayaRawat(b, sekarang), 0);
   }
 
   /** Rawat (perbarui) semua sarana-prasarana dengan koin. */
@@ -462,7 +521,8 @@ export class Progres {
         hasil = { ok: true, pesan: `Kartu ${kartu.nama} sudah kamu punya, ditukar 15 koin.`, ikon: kartu.ikon, langka };
       } else {
         this.k.koleksi.push(kartu.id);
-        hasil = { ok: true, pesan: `Kartu baru${langka ? ' LANGKA' : ''}: ${kartu.nama}!`, ikon: kartu.ikon, langka };
+        if (kartu.id === 'oma-reni') this.k.tiketGacha++;
+        hasil = { ok: true, pesan: `Kartu baru${langka ? ' LANGKA' : ''}: ${kartu.nama}! Manfaat: ${kartu.manfaat}.`, ikon: kartu.ikon, langka };
       }
     }
     this.simpan();

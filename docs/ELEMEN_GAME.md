@@ -175,3 +175,23 @@ di kota: di alun-alun Peta Wilayah gabungan dan di petak kosong terdekat ke pusa
 Kota Bebas. Hiasan yang sama juga bisa dibangun di petak mana saja lewat palet
 **Bangun dengan koin**. Warga menyebutnya di Kabar Warga. Hiasan tidak dihitung
 dalam indeks hijau dan tidak memengaruhi skor.
+
+## Kartu warga yang bermakna
+
+Kartu dari Kotak Kejutan kini punya **kisah** (warga kota dan kaitannya dengan
+SDG) serta **manfaat** di ekonomi kota. Ketuk kartu di panel Misi & Hadiah untuk
+membacanya.
+
+| Kartu | Manfaat |
+|---|---|
+| 🚲 Bu Sari | Kas kota +1 🪙/menit |
+| 🚌 Pak Darto | Kas kota +1 🪙/menit |
+| 🌷 Nina | Pohon dan taman aus 2× lebih lambat |
+| 🎒 Dimas | Kas kota menampung 90 menit, bukan 60 |
+| 📚 Oma Reni | Langsung mendapat 1 tiket Kotak Kejutan |
+| ☀️ Mbak Lusi ★ | Panel surya dan kincir angin tidak aus |
+| 🗺️ Bu Laras ★ | Biaya perawatan −30% |
+| 🩺 dr. Andi ★ | Bonus warga puas di kas kota menjadi +4 |
+
+Semua manfaat hanya menyentuh koin, kas kota, dan perawatan; tidak ada yang
+memengaruhi skor K1–K4, data AaL, atau level yang dinilai.

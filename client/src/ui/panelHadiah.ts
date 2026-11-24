@@ -202,6 +202,33 @@ function kotakKejutan(progres: Progres, gambarUlang: (pesan?: string) => void): 
   tKoin.addEventListener('click', () => buka('koin'));
 
   const punya = new Set(progres.koleksi());
+  const infoKartu = el('div', { class: 'gacha-info' });
+  const tombolKartu = KARTU_WARGA.map((k) => {
+    const dimiliki = punya.has(k.id);
+    const b = el(
+      'button',
+      {
+        class: `gacha-kartu${dimiliki ? ' is-punya' : ''}${k.langka ? ' is-langka' : ''}`,
+        ariaLabel: dimiliki ? k.nama : 'Kartu belum didapat',
+      },
+      dimiliki ? k.ikon : '❔',
+    );
+    b.addEventListener('click', () => {
+      infoKartu.replaceChildren(
+        ...(dimiliki
+          ? [
+              el('strong', {}, `${k.ikon} ${k.nama}${k.langka ? ' ★' : ''}`),
+              el('p', {}, k.kisah),
+              el('p', { class: 'gacha-manfaat' }, `✨ Manfaat aktif: ${k.manfaat}`),
+            ]
+          : [
+              el('strong', {}, `❔ Kartu ${k.langka ? 'langka ' : ''}belum didapat`),
+              el('p', {}, `Manfaat bila didapat: ${k.manfaat}. Buka Kotak Kejutan untuk mendapatkannya.`),
+            ]),
+      );
+    });
+    return b;
+  });
   return el(
     'div',
     { class: 'gacha' },
@@ -214,16 +241,9 @@ function kotakKejutan(progres: Progres, gambarUlang: (pesan?: string) => void): 
     el('div', { class: 'gacha-tombol' }, tTiket, tKoin),
     hasil,
     el('small', { class: 'hint' }, `Peluang: ${PELUANG_GACHA.map((p) => `${p.hasil} ${p.persen}%`).join(' · ')}. Kartu ganda ditukar 15 koin.`),
-    el(
-      'div',
-      { class: 'gacha-koleksi' },
-      ...KARTU_WARGA.map((k) =>
-        el(
-          'span',
-          { class: `gacha-kartu${punya.has(k.id) ? ' is-punya' : ''}${k.langka ? ' is-langka' : ''}`, ariaLabel: punya.has(k.id) ? k.nama : 'Kartu belum didapat' },
-          punya.has(k.id) ? k.ikon : '❔',
-        ),
-      ),
-    ),
+    el('h4', {}, `KARTU WARGA · ${punya.size}/${KARTU_WARGA.length}`),
+    el('p', { class: 'hint' }, 'Setiap kartu punya kisah dan manfaat untuk kotamu. Ketuk kartu untuk membacanya.'),
+    el('div', { class: 'gacha-koleksi' }, ...tombolKartu),
+    infoKartu,
   );
 }

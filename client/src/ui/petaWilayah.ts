@@ -11,7 +11,7 @@ import { SPRITE_BERASAP, type SpriteKota } from '../game/pixel/spriteKota.js';
 import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
-import { BATAS_KAS_MENIT, BATAS_RUSAK, biayaRawat, kondisiBangunan, PENDAPATAN_BANGUNAN, PENDAPATAN_DASAR, type BangunanKota, type Progres } from '../game/progres.js';
+import { BATAS_RUSAK, kondisiBangunan, PENDAPATAN_BANGUNAN, PENDAPATAN_DASAR, type BangunanKota, type Progres } from '../game/progres.js';
 import { JENIS_HIJAU, JENIS_HUNIAN, jenisDariKode, periksaStandar } from '../game/standarSdg.js';
 import { formTanggapanProtes, type TanggapanProtes } from './tanggapanProtes.js';
 
@@ -222,7 +222,7 @@ export function bukaPetaWilayah(
     const rusak = new Set<number>();
     for (const b of sarpras) {
       g.petak.set(b.seed, `s:${b.jenis}`);
-      if (kondisiBangunan(b) < BATAS_RUSAK) rusak.add(b.seed);
+      if ((progres ? progres.kondisi(b) : kondisiBangunan(b)) < BATAS_RUSAK) rusak.add(b.seed);
     }
     // Perbaikan kota dari tanggapan protes yang tepat (AaL): kota ikut berubah.
     const perbaikan = progres?.perbaikanKota() ?? kotaSiswa?.perbaikan ?? [];
@@ -512,7 +512,7 @@ function kasKota(progres: Progres, wargaPuas: boolean, segarkan: () => void): HT
     el(
       'small',
       { class: 'hint' },
-      `Pendapatan ${perMenit} 🪙/menit: dasar ${PENDAPATAN_DASAR}${wargaPuas ? ', bonus warga puas +2' : ''}, toko +${PENDAPATAN_BANGUNAN.toko}, pabrik ramah lingkungan +${PENDAPATAN_BANGUNAN['pabrik-hijau']}, panel surya dan kincir angin +1 per bangunan. Kas menampung paling banyak ${BATAS_KAS_MENIT} menit pendapatan.`,
+      `Pendapatan ${perMenit} 🪙/menit: dasar ${PENDAPATAN_DASAR}${wargaPuas ? ', bonus warga puas +2' : ''}, toko +${PENDAPATAN_BANGUNAN.toko}, pabrik ramah lingkungan +${PENDAPATAN_BANGUNAN['pabrik-hijau']}, panel surya dan kincir angin +1 per bangunan. Kas menampung paling banyak ${progres.batasKasMenit} menit pendapatan.`,
     ),
   );
 }
@@ -524,8 +524,8 @@ function kasKota(progres: Progres, wargaPuas: boolean, segarkan: () => void): HT
  */
 function perawatanSarpras(progres: Progres, sarpras: BangunanKota[], jumlahRusak: number, segarkan: () => void): HTMLElement {
   if (sarpras.length === 0) return el('span', {});
-  const rerata = Math.round(sarpras.reduce((n, b) => n + kondisiBangunan(b), 0) / sarpras.length);
-  const biaya = sarpras.reduce((n, b) => n + biayaRawat(b), 0);
+  const rerata = Math.round(sarpras.reduce((n, b) => n + progres.kondisi(b), 0) / sarpras.length);
+  const biaya = progres.biayaRawatSemua();
   const pesan = el('p', { class: 'hint' });
   const tombol = el('button', { class: 'btn btn-small' }, biaya > 0 ? `🔧 Rawat semua · ${biaya} 🪙` : '✓ Kondisi baik');
   tombol.disabled = biaya <= 0 || progres.koin < biaya;

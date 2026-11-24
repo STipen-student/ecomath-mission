@@ -3414,3 +3414,24 @@ textarea {
   border-color: #d9534f;
   background: #fdecea;
 }
+
+/* Kartu warga: dapat diketuk untuk membaca kisah dan manfaatnya */
+button.gacha-kartu {
+  padding: 0;
+  cursor: var(--kursor-tangan, pointer);
+}
+
+.gacha-info {
+  margin-top: 8px;
+  font-family: var(--font-read);
+  font-size: 0.9rem;
+}
+
+.gacha-info p {
+  margin: 4px 0;
+}
+
+.gacha-manfaat {
+  font-weight: 700;
+  color: #2e7d32;
+}
