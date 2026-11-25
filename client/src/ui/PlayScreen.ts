@@ -1083,17 +1083,21 @@ export class PlayScreen {
       );
       // Uji titik lewat kolom x, y tetap tersedia sejak awal: rubrik K2 membaca
       // kegiatan uji titik, jadi kesulitan menggambar tidak boleh menghalanginya.
+      formGambar.hidden = true;
       if (tulisan.length === 0) {
         petunjuk.textContent = 'Tulis dulu kendalamu di panel "Perda". Setelah itu kamu menggambar grafiknya di sini.';
       } else if (sekarang) {
         const g = keadaan(sekarang.k);
         const luar = !g.garisBenar && !diBidang(sekarang.k);
         tombolLewati.hidden = !luar;
+        formGambar.hidden = false;
+        barisGaris.hidden = g.garisBenar;
+        barisSisi.hidden = !g.garisBenar;
         petunjuk.textContent = luar
           ? `Kendala ke-${sekarang.slot + 1}: garis ${persamaan(sekarang.k)} memotong ${titikPotong(sekarang.k)}, jadi tidak melewati bidang gambar ini (x sampai ${num(xMax)}, y sampai ${num(yMax)}). Biasanya ini tanda angka atau satuan kendalanya keliru. Periksa lagi kendala ke-${sekarang.slot + 1} di panel "Perda", atau lewati garis ini.`
           : !g.garisBenar
-          ? `Kendala ke-${sekarang.slot + 1}: gambar garis ${persamaan(sekarang.k)}. Ketuk DUA titik di grafik yang dilalui garis itu (titik ${g.titik.length + 1} dari 2).`
-          : `Kendala ke-${sekarang.slot + 1}: garisnya sudah benar. Sekarang ketuk satu titik di sisi yang memenuhi ${persamaan(sekarang.k, simbol(sekarang.k.op))}.`;
+          ? `Kendala ke-${sekarang.slot + 1}: gambar garis ${persamaan(sekarang.k)}. Ketik dua titik yang dilalui garis itu (misalnya titik potong sumbu), lalu tekan "Gambar garis". Bisa juga dengan mengetuk dua titik di grafik.`
+          : `Kendala ke-${sekarang.slot + 1}: garisnya sudah benar. Ketik satu titik uji di sisi yang memenuhi ${persamaan(sekarang.k, simbol(sekarang.k.op))}, lalu tekan "Arsir sisi ini". Bisa juga dengan mengetuk grafik.`;
       } else if (tulisan.some(({ k }) => keadaan(k).dilewati)) {
         tombolLewati.hidden = true;
         petunjuk.textContent = 'Garis yang bisa digambar sudah selesai. Ada garis yang kamu lewati karena berada di luar bidang gambar; periksa lagi kendala itu di panel "Perda". Daerah hijau dihitung dari semua kendala yang kamu tulis.';
@@ -1129,6 +1133,101 @@ export class PlayScreen {
       ujiTitik(x, y);
     });
 
+    /**
+     * Periksa garis dari dua titik. Titik yang diketik dicek persis (boleh
+     * desimal, mis. 62,5); titik dari ketukan diberi toleransi setengah petak.
+     */
+    const periksaGaris = (p: [number, number], q: [number, number], diketik: boolean): void => {
+      const sekarang = aktif();
+      if (!sekarang) return;
+      const { k, slot } = sekarang;
+      const g = keadaan(k);
+      const toleransi = diketik
+        ? 1e-6 * Math.max(1, Math.abs(k.c))
+        : 0.5 * satuan * Math.max(Math.abs(k.a), Math.abs(k.b));
+      const diGaris = (pt: [number, number]): boolean => Math.abs(k.a * pt[0] + k.b * pt[1] - k.c) <= toleransi + 1e-9;
+      const berbeda = p[0] !== q[0] || p[1] !== q[1];
+      g.titik = [p, q];
+      g.garisBenar = berbeda && diGaris(p) && diGaris(q);
+      this.cb.onGambarGrafik?.({ slot, tahap: 'garis', titik: [p, q], benar: g.garisBenar });
+      hasil.className = g.garisBenar ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad';
+      hasil.textContent = g.garisBenar
+        ? `✓ Garis kendala ke-${slot + 1} benar.`
+        : !berbeda
+          ? '✕ Kedua titik sama. Masukkan dua titik yang berbeda.'
+          : `✕ Titik (${num(p[0])}, ${num(p[1])}) dan (${num(q[0])}, ${num(q[1])}) tidak keduanya terletak pada garis itu. Substitusikan kedua titik ke persamaan garis, atau cari titik potong dengan sumbu x (y = 0) dan sumbu y (x = 0).`;
+      if (!g.garisBenar) g.titik = [];
+    };
+
+    const pilihSisi = (x: number, y: number): void => {
+      const sekarang = aktif();
+      if (!sekarang) return;
+      const { k, slot } = sekarang;
+      const g = keadaan(k);
+      const lhs = k.a * x + k.b * y;
+      if (Math.abs(lhs - k.c) < 1e-9) {
+        hasil.className = 'hint';
+        hasil.textContent = 'Titik itu tepat di garis. Pilih titik yang jelas berada di salah satu sisi garis.';
+        return;
+      }
+      const memenuhi = k.op === '>=' || k.op === '>' ? lhs >= k.c : lhs <= k.c;
+      g.sisi = memenuhi ? [x, y] : null;
+      g.sisiBenar = memenuhi;
+      this.cb.onGambarGrafik?.({ slot, tahap: 'arsir', titik: [[x, y]], benar: memenuhi });
+      hasil.className = memenuhi ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad';
+      hasil.textContent = memenuhi
+        ? `✓ Sisi arsiran kendala ke-${slot + 1} benar.`
+        : `✕ Titik (${num(x)}, ${num(y)}) tidak memenuhi pertidaksamaan itu. Substitusikan titiknya, lalu pilih titik di sisi yang lain.`;
+    };
+
+    // Isian titik langsung: siswa mengetik koordinat, lalu grafiknya muncul.
+    const kolom = (label: string): HTMLInputElement =>
+      el('input', { type: 'number', step: 'any', ariaLabel: label, class: 'uji-hp-input', placeholder: label.slice(-1) });
+    const ambil = (a: HTMLInputElement): number | null => (a.value.trim() === '' ? null : Number(a.value.replace(',', '.')));
+    const g1x = kolom('Titik 1 x');
+    const g1y = kolom('Titik 1 y');
+    const g2x = kolom('Titik 2 x');
+    const g2y = kolom('Titik 2 y');
+    const tombolGaris = el('button', { class: 'btn btn-tiny' }, '✏️ Gambar garis');
+    tombolGaris.addEventListener('click', () => {
+      const v = [g1x, g1y, g2x, g2y].map(ambil);
+      if (v.some((n) => n === null || !Number.isFinite(n))) {
+        hasil.className = 'hint';
+        hasil.textContent = 'Isi x dan y untuk kedua titik.';
+        return;
+      }
+      const [a, b, c, d] = v as number[];
+      periksaGaris([a!, b!], [c!, d!], true);
+      gambar();
+    });
+    const sx1 = kolom('Titik uji x');
+    const sy1 = kolom('Titik uji y');
+    const tombolSisi = el('button', { class: 'btn btn-tiny' }, '🖍️ Arsir sisi ini');
+    tombolSisi.addEventListener('click', () => {
+      const x = ambil(sx1);
+      const y = ambil(sy1);
+      if (x === null || y === null || !Number.isFinite(x) || !Number.isFinite(y)) {
+        hasil.className = 'hint';
+        hasil.textContent = 'Isi x dan y titik uji.';
+        return;
+      }
+      pilihSisi(x, y);
+      gambar();
+    });
+    const barisGaris = el(
+      'div',
+      { class: 'uji-hp-baris' },
+      el('span', {}, 'Titik 1 ('), g1x, el('span', {}, ','), g1y, el('span', {}, ')  Titik 2 ('), g2x, el('span', {}, ','), g2y, el('span', {}, ')'),
+      tombolGaris,
+    );
+    const barisSisi = el(
+      'div',
+      { class: 'uji-hp-baris' },
+      el('span', {}, 'Titik uji ('), sx1, el('span', {}, ','), sy1, el('span', {}, ')'),
+      tombolSisi,
+    );
+    const formGambar = el('div', { class: 'uji-hp-form' }, barisGaris, barisSisi);
+
     grafik.addEventListener('click', (e) => {
       const svg = grafik.querySelector('svg');
       if (!svg) return;
@@ -1146,41 +1245,18 @@ export class PlayScreen {
         ujiTitik(x, y);
         return;
       }
-      const { k, slot } = sekarang;
-      const g = keadaan(k);
+      const g = keadaan(sekarang.k);
       if (!g.garisBenar) {
         g.titik.push([x, y]);
         if (g.titik.length === 2) {
           const [p, q] = g.titik as [[number, number], [number, number]];
-          const toleransi = 0.5 * satuan * Math.max(Math.abs(k.a), Math.abs(k.b));
-          const diGaris = (pt: [number, number]): boolean => Math.abs(k.a * pt[0] + k.b * pt[1] - k.c) <= toleransi + 1e-9;
-          const berbeda = p[0] !== q[0] || p[1] !== q[1];
-          g.garisBenar = berbeda && diGaris(p) && diGaris(q);
-          this.cb.onGambarGrafik?.({ slot, tahap: 'garis', titik: [p, q], benar: g.garisBenar });
-          hasil.className = g.garisBenar ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad';
-          hasil.textContent = g.garisBenar
-            ? `✓ Garis kendala ke-${slot + 1} benar.`
-            : `✕ Titik (${num(p[0])}, ${num(p[1])}) dan (${num(q[0])}, ${num(q[1])}) tidak keduanya terletak pada garis itu. Coba cari titik potong dengan sumbu x (y = 0) dan sumbu y (x = 0).`;
-          if (!g.garisBenar) g.titik = [];
+          periksaGaris(p, q, false);
         } else {
           hasil.className = 'hint';
           hasil.textContent = `Titik pertama (${num(x)}, ${num(y)}). Ketuk titik kedua.`;
         }
       } else {
-        const lhs = k.a * x + k.b * y;
-        if (Math.abs(lhs - k.c) < 1e-9) {
-          hasil.className = 'hint';
-          hasil.textContent = 'Titik itu tepat di garis. Ketuk titik yang jelas berada di salah satu sisi garis.';
-          return;
-        }
-        const memenuhi = k.op === '>=' || k.op === '>' ? lhs >= k.c : lhs <= k.c;
-        g.sisi = memenuhi ? [x, y] : null;
-        g.sisiBenar = memenuhi;
-        this.cb.onGambarGrafik?.({ slot, tahap: 'arsir', titik: [[x, y]], benar: memenuhi });
-        hasil.className = memenuhi ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad';
-        hasil.textContent = memenuhi
-          ? `✓ Sisi arsiran kendala ke-${slot + 1} benar.`
-          : `✕ Titik (${num(x)}, ${num(y)}) tidak memenuhi pertidaksamaan itu. Substitusikan titiknya, lalu pilih sisi yang lain.`;
+        pilihSisi(x, y);
       }
       gambar();
     });
@@ -1204,7 +1280,7 @@ export class PlayScreen {
     });
 
     gambar();
-    return el('div', { class: 'uji-hp' }, petunjuk, grafik, barisUji, el('div', { class: 'uji-hp-baris' }, tombolLewati, ulangi), hasil, riwayat);
+    return el('div', { class: 'uji-hp' }, petunjuk, formGambar, grafik, barisUji, el('div', { class: 'uji-hp-baris' }, tombolLewati, ulangi), hasil, riwayat);
   }
 
   /**

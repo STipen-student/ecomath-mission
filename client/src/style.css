@@ -3435,3 +3435,15 @@ button.gacha-kartu {
   font-weight: 700;
   color: #2e7d32;
 }
+
+/* Isian titik langsung untuk menggambar grafik pertidaksamaan */
+.uji-hp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+
+.uji-hp-form .uji-hp-input {
+  width: 64px;
+}
