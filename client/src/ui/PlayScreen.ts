@@ -1007,9 +1007,26 @@ export class PlayScreen {
    */
   private ujiHimpunan(): HTMLElement {
     const t = this.ctx.task;
-    const xMax = t.variables.x.max;
-    const yMax = t.variables.y.max;
-    const satuan = Math.max(xMax, yMax) <= 100 ? 1 : Math.max(xMax, yMax) / 100;
+    // Bidang gambar persegi dengan skala sama di kedua sumbu (kisi tiap 5).
+    // Bidang melebar sampai titik potong sumbu dari kendala tulisan siswa,
+    // paling jauh 3x batas soal; lebih jauh dari itu dianggap skala keliru.
+    const xSoal = t.variables.x.max;
+    const ySoal = t.variables.y.max;
+    const batasBidang = 3 * Math.max(xSoal, ySoal);
+    const potongSumbu: number[] = [xSoal, ySoal];
+    for (const tk of this.tulisanKendala) {
+      if (!tk) continue;
+      const k = this.keConstraintDto(tk);
+      for (const koef of [k.a, k.b]) {
+        const v = koef !== 0 ? k.c / koef : 0;
+        if (v > 0 && v <= batasBidang) potongSumbu.push(v);
+      }
+    }
+    const LANGKAH_KISI = 5;
+    const sisiBidang = Math.ceil(Math.max(...potongSumbu) / LANGKAH_KISI) * LANGKAH_KISI;
+    const xMax = sisiBidang;
+    const yMax = sisiBidang;
+    const satuan = sisiBidang <= 100 ? 1 : sisiBidang / 100;
     const bulat = (v: number): number => Math.round(v / satuan) * satuan;
 
     const tulisan = this.tulisanKendala
@@ -1493,7 +1510,8 @@ export class PlayScreen {
 /* Grafik himpunan penyelesaian (SVG)                                  */
 /* ------------------------------------------------------------------ */
 
-const GRAF = { w: 340, h: 260, kiri: 34, kanan: 12, atas: 12, bawah: 30 };
+// Area gambar persegi (w - kiri - kanan = h - atas - bawah) agar skala x dan y sama.
+const GRAF = { w: 340, h: 336, kiri: 34, kanan: 12, atas: 12, bawah: 30 };
 
 /** Potong poligon dengan setengah bidang a*x + b*y (op) c (Sutherland-Hodgman). */
 function potong(poli: Array<[number, number]>, k: ConstraintDto): Array<[number, number]> {
@@ -1545,15 +1563,20 @@ function grafikHimpunan(
       : '';
 
   const bagian: string[] = [];
-  // Kisi rapat (10 x 10) sebagai kertas berpetak tempat siswa menggambar.
-  for (let i = 0; i <= 10; i++) {
-    const gx = sx((xMax * i) / 10);
-    const gy = sy((yMax * i) / 10);
+  // Kertas berpetak dengan langkah 5 di kedua sumbu. Bila garisnya banyak,
+  // angka ditulis tiap 10 agar tidak bertumpuk.
+  const langkah = 5;
+  const jumlah = Math.round(xMax / langkah);
+  const labelTiap = jumlah > 12 ? 2 : 1;
+  for (let i = 0; i <= jumlah; i++) {
+    const v = i * langkah;
+    const gx = sx(v);
+    const gy = sy(v);
     bagian.push(`<line x1="${gx}" y1="${atas}" x2="${gx}" y2="${h - bawah}" stroke="#e3eaed"/>`);
     bagian.push(`<line x1="${kiri}" y1="${gy}" x2="${w - kanan}" y2="${gy}" stroke="#e3eaed"/>`);
-    if (i % 2 === 0) {
-      bagian.push(`<text x="${gx}" y="${h - bawah + 13}" font-size="10" text-anchor="middle" fill="#1d3640">${Math.round((xMax * i) / 10)}</text>`);
-      bagian.push(`<text x="${kiri - 4}" y="${gy + 3}" font-size="10" text-anchor="end" fill="#1d3640">${Math.round((yMax * i) / 10)}</text>`);
+    if (i % labelTiap === 0) {
+      bagian.push(`<text x="${gx}" y="${h - bawah + 13}" font-size="10" text-anchor="middle" fill="#1d3640">${v}</text>`);
+      bagian.push(`<text x="${kiri - 4}" y="${gy + 3}" font-size="10" text-anchor="end" fill="#1d3640">${v}</text>`);
     }
   }
 
