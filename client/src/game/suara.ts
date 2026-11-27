@@ -145,7 +145,7 @@ let rekamanProtes: HTMLAudioElement | null = null;
 export function bunyiProtes(): void {
   if (sedangBisu()) return;
   try {
-    rekamanProtes ??= new Audio(`${import.meta.env.BASE_URL}suara/protes.mp3`);
+    rekamanProtes ??= new Audio(`${import.meta.env.BASE_URL}suara/protes.mp3?v=2`);
     rekamanProtes.currentTime = 0;
     void rekamanProtes.play().catch(() => {});
   } catch {
