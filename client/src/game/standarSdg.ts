@@ -52,6 +52,14 @@ export function periksaStandar(jenisDaftar: string[]): Pelanggaran[] {
   return hasil;
 }
 
+/** Seruan warga saat taman dan fasilitas kota rusak karena tidak dirawat. */
+export const SERUAN_RUSAK: string[] = [
+  'Taman kami rusak, tolong dirawat!',
+  'Fasilitas rusak, mana perawatannya?',
+  'Pohonnya layu, kota jadi panas!',
+  'Rawat fasilitas kota kami!',
+];
+
 /** Seruan protes warga per SDG. */
 export const SERUAN: Record<11 | 13, string[]> = {
   13: ['Kotanya makin panas!', 'Asapnya bikin sesak napas!', 'Udaranya kotor, anak-anak batuk!', 'Langit jadi abu-abu!', 'Ganti ke energi bersih!'],

@@ -195,3 +195,22 @@ membacanya.
 
 Semua manfaat hanya menyentuh koin, kas kota, dan perawatan; tidak ada yang
 memengaruhi skor K1–K4, data AaL, atau level yang dinilai.
+
+## Indeks hijau berbobot (fasilitas terawat dan pohon)
+
+Indeks hijau Peta Wilayah gabungan kini dihitung berbobot:
+
+- **Pohon dan taman bernilai ganda**, karena paling banyak menyerap panas dan
+  karbon. Menanam banyak pohon menaikkan indeks dengan jelas (uji: 41% tanpa
+  pohon, 57% dengan 5, 66% dengan 10, 77% dengan 20).
+- **Sarana yang dibeli dengan koin menyumbang sebesar kondisinya**, jadi indeks
+  turun bertahap saat tidak dirawat (uji: 100% saat terawat, 87% setelah
+  15 menit), dan fasilitas rusak (di bawah 40%) tidak menyumbang sama sekali.
+
+**Warga berdemo saat fasilitas rusak:** demo muncul di peta dekat fasilitas yang
+rusak ("Taman kami rusak, tolong dirawat!"), dan masuk daftar protes sebagai
+pelanggaran SDG 11. Tanggapan protes punya rencana baru, **merawat fasilitas**,
+yang dinilai sesuai bila penyebabnya fasilitas rusak. Menerapkannya memakai koin,
+sama seperti tombol Rawat semua. Kesesuaian rencana kini dinilai menurut jenis
+penyebab (emisi, permukiman tanpa ruang hijau, atau fasilitas rusak), bukan
+hanya nomor SDG-nya.

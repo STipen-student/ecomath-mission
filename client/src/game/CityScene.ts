@@ -44,7 +44,7 @@ import {
 import { buatSpriteKota, kunciSprite, SPRITE_BERASAP, type SpriteKota } from './pixel/spriteKota.js';
 import { bunyiProtes } from './suara.js';
 import { KURSOR_BIDIK, KURSOR_PANAH } from './kursor.js';
-import { JENIS_BERASAP, JENIS_HUNIAN, jenisDariKode, periksaStandar, SERUAN } from './standarSdg.js';
+import { JENIS_BERASAP, JENIS_HUNIAN, jenisDariKode, periksaStandar, SERUAN, SERUAN_RUSAK } from './standarSdg.js';
 
 export interface AllocationView {
   x: number;
@@ -749,17 +749,25 @@ export class CityScene extends Phaser.Scene {
    * berasap, SDG 11 di dekat hunian bila ruang hijau kurang. Hanya di peta yang
    * punya penduduk berjalan (bukan level dinilai). Hanya tampilan.
    */
+  /** Petak fasilitas yang rusak (diisi tampilkanKota); warga berdemo di dekatnya. */
+  private fasilitasRusak: ReadonlySet<number> = new Set();
+
   private wargaProtes(): void {
     if (this.demoBerjalan || this.wargaJalan.length === 0) return;
     const tampil = [...this.bangunan.values()].filter((s) => s.visible && s.getData('jenis'));
     const pelanggaran = periksaStandar(tampil.map((s) => String(s.getData('jenis'))));
+    const spriteRusak = [...this.fasilitasRusak].map((seed) => this.bangunan.get(seed)).filter((s): s is Phaser.GameObjects.Image => !!s?.visible);
+    if (spriteRusak.length > 0) pelanggaran.push({ sdg: 11, jenis: 'rusak', alasan: 'fasilitas kota rusak' });
     if (pelanggaran.length === 0) return;
 
     const p = pelanggaran[Math.floor(Math.random() * pelanggaran.length)]!;
-    const kandidat = tampil.filter((s) => {
-      const j = String(s.getData('jenis'));
-      return p.sdg === 13 ? j === p.jenis || JENIS_BERASAP.has(j) : JENIS_HUNIAN.has(j);
-    });
+    const kandidat =
+      p.jenis === 'rusak'
+        ? spriteRusak
+        : tampil.filter((s) => {
+            const j = String(s.getData('jenis'));
+            return p.sdg === 13 ? j === p.jenis || JENIS_BERASAP.has(j) : JENIS_HUNIAN.has(j);
+          });
     const sasaran = kandidat[Math.floor(Math.random() * kandidat.length)];
     if (!sasaran) return;
 
@@ -778,7 +786,8 @@ export class CityScene extends Phaser.Scene {
 
     const zoom = Math.max(0.25, this.kamera.zoom);
     bunyiProtes();
-    const seruan = SERUAN[p.sdg][Math.floor(Math.random() * SERUAN[p.sdg].length)]!;
+    const daftarSeruan = p.jenis === 'rusak' ? SERUAN_RUSAK : SERUAN[p.sdg];
+    const seruan = daftarSeruan[Math.floor(Math.random() * daftarSeruan.length)]!;
     const teks = this.add
       .text(sasaran.x, sasaran.y - 16, `📢 ${seruan}`, {
         fontFamily: 'system-ui, sans-serif',
@@ -905,6 +914,7 @@ export class CityScene extends Phaser.Scene {
     }
     // Fasilitas yang rusak tampil kusam: perlu dirawat agar kembali berfungsi.
     for (const seed of rusak) this.bangunan.get(seed)?.setTint(0x8a8a7a);
+    this.fasilitasRusak = new Set(rusak);
   }
 }
 

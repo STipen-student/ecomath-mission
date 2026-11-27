@@ -28,11 +28,13 @@ export interface TanggapanProtes {
   terkalibrasi: boolean;
 }
 
+// `untuk` = jenis pelanggaran yang dijawab rencana itu (lihat game/standarSdg.ts).
 const RENCANA = [
-  { id: 'ganti-listrik', teks: 'Mengganti bus konvensional/mesin fosil dengan versi listrik, tetap di dalam batas kendala soal', sdg: 13 },
-  { id: 'tambah-hijau', teks: 'Menambah ruang hijau di dekat permukiman, tanpa melampaui lahan yang tersedia', sdg: 11 },
-  { id: 'tambah-fosil', teks: 'Menambah bus/mesin berbahan bakar fosil agar lebih murah', sdg: 0 },
-  { id: 'biarkan', teks: 'Membiarkan saja, karena kota sudah layak menurut Dewan', sdg: 0 },
+  { id: 'ganti-listrik', teks: 'Mengganti bus konvensional/mesin fosil dengan versi listrik, tetap di dalam batas kendala soal', sdg: 13, untuk: 'emisi' },
+  { id: 'tambah-hijau', teks: 'Menambah ruang hijau di dekat permukiman, tanpa melampaui lahan yang tersedia', sdg: 11, untuk: 'hunian' },
+  { id: 'rawat-fasilitas', teks: 'Merawat taman dan fasilitas kota yang rusak dengan anggaran kota (koin)', sdg: 11, untuk: 'rusak' },
+  { id: 'tambah-fosil', teks: 'Menambah bus/mesin berbahan bakar fosil agar lebih murah', sdg: 0, untuk: '' },
+  { id: 'biarkan', teks: 'Membiarkan saja, karena kota sudah layak menurut Dewan', sdg: 0, untuk: '' },
 ] as const;
 
 export function formTanggapanProtes(
@@ -107,7 +109,10 @@ export function formTanggapanProtes(
     }
     const diagnosisTepat =
       [...sdgDilanggar].every((s) => pilihanDiagnosis.has(s)) && [...pilihanDiagnosis].every((s) => sdgDilanggar.has(s as 11 | 13));
-    const rencanaSesuai = rencana.sdg !== 0 && sdgDilanggar.has(rencana.sdg as 11 | 13);
+    // Rencana sesuai bila menjawab salah satu penyebab protes yang sebenarnya:
+    // emisi (SDG 13), permukiman tanpa ruang hijau, atau fasilitas rusak (SDG 11).
+    const jenisPelanggaran = new Set(pelanggaran.map((p) => (p.sdg === 13 ? 'emisi' : p.jenis)));
+    const rencanaSesuai = rencana.untuk !== '' && jenisPelanggaran.has(rencana.untuk);
     const benar = diagnosisTepat && rencanaSesuai;
     const yakin = keyakinan >= 2;
     const t: TanggapanProtes = {
@@ -139,7 +144,11 @@ export function formTanggapanProtes(
     );
     if (benar && terapkan) {
       const id = rencana.id;
-      const tombolTerap = el('button', { class: 'btn btn-small' }, id === 'ganti-listrik' ? '🔧 Terapkan: ganti ke versi listrik' : '🌳 Terapkan: tanam ruang hijau');
+      const tombolTerap = el(
+        'button',
+        { class: 'btn btn-small' },
+        id === 'ganti-listrik' ? '🔧 Terapkan: ganti ke versi listrik' : id === 'rawat-fasilitas' ? '🛠️ Terapkan: rawat fasilitas' : '🌳 Terapkan: tanam ruang hijau',
+      );
       tombolTerap.addEventListener('click', () => terapkan(id));
       wadah.append(tombolTerap);
     }

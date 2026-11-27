@@ -12,7 +12,7 @@ import { GRID, plotTiles } from '../game/iso/isoGrid.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { el, num } from './dom.js';
 import { BATAS_RUSAK, kondisiBangunan, PENDAPATAN_BANGUNAN, PENDAPATAN_DASAR, type BangunanKota, type Progres } from '../game/progres.js';
-import { JENIS_HIJAU, JENIS_HUNIAN, jenisDariKode, periksaStandar } from '../game/standarSdg.js';
+import { JENIS_HIJAU, JENIS_HUNIAN, jenisDariKode, periksaStandar, type Pelanggaran } from '../game/standarSdg.js';
 import { formTanggapanProtes, type TanggapanProtes } from './tanggapanProtes.js';
 
 /** Bangunan yang bisa dibeli dengan koin untuk wilayah gabungan. */
@@ -28,6 +28,9 @@ const KATALOG: Array<{ jenis: SpriteKota; nama: string; ikon: string; harga: num
   { jenis: 'lampu-kota', nama: 'Lampu kota', ikon: '🏮', harga: 15 },
   { jenis: 'bendera-kota', nama: 'Bendera kota', ikon: '🚩', harga: 15 },
 ];
+
+/** Pohon dan taman: bernilai ganda dalam indeks hijau. */
+const POHON: ReadonlySet<string> = new Set(['pohon', 'taman-kota', 'taman', 'hijau-multifungsi']);
 
 /** Hiasan Toko Perlengkapan: dekorasi, tidak dihitung dalam indeks hijau. */
 const HIASAN: ReadonlySet<string> = new Set(['air-mancur', 'lampu-kota', 'bendera-kota']);
@@ -261,17 +264,33 @@ export function bukaPetaWilayah(
     g.hijau = 0;
     g.berasap = 0;
     g.lainnya = 0;
+    // Indeks hijau berbobot:
+    //  - pohon dan taman bernilai ganda (paling banyak menyerap panas dan karbon);
+    //  - sarana yang dibeli dengan koin menyumbang sebesar kondisinya (70% -> 0,7);
+    //  - fasilitas rusak tidak menyumbang ruang hijau sama sekali.
+    const kondisiSeed = new Map<number, number>();
+    for (const b of sarpras) kondisiSeed.set(b.seed, (progres ? progres.kondisi(b) : kondisiBangunan(b)) / 100);
     for (const [seed, kode] of g.petak) {
       const j = jenisDariKode(kode);
       if (j === 'perpustakaan' || j.startsWith('pencakar') || HIASAN.has(j)) continue;
-      if (rusak.has(seed)) g.lainnya++;
-      else if (SPRITE_HIJAU.has(j as SpriteKota) || JENIS_HIJAU.has(j)) g.hijau++;
-      else if (SPRITE_BERASAP.has(j as SpriteKota)) g.berasap++;
+      const bobot = POHON.has(j) ? 2 : 1;
+      if (rusak.has(seed)) g.lainnya += 1;
+      else if (SPRITE_HIJAU.has(j as SpriteKota) || JENIS_HIJAU.has(j)) {
+        const kondisi = kondisiSeed.get(seed) ?? 1;
+        g.hijau += bobot * kondisi;
+        g.lainnya += bobot * (1 - kondisi);
+      } else if (SPRITE_BERASAP.has(j as SpriteKota)) g.berasap++;
       else g.lainnya++;
     }
     // Latar mengikuti keadaan wilayah akhir: hijau bila tidak ada protes warga
     // (bebas asap dan ruang hijau cukup), merah bila masih ada masalah.
-    const wilayahSehat = periksaStandar([...g.petak.values()].map(jenisDariKode)).length === 0;
+    const pelanggaranKota = (): Pelanggaran[] => [
+      ...periksaStandar([...g.petak.values()].map(jenisDariKode)),
+      ...(rusak.size > 0
+        ? [{ sdg: 11 as const, jenis: 'rusak', alasan: `${rusak.size} taman dan fasilitas kota rusak karena tidak dirawat` }]
+        : []),
+    ];
+    const wilayahSehat = pelanggaranKota().length === 0;
     peta.tampilkanKota(g.petak, wilayahSehat, rusak);
     peta.hidupkan(20 + kota.length * 6);
 
@@ -342,7 +361,7 @@ export function bukaPetaWilayah(
         : el('p', { class: 'peta-wilayah-status ok' }, '🏆 Indeks hijau penuh!'),
       el('p', { class: g.berasap === 0 ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad' }, status),
       (() => {
-        const protes = periksaStandar([...g.petak.values()].map(jenisDariKode));
+        const protes = pelanggaranKota();
         return protes.length === 0
           ? el('p', { class: 'peta-wilayah-status ok' }, '😊 Warga puas: kota sesuai semangat SDG 11 dan SDG 13.')
           : (() => {
@@ -356,7 +375,13 @@ export function bukaPetaWilayah(
                 const tombol = el('button', { class: 'btn btn-small' }, '✍ Tanggapi protes warga');
                 tombol.addEventListener('click', () => tombol.replaceWith(
                     formTanggapanProtes(protes, onTanggapan, (id) => {
-                      progres?.perbaikiKota(id);
+                      if (id === 'rawat-fasilitas') {
+                        // Merawat memakai anggaran kota (koin), sama seperti tombol Rawat semua.
+                        const h = progres?.rawatSemua();
+                        if (h && !h.ok) window.alert(h.pesan);
+                      } else {
+                        progres?.perbaikiKota(id);
+                      }
                       tampilkanGabungan();
                     }),
                   ),
