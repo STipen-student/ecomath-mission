@@ -16,6 +16,7 @@ import {
   type PriorClaimScores,
 } from '../src/tasks/adaptive.js';
 import { isAdaptiveEnabled, resetAdaptiveEnabled, setAdaptiveEnabled } from '../src/tasks/adaptiveState.js';
+import { prisma } from '../src/db.js';
 import { TASK_BANK, tasksByLevel } from '../src/tasks/index.js';
 import { deriveObservables } from '../src/scoring/observables.js';
 import { scoreAttempt } from '../src/scoring/index.js';
@@ -130,12 +131,14 @@ describe('pemilihan varian', () => {
 });
 
 describe('saklar mode adaptif', () => {
-  it('dapat dinyalakan dan dimatikan saat berjalan', () => {
-    setAdaptiveEnabled(true);
-    expect(isAdaptiveEnabled()).toBe(true);
-    setAdaptiveEnabled(false);
-    expect(isAdaptiveEnabled()).toBe(false);
-    resetAdaptiveEnabled();
+  it('dapat dinyalakan dan dimatikan, dan tersimpan di database', async () => {
+    await setAdaptiveEnabled(true);
+    expect(await isAdaptiveEnabled()).toBe(true);
+    const baris = await prisma.pengaturan.findUnique({ where: { kunci: 'adaptiveMode' } });
+    expect(baris?.nilai).toBe('true');
+    await setAdaptiveEnabled(false);
+    expect(await isAdaptiveEnabled()).toBe(false);
+    await resetAdaptiveEnabled();
   });
 });
 

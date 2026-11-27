@@ -142,12 +142,13 @@ adminRouter.get(
  *      level, sehingga guru dapat melihat pada level mana adaptivitas benar-
  *      benar punya ruang - Level 1 dan 4 tidak, karena ketiga variannya
  *      dirancang setara.
- * POST mengubah keadaan berjalan (tidak bertahan melewati restart server).
+ * POST menyimpan keadaan di database (tabel Pengaturan): berlaku untuk semua
+ * salinan server dan bertahan melewati restart.
  */
 adminRouter.get(
   '/adaptive',
   asyncHandler(async (_req, res) => {
-    res.json(ringkasanAdaptif());
+    res.json(await ringkasanAdaptif());
   }),
 );
 
@@ -155,12 +156,12 @@ adminRouter.post(
   '/adaptive',
   asyncHandler(async (req, res) => {
     const { enabled } = AdaptiveToggleSchema.parse(req.body);
-    setAdaptiveEnabled(enabled);
-    res.json(ringkasanAdaptif());
+    await setAdaptiveEnabled(enabled);
+    res.json(await ringkasanAdaptif());
   }),
 );
 
-function ringkasanAdaptif() {
+async function ringkasanAdaptif() {
   const perLevel = [1, 2, 3, 4].map((level) => {
     const varian = TASK_BANK.filter((t) => t.level === level)
       .map((t) => ({ taskId: t.id, bebanPermukaan: Math.round(surfaceLoad(t) * 100) / 100 }))
@@ -170,8 +171,8 @@ function ringkasanAdaptif() {
   });
 
   return {
-    enabled: isAdaptiveEnabled(),
-    /** Nilai ADAPTIVE_MODE; keadaan kembali ke sini setiap server restart. */
+    enabled: await isAdaptiveEnabled(),
+    /** Nilai ADAPTIVE_MODE; dipakai bila saklar belum pernah diatur di database. */
     defaultFromEnv: config.adaptiveModeDefault,
     thresholds: ADAPTIVE_THRESHOLDS,
     perLevel,

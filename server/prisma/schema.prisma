@@ -184,3 +184,11 @@ model KotaHijau {
   data      String
   createdAt DateTime @default(now())
 }
+
+/// Pengaturan bersama server (mis. saklar mode adaptif). Disimpan di database
+/// agar sama untuk semua salinan Worker dan bertahan melewati restart.
+model Pengaturan {
+  kunci      String   @id
+  nilai      String
+  diubahPada DateTime @default(now())
+}

@@ -107,7 +107,7 @@ taskRouter.get(
         .map((a) => getTaskById(a.taskId)?.sdgContext)
         .filter((s): s is SdgContext => Boolean(s));
 
-      const adaptif = isAdaptiveEnabled();
+      const adaptif = await isAdaptiveEnabled();
 
       let picked: TaskDefinition | undefined;
       let jejak: AdaptiveSelectionPayload | null = null;

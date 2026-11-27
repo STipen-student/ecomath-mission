@@ -1,36 +1,35 @@
 /**
- * Keadaan berjalan saklar adaptif.
+ * Saklar mode adaptif (Activity Selection).
  *
- * Disimpan di memori proses, disemai dari `ADAPTIVE_MODE` saat start. Guru dapat
- * mengubahnya saat berjalan lewat portal guru — berguna untuk demonstrasi tanpa
- * perlu men-deploy ulang.
+ * Disimpan di DATABASE (tabel Pengaturan), bukan di memori. Di Cloudflare
+ * Workers server berjalan sebagai banyak salinan yang dibuat ulang setiap
+ * beberapa menit; saklar di memori hanya mengubah satu salinan dan cepat
+ * kembali ke bawaan, sehingga siswa dalam satu kelas bisa mendapat mode yang
+ * berbeda. Dengan database, semua salinan membaca keadaan yang sama.
  *
- * KONSEKUENSI YANG DISENGAJA: perubahan saat berjalan TIDAK bertahan melewati
- * restart server; setelah restart, nilainya kembali ke `ADAPTIVE_MODE`. Itulah
- * alasan variabel environment tetap menjadi setelan yang mengikat untuk
- * pengambilan data — seseorang yang menyalakan mode adaptif saat demonstrasi
- * tidak dapat tanpa sengaja meninggalkannya menyala pada sesi pengambilan data
- * berikutnya setelah server berputar ulang.
- *
- * Setiap percobaan task menyimpan mode yang berlaku saat itu pada event
- * `adaptive_selection`, sehingga analisis selalu dapat memisahkan data
- * fixed-form dari data adaptif walau saklarnya pernah berubah di tengah jalan.
+ * Bila belum pernah diatur, nilai bawaan diambil dari ADAPTIVE_MODE.
  */
 
 import { config } from '../config.js';
+import { prisma } from '../db.js';
 
-let adaptiveAktif: boolean = config.adaptiveModeDefault;
+const KUNCI = 'adaptiveMode';
 
-export function isAdaptiveEnabled(): boolean {
-  return adaptiveAktif;
+export async function isAdaptiveEnabled(): Promise<boolean> {
+  const baris = await prisma.pengaturan.findUnique({ where: { kunci: KUNCI } });
+  return baris ? baris.nilai === 'true' : config.adaptiveModeDefault;
 }
 
-export function setAdaptiveEnabled(nilai: boolean): boolean {
-  adaptiveAktif = nilai;
-  return adaptiveAktif;
+export async function setAdaptiveEnabled(nilai: boolean): Promise<boolean> {
+  await prisma.pengaturan.upsert({
+    where: { kunci: KUNCI },
+    create: { kunci: KUNCI, nilai: String(nilai) },
+    update: { nilai: String(nilai), diubahPada: new Date() },
+  });
+  return nilai;
 }
 
-/** Kembalikan ke nilai environment; dipakai pembersihan antar-uji. */
-export function resetAdaptiveEnabled(): void {
-  adaptiveAktif = config.adaptiveModeDefault;
+/** Hapus pengaturan tersimpan sehingga kembali ke ADAPTIVE_MODE (dipakai uji). */
+export async function resetAdaptiveEnabled(): Promise<void> {
+  await prisma.pengaturan.deleteMany({ where: { kunci: KUNCI } });
 }
