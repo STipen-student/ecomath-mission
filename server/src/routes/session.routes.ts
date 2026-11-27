@@ -108,6 +108,7 @@ sessionRouter.post(
         kota: baru ? [] : await kotaPerLevel(s.id),
         tutorialSelesai: s.tutorialStatus !== null,
         refleksiSelesai: refleksi !== null,
+        kotaHijauSelesai: (await prisma.kotaHijau.findUnique({ where: { sessionId: s.id }, select: { id: true } })) !== null,
         sessionComposite: s.sessionComposite,
         progres: s.progres,
       },

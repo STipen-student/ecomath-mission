@@ -278,6 +278,27 @@ export interface LaporanSiswa {
   /** Kota rancangan akhir tiap level, untuk Peta Wilayah (tampilan guru). */
   kota?: KotaLevel[];
   /** Bangunan koin dan perbaikan protes terakhir yang dikirim siswa. */
+  /** Misi Kota Hijau: penilaian KPMM kedua (KH1-KH4), terpisah dari K1-K4. */
+  kotaHijau?: {
+    versi: string;
+    KH1: number;
+    KH2: number;
+    KH3: number;
+    KH4: number;
+    total: number;
+    selesaiPada: string;
+    penilaianDiri?: { KH1: number; KH2: number; KH3: number; KH4: number };
+    refleksi?: { pilihan: string; teks?: string };
+    rincian?: {
+      syaratBenar: number;
+      pengecohDipilih: number;
+      hitungSebelumJalankan: boolean;
+      rencanaPertama: string;
+      akhirFase1: { indeks: number; emisi: number; rusak: number; dana: number; jumlahTarget: number };
+      akhirFase2: { indeks: number; emisi: number; rusak: number; dana: number; jumlahTarget: number };
+      ditolak: number;
+    };
+  } | null;
   kotaSiswa?: { bangunan: Array<{ seed: number; jenis: string; harga?: number; dirawat?: number }>; perbaikan: string[]; koin: number; diperbarui: string } | null;
   startedAt: string;
   finishedAt: string | null;

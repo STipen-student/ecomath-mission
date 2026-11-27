@@ -108,6 +108,7 @@ export interface LoginResponse extends SessionResponse {
     kota: Array<Record<string, unknown>>;
     tutorialSelesai: boolean;
     refleksiSelesai: boolean;
+    kotaHijauSelesai: boolean;
     sessionComposite: number | null;
     progres: string | null;
   };

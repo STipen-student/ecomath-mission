@@ -150,6 +150,33 @@ export class App {
     );
   }
 
+  /** Misi Kota Hijau sudah dikerjakan pada sesi ini (satu kali per sesi). */
+  private kotaHijauSelesai = false;
+
+  /**
+   * Misi Kota Hijau: tugas kinerja KPMM kedua, dinilai dengan rubrik KH1-KH4
+   * secara terpisah dari K1-K4. Dilewati bila sudah dikerjakan.
+   */
+  private mulaiMisiKotaHijau(lalu: () => void): void {
+    if (this.kotaHijauSelesai) {
+      lalu();
+      return;
+    }
+    this.play?.destroy();
+    this.play = null;
+    this.tampilkanMemuat('Menyiapkan Misi Kota Hijau...');
+    void import('./kotaHijau/MisiKotaHijau.js').then((m) =>
+      m.mountMisiKotaHijau(this.root, {
+        sessionId: this.sessionId,
+        studentName: this.studentName,
+        selesai: () => {
+          this.kotaHijauSelesai = true;
+          lalu();
+        },
+      }),
+    );
+  }
+
   /** Kirim progres ke server, ditunda sebentar agar tidak setiap klik. */
   private tundaProgres: number | null = null;
   private simpanProgres(json: string): void {
@@ -193,7 +220,8 @@ export class App {
       this.refleksiTercatat = lanjut.refleksiSelesai;
       const taskTerakhir = terakhir?.taskId;
       if (!this.refleksiTercatat && taskTerakhir) logger.start(this.sessionId, taskTerakhir);
-      this.tampilkanSelesai();
+      this.kotaHijauSelesai = lanjut.kotaHijauSelesai;
+      this.mulaiMisiKotaHijau(() => this.tampilkanSelesai());
       return;
     }
     this.levelIndex = berikut;
@@ -491,8 +519,12 @@ export class App {
             false,
             this.progres ?? undefined,
           );
-          if (this.progres?.sudah('tiket-jalan-pintas')) keRingkasan();
-          else renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.map((k) => k.judul), this.kotaHasil), keRingkasan);
+          const keEpilog = (): void => {
+            if (this.progres?.sudah('tiket-jalan-pintas')) keRingkasan();
+            else renderAdegan(this.root, epilog(this.studentName, this.kotaHasil.map((k) => k.judul), this.kotaHasil), keRingkasan);
+          };
+          // Misi Kota Hijau (KPMM kedua, rubrik KH1-KH4) dikerjakan setelah Level 4.
+          this.mulaiMisiKotaHijau(keEpilog);
         }
       },
     );

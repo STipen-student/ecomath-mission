@@ -276,6 +276,21 @@ teacherRouter.get(
 
     const kota = await kotaPerLevel(session.id);
 
+    // Misi Kota Hijau: penilaian KPMM kedua (KH1-KH4), TERPISAH dari K1-K4.
+    const kh = await prisma.kotaHijau.findUnique({ where: { sessionId: session.id } });
+    const kotaHijau = kh
+      ? {
+          versi: kh.versi,
+          KH1: kh.kh1,
+          KH2: kh.kh2,
+          KH3: kh.kh3,
+          KH4: kh.kh4,
+          total: kh.total,
+          selesaiPada: kh.createdAt.toISOString(),
+          ...(parseJson(kh.data) as Record<string, unknown>),
+        }
+      : null;
+
     res.json({
       sessionId: session.id,
       studentName: session.studentName,
@@ -283,6 +298,7 @@ teacherRouter.get(
       classCode: session.classCode,
       kota,
       kotaSiswa,
+      kotaHijau,
       startedAt: session.startedAt.toISOString(),
       finishedAt: session.finishedAt ? session.finishedAt.toISOString() : null,
       sessionComposite: session.sessionComposite,

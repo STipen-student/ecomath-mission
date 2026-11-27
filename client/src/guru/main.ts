@@ -737,6 +737,7 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
   }
 
   bagian.push(...panelKemandirianBelajar(lap));
+  bagian.push(...panelKotaHijau(lap));
 
   return bagian;
 }
@@ -1115,3 +1116,41 @@ function panelRefleksi(r: RincianPercobaan): HTMLElement {
 
 if (kunci) void muatLaporan();
 else layarMasuk();
+
+/** Misi Kota Hijau: rubrik KH1-KH4 (KPMM kedua), dilaporkan terpisah dari K1-K4. */
+function panelKotaHijau(lap: LaporanSiswa): HTMLElement[] {
+  const kh = lap.kotaHijau;
+  if (!kh) {
+    return [el('section', { class: 'profile-block' }, el('h3', {}, 'MISI KOTA HIJAU (KPMM, TERPISAH DARI K1–K4)'), el('p', { class: 'hint' }, 'Siswa belum mengerjakan Misi Kota Hijau.'))];
+  }
+  const nama: Record<string, string> = { KH1: 'Memahami masalah', KH2: 'Menyusun rencana', KH3: 'Melaksanakan rencana', KH4: 'Memeriksa kembali' };
+  const baris = (['KH1', 'KH2', 'KH3', 'KH4'] as const).map((k) =>
+    el(
+      'tr',
+      {},
+      el('td', {}, `${k} · ${nama[k]}`),
+      el('td', {}, String(kh[k])),
+      el('td', {}, kh.penilaianDiri ? String(kh.penilaianDiri[k]) : '-'),
+    ),
+  );
+  const r = kh.rincian;
+  const ringkasan = r
+    ? [
+        `Syarat misi dikenali: ${r.syaratBenar}/4, pengecoh dipilih: ${r.pengecohDipilih}.`,
+        `Menghitung perkiraan sebelum menjalankan: ${r.hitungSebelumJalankan ? 'ya' : 'tidak'}; rencana pertama ${r.rencanaPertama}; rencana ditolak karena anggaran: ${r.ditolak}.`,
+        `Akhir fase 1: indeks ${r.akhirFase1.indeks}%, emisi ${r.akhirFase1.emisi}, rusak ${r.akhirFase1.rusak}, sisa dana ${r.akhirFase1.dana} (${r.akhirFase1.jumlahTarget}/3 target).`,
+        `Setelah revisi badai: indeks ${r.akhirFase2.indeks}%, emisi ${r.akhirFase2.emisi}, rusak ${r.akhirFase2.rusak} (${r.akhirFase2.jumlahTarget}/3 target).`,
+      ]
+    : [];
+  return [
+    el(
+      'section',
+      { class: 'profile-block' },
+      el('h3', {}, `MISI KOTA HIJAU (KPMM, TERPISAH DARI K1–K4) · ${kh.total}/12`),
+      el('p', { class: 'hint' }, `Rubrik ${kh.versi}. Skor ini tidak dijumlahkan ke K1–K4 maupun komposit; lihat docs/RUBRIK_KOTA_HIJAU.md.`),
+      el('table', { class: 'data-table' }, el('thead', {}, el('tr', {}, el('th', {}, 'Aspek'), el('th', {}, 'Skor sistem'), el('th', {}, 'Penilaian diri'))), el('tbody', {}, ...baris)),
+      el('ul', {}, ...ringkasan.map((t) => el('li', {}, t))),
+      ...(kh.refleksi?.teks ? [el('p', {}, `Refleksi: "${kh.refleksi.teks}"`)] : []),
+    ),
+  ];
+}

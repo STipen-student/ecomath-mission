@@ -3447,3 +3447,58 @@ button.gacha-kartu {
 .uji-hp-form .uji-hp-input {
   width: 64px;
 }
+
+/* Misi Kota Hijau */
+.kh-kartu {
+  max-width: 760px;
+  width: 100%;
+}
+
+.kh-peta {
+  height: 240px;
+  margin: 8px 0;
+  border: 2px solid #1d3640;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.kh-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 6px 0;
+  font-family: var(--font-read);
+}
+
+.kh-status .ok {
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.kh-status .bad {
+  color: #c62828;
+  font-weight: 700;
+}
+
+.kh-perkiraan {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 2px dashed #1d3640;
+  border-radius: 8px;
+}
+
+.kh-perkiraan:empty {
+  display: none;
+}
+
+.kh-diri {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 8px 0;
+}
+
+.kh-layar {
+  overflow-y: auto;
+  align-items: flex-start;
+}

@@ -66,6 +66,7 @@ model Session {
   progres String?
 
   attempts TaskAttempt[]
+  kotaHijau KotaHijau?
 
   @@index([classCode])
   @@index([studentId, classCode])
@@ -164,4 +165,22 @@ model Score {
   @@index([sessionId])
   @@index([taskId])
   @@index([level])
+}
+
+/// Misi Kota Hijau: tugas kinerja KPMM kedua (rubrik KH1-KH4, 0-3 tiap aspek).
+/// TERPISAH dari Score (K1-K4); tidak masuk komposit maupun pemilihan adaptif.
+/// Lihat docs/RUBRIK_KOTA_HIJAU.md.
+model KotaHijau {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  versi     String
+  kh1       Int
+  kh2       Int
+  kh3       Int
+  kh4       Int
+  total     Int
+  /// JSON: kiriman mentah siswa, penilaian diri, dan rincian penskoran.
+  data      String
+  createdAt DateTime @default(now())
 }

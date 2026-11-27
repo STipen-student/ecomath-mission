@@ -80,6 +80,17 @@ export const api = {
     });
   },
 
+  /** Kirim pengerjaan Misi Kota Hijau; server menilai KH1-KH4. */
+  kirimKotaHijau(body: {
+    sessionId: string;
+    pemahaman: string[];
+    langkah: Array<{ fase: 1 | 2; tipe: 'hitung' | 'jalankan'; rencana: Record<string, number> }>;
+    refleksi: { pilihan: string; teks?: string };
+    penilaianDiri: { KH1: number; KH2: number; KH3: number; KH4: number };
+  }): Promise<{ KH1: number; KH2: number; KH3: number; KH4: number; total: number; versi: string }> {
+    return request('/api/kota-hijau/submit', { method: 'POST', body: JSON.stringify(body) });
+  },
+
   /** Simpan progres permainan (koin, misi, bangunan) agar ikut ke perangkat lain. */
   simpanProgres(sessionId: string, progres: string): Promise<{ ok: boolean }> {
     return request<{ ok: boolean }>(`/api/session/${sessionId}/progres`, {
