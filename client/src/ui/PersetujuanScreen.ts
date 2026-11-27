@@ -53,7 +53,7 @@ export function renderPersetujuan(
         el(
           'ul',
           { class: 'persetujuan-daftar' },
-          butir('Tujuan:', 'mengetahui kemampuan pemecahan masalah matematis pada materi pertidaksamaan dan program linear.'),
+          butir('Tujuan:', 'mengembangkan game asesmen untuk mengukur kemampuan pemecahan masalah matematis pada materi pertidaksamaan dan program linear, serta mengurangi kecemasan matematis siswa.'),
           butir('Yang kamu lakukan:', 'mengerjakan 4 level dan satu misi kota hijau, sekitar satu sampai dua jam pelajaran.'),
           butir(
             'Data yang dicatat:',

@@ -9,10 +9,10 @@
 export const VERSI_PERSETUJUAN = '1';
 
 /** Nama peneliti dan program studi, mis. "Nama Lengkap, Magister Pendidikan Matematika FKIP UNS". */
-export const PENELITI = '[isi nama peneliti dan program studi]';
+export const PENELITI = 'Nurul Huda Satriyanto (NIM S852508014), Magister Pendidikan Matematika FKIP UNS';
 
 /** Kontak yang bisa dihubungi siswa/wali, mis. alamat surel kampus atau nomor yang disetujui pembimbing. */
-export const KONTAK_PENELITI = '[isi kontak peneliti]';
+export const KONTAK_PENELITI = 'Nurul Huda Satriyanto, WhatsApp +62 896-3006-3941';
 
 /** Lama data identitas disimpan sebelum dihapus, mis. "sampai analisis selesai, paling lama 1 tahun". */
-export const LAMA_PENYIMPANAN = 'sampai analisis tesis selesai; setelah itu nama dan NIS dihapus dan hanya data tanpa identitas yang disimpan';
+export const LAMA_PENYIMPANAN = 'selama 6 bulan; setelah itu nama dan NIS diganti dengan nomor absen';
