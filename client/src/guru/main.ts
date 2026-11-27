@@ -1156,24 +1156,42 @@ function panelKotaHijau(lap: LaporanSiswa): HTMLElement[] {
   ];
 }
 
-/** Integritas pengerjaan: keluar dari layar penuh per level. */
+/** Integritas pengerjaan: meninggalkan pengerjaan per level dan di Misi Kota Hijau. */
 function panelLayarPenuh(lap: LaporanSiswa): HTMLElement[] {
   const data = lap.layarPenuh ?? [];
-  if (data.length === 0) return [];
-  const total = data.reduce((n, d) => n + d.keluar, 0);
+  const misi = lap.kotaHijau?.integritas ?? null;
+  if (data.length === 0 && !misi) return [];
+  const lama = (ms: number | undefined): string => {
+    const detik = Math.round((ms ?? 0) / 1000);
+    return detik >= 60 ? `${Math.floor(detik / 60)} menit ${detik % 60} detik` : `${detik} detik`;
+  };
+  const total = data.reduce((n, d) => n + d.keluar, 0) + (misi?.jumlah ?? 0);
+  const totalMs = data.reduce((n, d) => n + (d.durasiMs ?? 0), 0) + (misi?.durasiMs ?? 0);
+  const baris = data.map((d) => {
+    if (d.tidakDidukung && d.keluar === 0) return el('li', {}, `Level ${d.level}: perangkat tidak mendukung layar penuh`);
+    const rincian = [
+      d.keluarLayarPenuh ? `keluar layar penuh ${d.keluarLayarPenuh}x` : '',
+      d.pindahTab ? `pindah tab/aplikasi ${d.pindahTab}x` : '',
+      d.kehilanganFokus ? `jendela kehilangan fokus ${d.kehilanganFokus}x` : '',
+    ].filter(Boolean);
+    return el(
+      'li',
+      {},
+      `Level ${d.level}: meninggalkan ${d.keluar} kali${d.keluar > 0 ? `, total ${lama(d.durasiMs)}` : ''}${rincian.length ? ` (${rincian.join(', ')})` : ''}`,
+    );
+  });
+  if (misi) baris.push(el('li', {}, `Misi Kota Hijau: meninggalkan ${misi.jumlah} kali${misi.jumlah > 0 ? `, total ${lama(misi.durasiMs)}` : ''}`));
   return [
     el(
       'section',
       { class: 'profile-block' },
-      el('h3', {}, `INTEGRITAS PENGERJAAN · keluar layar penuh ${total} kali`),
-      el('p', { class: 'hint' }, 'Setiap kali siswa keluar dari layar penuh, soal dijeda sampai ia kembali. Data proses saja; tidak memengaruhi skor.'),
+      el('h3', {}, `INTEGRITAS PENGERJAAN · meninggalkan ${total} kali, total ${lama(totalMs)}`),
       el(
-        'ul',
-        {},
-        ...data.map((d) =>
-          el('li', {}, `Level ${d.level}: ${d.tidakDidukung ? 'perangkat tidak mendukung layar penuh' : `keluar ${d.keluar} kali`}`),
-        ),
+        'p',
+        { class: 'hint' },
+        'Tercatat saat siswa keluar dari layar penuh, pindah tab atau aplikasi, atau jendela browser kehilangan fokus (mis. Alt+Tab). Pakai sebagai penanda untuk ditinjau, bukan bukti kecurangan: notifikasi atau salah tekan juga ikut tercatat. Tidak memengaruhi skor.',
       ),
+      el('ul', {}, ...baris),
     ),
   ];
 }

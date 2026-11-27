@@ -148,9 +148,10 @@ export class App {
         this.lepasPenjagaLayar?.();
         this.lepasPenjagaLayar = jagaLayarPenuh(
           () => this.play !== null || this.misiAktif,
-          (aksi) => {
-            // Data proses (event non-bukti): hanya tercatat saat level berjalan.
-            if (this.play) logger.record('layar_penuh', { aksi }, true);
+          (c) => {
+            // Data proses (event non-bukti) saat level berjalan; selama Misi Kota
+            // Hijau ringkasannya ikut terkirim bersama pengerjaan misi.
+            if (this.play) logger.record('layar_penuh', { ...c }, true);
           },
         );
         this.lanjutkanDari(sesi.baru, lanjut);

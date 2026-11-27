@@ -72,38 +72,107 @@ export function pastikanLayarPenuh(lanjut: () => void): void {
   document.body.append(kotak);
 }
 
+/** Penyebab siswa meninggalkan pengerjaan. */
+export type SebabPergi = 'layar-penuh' | 'tab' | 'fokus';
+
+export interface CatatanPergi {
+  aksi: 'pergi' | 'kembali';
+  sebab: SebabPergi;
+  /** Lama meninggalkan pengerjaan (ms), hanya pada aksi 'kembali'. */
+  durasiMs?: number;
+}
+
+/** Riwayat setiap kali siswa pergi, untuk ringkasan (mis. Misi Kota Hijau). */
+const riwayatPergi: Array<{ mulai: number; selesai: number | null; sebab: SebabPergi }> = [];
+
+/** Jumlah dan total lama pergi sejak waktu `sejak` (ms, Date.now()). */
+export function ringkasPergi(sejak: number, sekarang = Date.now()): { jumlah: number; durasiMs: number } {
+  const milik = riwayatPergi.filter((r) => r.mulai >= sejak);
+  return {
+    jumlah: milik.length,
+    durasiMs: milik.reduce((n, r) => n + ((r.selesai ?? sekarang) - r.mulai), 0),
+  };
+}
+
 /**
- * Pasang penjaga selama pengerjaan: bila siswa keluar dari layar penuh saat
- * `sedangMengerjakan()` benar, soal ditutup sampai siswa kembali. Setiap
- * keluar dan masuk dilaporkan lewat `catat`. Mengembalikan fungsi pelepas.
+ * Sebab siswa sedang tidak berada di pengerjaan, atau null bila sedang di sana:
+ *  - 'layar-penuh': keluar dari layar penuh (perangkat yang mendukung);
+ *  - 'tab': halaman tidak terlihat (pindah tab, aplikasi lain di HP, layar dikunci);
+ *  - 'fokus': jendela browser kehilangan fokus (mis. Alt+Tab ke aplikasi lain
+ *    sementara browser tetap layar penuh di belakang).
  */
-export function jagaLayarPenuh(sedangMengerjakan: () => boolean, catat: (aksi: 'keluar' | 'masuk') => void): () => void {
+function sebabPergi(): SebabPergi | null {
+  if (document.hidden) return 'tab';
+  if (layarPenuhDidukung() && !sedangLayarPenuh()) return 'layar-penuh';
+  if (!document.hasFocus()) return 'fokus';
+  return null;
+}
+
+/**
+ * Pasang penjaga selama pengerjaan. Saat `sedangMengerjakan()` benar dan siswa
+ * pergi (keluar layar penuh, pindah tab/aplikasi, atau jendela kehilangan
+ * fokus), soal ditutup layar jeda; setiap pergi dan kembali dilaporkan lewat
+ * `catat`, termasuk lamanya. Mengembalikan fungsi pelepas.
+ */
+export function jagaLayarPenuh(sedangMengerjakan: () => boolean, catat: (c: CatatanPergi) => void): () => void {
   let kotak: HTMLElement | null = null;
+  let pergiSejak: { mulai: number; sebab: SebabPergi } | null = null;
+
+  const tampilkanJeda = (): void => {
+    kotak?.remove();
+    const perluLayarPenuh = layarPenuhDidukung() && !sedangLayarPenuh();
+    kotak = penutup(
+      '⏸ Pengerjaan dijeda',
+      perluLayarPenuh
+        ? 'Kamu meninggalkan pengerjaan. Soal disembunyikan sampai kamu kembali ke layar penuh. Setiap kali meninggalkan pengerjaan, beserta lamanya, tercatat dalam laporanmu.'
+        : 'Kamu sempat meninggalkan pengerjaan (pindah tab, aplikasi, atau jendela). Setiap kali meninggalkan pengerjaan, beserta lamanya, tercatat dalam laporanmu.',
+      perluLayarPenuh ? '⛶ KEMBALI KE LAYAR PENUH' : '▶ LANJUTKAN MENGERJAKAN',
+      async (pesan) => {
+        if (layarPenuhDidukung() && !sedangLayarPenuh() && !(await mintaLayarPenuh())) {
+          pesan.textContent = 'Layar penuh belum aktif. Coba tekan tombolnya sekali lagi.';
+          return;
+        }
+        if (sebabPergi() === null) {
+          kotak?.remove();
+          kotak = null;
+        }
+      },
+    );
+    document.body.append(kotak);
+  };
+
   const berubah = (): void => {
     if (!sedangMengerjakan()) return;
-    if (!sedangLayarPenuh()) {
-      catat('keluar');
-      if (kotak) return;
-      kotak = penutup(
-        '⏸ Pengerjaan dijeda',
-        'Kamu keluar dari layar penuh. Soal disembunyikan sampai kamu kembali ke layar penuh. Keluar dari layar penuh tercatat dalam laporan pengerjaanmu.',
-        '⛶ KEMBALI KE LAYAR PENUH',
-        async (pesan) => {
-          if (!(await mintaLayarPenuh())) pesan.textContent = 'Layar penuh belum aktif. Coba tekan tombolnya sekali lagi.';
-        },
-      );
-      document.body.append(kotak);
-    } else {
-      catat('masuk');
-      kotak?.remove();
-      kotak = null;
+    const sebab = sebabPergi();
+    if (sebab && !pergiSejak) {
+      pergiSejak = { mulai: Date.now(), sebab };
+      riwayatPergi.push({ mulai: pergiSejak.mulai, selesai: null, sebab });
+      catat({ aksi: 'pergi', sebab });
+      tampilkanJeda();
+    } else if (!sebab && pergiSejak) {
+      const durasiMs = Date.now() - pergiSejak.mulai;
+      const terakhir = riwayatPergi[riwayatPergi.length - 1];
+      if (terakhir) terakhir.selesai = Date.now();
+      catat({ aksi: 'kembali', sebab: pergiSejak.sebab, durasiMs });
+      pergiSejak = null;
+      // Layar jeda tetap tampil sampai siswa menekan tombolnya, agar ia sadar
+      // kepergiannya tercatat; tombolnya langsung menutup jeda bila sudah kembali.
+      if (!kotak) tampilkanJeda();
+    } else if (sebab && kotak && sebab === 'layar-penuh') {
+      tampilkanJeda();
     }
   };
-  document.addEventListener('fullscreenchange', berubah);
-  document.addEventListener('webkitfullscreenchange', berubah);
+
+  const peristiwa: Array<[EventTarget, string]> = [
+    [document, 'fullscreenchange'],
+    [document, 'webkitfullscreenchange'],
+    [document, 'visibilitychange'],
+    [window, 'blur'],
+    [window, 'focus'],
+  ];
+  for (const [sasaran, nama] of peristiwa) sasaran.addEventListener(nama, berubah);
   return () => {
-    document.removeEventListener('fullscreenchange', berubah);
-    document.removeEventListener('webkitfullscreenchange', berubah);
+    for (const [sasaran, nama] of peristiwa) sasaran.removeEventListener(nama, berubah);
     kotak?.remove();
   };
 }

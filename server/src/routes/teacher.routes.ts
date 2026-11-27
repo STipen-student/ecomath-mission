@@ -282,12 +282,20 @@ teacherRouter.get(
       select: { payload: true, attempt: { select: { level: true } } },
     });
     const layarPenuh = [1, 2, 3, 4].map((level) => {
-      const milik = layarRows.filter((r) => r.attempt.level === level);
-      const aksi = milik.map((r) => (parseJson(r.payload) as { aksi?: string }).aksi);
+      const milik = layarRows
+        .filter((r) => r.attempt.level === level)
+        .map((r) => parseJson(r.payload) as { aksi?: string; sebab?: string; durasiMs?: number });
+      // Format baru: 'pergi'/'kembali' dengan sebab dan lama; format lama: 'keluar'/'masuk'.
+      const pergi = milik.filter((p) => p.aksi === 'pergi' || p.aksi === 'keluar');
+      const perSebab = (s: string): number => pergi.filter((p) => (p.sebab ?? 'layar-penuh') === s).length;
       return {
         level,
-        keluar: aksi.filter((a) => a === 'keluar').length,
-        tidakDidukung: aksi.includes('tidak-didukung'),
+        keluar: pergi.length,
+        keluarLayarPenuh: perSebab('layar-penuh'),
+        pindahTab: perSebab('tab'),
+        kehilanganFokus: perSebab('fokus'),
+        durasiMs: milik.filter((p) => p.aksi === 'kembali').reduce((n, p) => n + (Number(p.durasiMs) || 0), 0),
+        tidakDidukung: milik.some((p) => p.aksi === 'tidak-didukung'),
       };
     });
 

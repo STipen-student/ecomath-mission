@@ -238,13 +238,16 @@ export function narrateEvent(taskId: string, eventType: string, payloadJson: str
 
     case 'layar_penuh': {
       const aksi = teks(p.aksi);
+      const sebab: Record<string, string> = { 'layar-penuh': 'keluar dari layar penuh', tab: 'pindah tab atau aplikasi', fokus: 'jendela kehilangan fokus' };
+      const alasan = sebab[teks(p.sebab)] ?? 'keluar dari layar penuh';
+      const detik = angka(p.durasiMs) === '' ? '' : ` setelah ${Math.round(Number(p.durasiMs) / 1000)} detik`;
       const keterangan =
-        aksi === 'keluar'
-          ? 'Keluar dari layar penuh (pengerjaan dijeda)'
-          : aksi === 'masuk'
-            ? 'Kembali ke layar penuh'
+        aksi === 'pergi' || aksi === 'keluar'
+          ? `Meninggalkan pengerjaan: ${alasan} (pengerjaan dijeda)`
+          : aksi === 'kembali' || aksi === 'masuk'
+            ? `Kembali ke pengerjaan${detik}`
             : 'Perangkat tidak mendukung layar penuh';
-      return { ...KOSONG, catatan: aksi, keterangan };
+      return { ...KOSONG, catatan: [aksi, teks(p.sebab)].filter(Boolean).join(' '), keterangan };
     }
 
     case 'learning_reflection': {

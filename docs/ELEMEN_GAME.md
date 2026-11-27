@@ -231,3 +231,24 @@ menampilkan bagian **Integritas pengerjaan** (berapa kali keluar per level).
 Perangkat yang tidak mendukung layar penuh untuk halaman web (misalnya Safari di
 iPhone) tetap bisa mengerjakan; hal itu dicatat sebagai `tidak-didukung` agar
 dapat dipertimbangkan saat analisis.
+
+### Deteksi meninggalkan pengerjaan (pembaruan)
+
+Penjaga kini mendeteksi tiga cara meninggalkan pengerjaan, masing-masing dengan
+lamanya:
+
+| Sebab | Cara mendeteksi | Contoh |
+|---|---|---|
+| `layar-penuh` | layar penuh tertutup | Esc, tombol keluar layar penuh |
+| `tab` | halaman tidak terlihat (`visibilitychange`) | pindah tab, pindah aplikasi di HP (termasuk iPhone), layar dikunci |
+| `fokus` | jendela kehilangan fokus (`blur`) | Alt+Tab ke aplikasi lain sementara browser tetap layar penuh |
+
+Saat siswa pergi, soal ditutup layar jeda; saat kembali, siswa menekan
+**Lanjutkan** (atau **Kembali ke layar penuh**). Selama level, setiap pergi dan
+kembali dicatat sebagai event `layar_penuh` (`aksi: pergi/kembali`, `sebab`,
+`durasiMs`). Selama Misi Kota Hijau, ringkasannya (jumlah dan total lama) ikut
+terkirim bersama pengerjaan misi. Portal Guru menampilkan jumlah per sebab dan
+total lama per level dan untuk misi.
+
+Data ini penanda untuk ditinjau, bukan bukti kecurangan: notifikasi, panggilan
+masuk, atau salah tekan juga ikut tercatat.

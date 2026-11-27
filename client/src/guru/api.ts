@@ -279,7 +279,15 @@ export interface LaporanSiswa {
   kota?: KotaLevel[];
   /** Bangunan koin dan perbaikan protes terakhir yang dikirim siswa. */
   /** Berapa kali siswa keluar dari layar penuh per level (integritas pengerjaan). */
-  layarPenuh?: Array<{ level: number; keluar: number; tidakDidukung: boolean }>;
+  layarPenuh?: Array<{
+    level: number;
+    keluar: number;
+    keluarLayarPenuh?: number;
+    pindahTab?: number;
+    kehilanganFokus?: number;
+    durasiMs?: number;
+    tidakDidukung: boolean;
+  }>;
   /** Misi Kota Hijau: penilaian KPMM kedua (KH1-KH4), terpisah dari K1-K4. */
   kotaHijau?: {
     versi: string;
@@ -291,6 +299,7 @@ export interface LaporanSiswa {
     selesaiPada: string;
     penilaianDiri?: { KH1: number; KH2: number; KH3: number; KH4: number };
     refleksi?: { pilihan: string; teks?: string };
+    integritas?: { jumlah: number; durasiMs: number } | null;
     rincian?: {
       syaratBenar: number;
       pengecohDipilih: number;

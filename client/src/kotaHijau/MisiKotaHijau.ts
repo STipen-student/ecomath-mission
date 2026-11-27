@@ -9,6 +9,7 @@
  */
 
 import { api } from '../api/client.js';
+import { ringkasPergi } from '../ui/layarPenuh.js';
 import { el } from '../ui/dom.js';
 import { mountCity, type CityHandle } from '../game/mountCity.js';
 import { GRID, plotTiles } from '../game/iso/isoGrid.js';
@@ -102,6 +103,8 @@ function tabelKeadaan(r: Ringkasan): HTMLElement {
 }
 
 export function mountMisiKotaHijau(root: HTMLElement, opsi: OpsiMisi): void {
+  // Untuk ringkasan integritas: berapa kali dan berapa lama siswa meninggalkan misi.
+  const mulaiMisi = Date.now();
   const pemahaman = new Set<string>();
   const langkah: Langkah[] = [];
   let keadaan = salin(KOTA_AWAL);
@@ -369,6 +372,7 @@ export function mountMisiKotaHijau(root: HTMLElement, opsi: OpsiMisi): void {
           langkah,
           refleksi,
           penilaianDiri: nilai as { KH1: number; KH2: number; KH3: number; KH4: number },
+          integritas: ringkasPergi(mulaiMisi),
         });
         tampilkanHasil(hasil, nilai as Record<string, number>);
       } catch (err) {

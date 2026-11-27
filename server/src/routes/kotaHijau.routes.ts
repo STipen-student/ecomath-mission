@@ -29,6 +29,8 @@ const KirimanSchema = z.object({
     .max(200),
   refleksi: z.object({ pilihan: z.string().max(10), teks: z.string().max(2000).optional() }),
   penilaianDiri: z.object({ KH1: SKOR_DIRI, KH2: SKOR_DIRI, KH3: SKOR_DIRI, KH4: SKOR_DIRI }),
+  /** Berapa kali dan berapa lama siswa meninggalkan misi (data proses, bukan skor). */
+  integritas: z.object({ jumlah: z.number().int().min(0).max(10000), durasiMs: z.number().min(0).max(1e9) }).optional(),
 });
 
 kotaHijauRouter.post(
@@ -56,6 +58,7 @@ kotaHijauRouter.post(
           langkah: input.langkah,
           refleksi: input.refleksi,
           penilaianDiri: input.penilaianDiri,
+          integritas: input.integritas ?? null,
           rincian: skor.rincian,
         }),
       },

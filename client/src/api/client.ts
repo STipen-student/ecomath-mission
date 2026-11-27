@@ -87,6 +87,7 @@ export const api = {
     langkah: Array<{ fase: 1 | 2; tipe: 'hitung' | 'jalankan'; rencana: Record<string, number> }>;
     refleksi: { pilihan: string; teks?: string };
     penilaianDiri: { KH1: number; KH2: number; KH3: number; KH4: number };
+    integritas?: { jumlah: number; durasiMs: number };
   }): Promise<{ KH1: number; KH2: number; KH3: number; KH4: number; total: number; versi: string }> {
     return request('/api/kota-hijau/submit', { method: 'POST', body: JSON.stringify(body) });
   },
