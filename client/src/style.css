@@ -3540,3 +3540,16 @@ button.gacha-kartu {
 .persetujuan-daftar li {
   margin-bottom: 6px;
 }
+
+/* Mode mudah menggambar grafik himpunan penyelesaian */
+.uji-hp-mudah {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn.btn-mudah { background: #fff4d6; border-color: #e0b84c; color: #6b4e00; }
+.btn.btn-mudah[hidden] { display: none; }
+.uji-hp [hidden] { display: none !important; }

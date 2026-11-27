@@ -90,7 +90,7 @@ export function renderLandingScreen(root: HTMLElement, aksi: LandingActions): La
           el(
             'p',
             { class: 'hero-lead' },
-            'Bagi lahan kota, penuhi kendala anggaran dan lingkungan, lalu cari kombinasi terbaik. Setiap keputusanmu terekam dan langsung diberi umpan balik.',
+            'Bagi lahan kota, penuhi kendala anggaran dan lingkungan, lalu tentukan himpunan penyelesaiannya. Setiap keputusanmu terekam dan langsung diberi umpan balik.',
           ),
           el('div', { class: 'hero-actions' }, tombolSiswa, tombolGuru, tombolPanduan),
           el(

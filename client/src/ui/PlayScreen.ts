@@ -37,6 +37,8 @@ export interface GambarGrafikEvent {
   tahap: 'garis' | 'arsir';
   titik: Array<[number, number]>;
   benar: boolean;
+  /** true bila langkah ini dikerjakan lewat tombol Mode Mudah. */
+  bantuan?: boolean;
 }
 
 export interface PlayCallbacks {
@@ -996,6 +998,8 @@ export class PlayScreen {
 
   /** Gambar siswa per kendala tulisan, disimpan agar tidak hilang saat panel digambar ulang. */
   private gambarSiswa = new Map<string, GambarKendala>();
+  /** Mode Mudah menggambar grafik: tombol bantu garis dan bantu arsir. */
+  private modeMudah = false;
 
   /**
    * Soal pertidaksamaan linear tanpa fungsi tujuan: SISWA SENDIRI menggambar
@@ -1137,7 +1141,7 @@ export class PlayScreen {
      * Periksa garis dari dua titik. Titik yang diketik dicek persis (boleh
      * desimal, mis. 62,5); titik dari ketukan diberi toleransi setengah petak.
      */
-    const periksaGaris = (p: [number, number], q: [number, number], diketik: boolean): void => {
+    const periksaGaris = (p: [number, number], q: [number, number], diketik: boolean, bantuan = false): void => {
       const sekarang = aktif();
       if (!sekarang) return;
       const { k, slot } = sekarang;
@@ -1149,7 +1153,7 @@ export class PlayScreen {
       const berbeda = p[0] !== q[0] || p[1] !== q[1];
       g.titik = [p, q];
       g.garisBenar = berbeda && diGaris(p) && diGaris(q);
-      this.cb.onGambarGrafik?.({ slot, tahap: 'garis', titik: [p, q], benar: g.garisBenar });
+      this.cb.onGambarGrafik?.({ slot, tahap: 'garis', titik: [p, q], benar: g.garisBenar, ...(bantuan ? { bantuan } : {}) });
       hasil.className = g.garisBenar ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad';
       hasil.textContent = g.garisBenar
         ? `✓ Garis kendala ke-${slot + 1} benar.`
@@ -1159,7 +1163,7 @@ export class PlayScreen {
       if (!g.garisBenar) g.titik = [];
     };
 
-    const pilihSisi = (x: number, y: number): void => {
+    const pilihSisi = (x: number, y: number, bantuan = false): void => {
       const sekarang = aktif();
       if (!sekarang) return;
       const { k, slot } = sekarang;
@@ -1173,7 +1177,7 @@ export class PlayScreen {
       const memenuhi = k.op === '>=' || k.op === '>' ? lhs >= k.c : lhs <= k.c;
       g.sisi = memenuhi ? [x, y] : null;
       g.sisiBenar = memenuhi;
-      this.cb.onGambarGrafik?.({ slot, tahap: 'arsir', titik: [[x, y]], benar: memenuhi });
+      this.cb.onGambarGrafik?.({ slot, tahap: 'arsir', titik: [[x, y]], benar: memenuhi, ...(bantuan ? { bantuan } : {}) });
       hasil.className = memenuhi ? 'peta-wilayah-status ok' : 'peta-wilayah-status bad';
       hasil.textContent = memenuhi
         ? `✓ Sisi arsiran kendala ke-${slot + 1} benar.`
@@ -1226,6 +1230,77 @@ export class PlayScreen {
       el('span', {}, 'Titik uji ('), sx1, el('span', {}, ','), sy1, el('span', {}, ')'),
       tombolSisi,
     );
+    // Mode Mudah: sistem menghitung titik potong sumbu dan titik uji (0, 0)
+    // sambil menampilkan langkah hitungnya, jadi siswa yang kesulitan
+    // menggambar tetap sampai ke himpunan penyelesaian. Setiap langkah bantuan
+    // dicatat (bantuan: true) agar guru dapat melihatnya.
+    const duaTitik = (k: ConstraintDto): { p: [number, number]; q: [number, number]; cara: string } => {
+      if (k.a !== 0 && k.b !== 0 && k.c !== 0) {
+        return {
+          p: [k.c / k.a, 0],
+          q: [0, k.c / k.b],
+          cara: `y = 0 → ${num(k.a)}x = ${num(k.c)} → x = ${num(k.c / k.a)}; x = 0 → ${num(k.b)}y = ${num(k.c)} → y = ${num(k.c / k.b)}`,
+        };
+      }
+      if (k.b === 0) return { p: [k.c / k.a, 0], q: [k.c / k.a, LANGKAH_KISI * 2], cara: `garis tegak x = ${num(k.c / k.a)}` };
+      if (k.a === 0) return { p: [0, k.c / k.b], q: [LANGKAH_KISI * 2, k.c / k.b], cara: `garis mendatar y = ${num(k.c / k.b)}` };
+      const t = LANGKAH_KISI * 2;
+      const yt = (k.c - k.a * t) / k.b;
+      return { p: [0, 0], q: [t, yt], cara: `x = 0 → y = 0; x = ${num(t)} → y = ${num(yt)}` };
+    };
+    const tombolBantuGaris = el('button', { class: 'btn btn-tiny btn-mudah' }, '✨ Bantu gambar garis');
+    tombolBantuGaris.addEventListener('click', () => {
+      const sekarang = aktif();
+      if (!sekarang) return;
+      const { p, q, cara } = duaTitik(sekarang.k);
+      const teks = (v: number): string => String(+v.toFixed(4));
+      g1x.value = teks(p[0]);
+      g1y.value = teks(p[1]);
+      g2x.value = teks(q[0]);
+      g2y.value = teks(q[1]);
+      periksaGaris(p, q, true, true);
+      hasil.className = 'peta-wilayah-status ok';
+      hasil.textContent = `✓ Garis digambar lewat (${num(p[0])}, ${num(p[1])}) dan (${num(q[0])}, ${num(q[1])}). Cara: ${cara}.`;
+      gambar();
+    });
+    const tombolBantuSisi = el('button', { class: 'btn btn-tiny btn-mudah' }, '✨ Bantu arsir');
+    tombolBantuSisi.addEventListener('click', () => {
+      const sekarang = aktif();
+      if (!sekarang) return;
+      const { k } = sekarang;
+      // Titik uji (0, 0), atau (0, 10) bila (0, 0) tepat di garis.
+      const uji: [number, number] = k.c !== 0 ? [0, 0] : k.b !== 0 ? [LANGKAH_KISI * 2, 0] : [0, LANGKAH_KISI * 2];
+      const lhs = k.a * uji[0] + k.b * uji[1];
+      const memenuhi = k.op === '>=' || k.op === '>' ? lhs >= k.c : lhs <= k.c;
+      // Titik di sisi yang memenuhi: geser dari garis searah normal (a, b).
+      const { p, q } = duaTitik(k);
+      const tengah: [number, number] = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+      const panjang = Math.hypot(k.a, k.b);
+      const arah = k.op === '>=' || k.op === '>' ? 1 : -1;
+      const geser = sisiBidang / 10;
+      const sisi: [number, number] = memenuhi
+        ? uji
+        : [tengah[0] + (arah * geser * k.a) / panjang, tengah[1] + (arah * geser * k.b) / panjang];
+      pilihSisi(sisi[0], sisi[1], true);
+      const tanda = simbol(k.op);
+      hasil.className = 'peta-wilayah-status ok';
+      hasil.textContent = `✓ Uji titik (${num(uji[0])}, ${num(uji[1])}): ${num(k.a)}·${num(uji[0])} + ${num(k.b)}·${num(uji[1])} = ${num(lhs)}, dan ${num(lhs)} ${tanda} ${num(k.c)} ${memenuhi ? 'BENAR, jadi arsir sisi yang memuat titik itu' : 'SALAH, jadi arsir sisi yang tidak memuat titik itu'}.`;
+      gambar();
+    });
+    barisGaris.append(tombolBantuGaris);
+    barisSisi.append(tombolBantuSisi);
+    const saklarMudah = el('input', { type: 'checkbox', ariaLabel: 'Mode mudah menggambar' }) as HTMLInputElement;
+    saklarMudah.checked = this.modeMudah;
+    const terapkanMudah = (): void => {
+      tombolBantuGaris.hidden = !this.modeMudah;
+      tombolBantuSisi.hidden = !this.modeMudah;
+    };
+    saklarMudah.addEventListener('change', () => {
+      this.modeMudah = saklarMudah.checked;
+      terapkanMudah();
+    });
+    terapkanMudah();
+    const barisMudah = el('label', { class: 'uji-hp-mudah' }, saklarMudah, el('span', {}, ' 🪄 Mode mudah: sistem membantu menghitung titik potong dan titik uji'));
     const formGambar = el('div', { class: 'uji-hp-form' }, barisGaris, barisSisi);
 
     grafik.addEventListener('click', (e) => {
@@ -1280,7 +1355,7 @@ export class PlayScreen {
     });
 
     gambar();
-    return el('div', { class: 'uji-hp' }, petunjuk, formGambar, grafik, barisUji, el('div', { class: 'uji-hp-baris' }, tombolLewati, ulangi), hasil, riwayat);
+    return el('div', { class: 'uji-hp' }, petunjuk, barisMudah, formGambar, grafik, barisUji, el('div', { class: 'uji-hp-baris' }, tombolLewati, ulangi), hasil, riwayat);
   }
 
   /**
