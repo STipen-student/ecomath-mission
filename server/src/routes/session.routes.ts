@@ -54,7 +54,7 @@ sessionRouter.post(
  *
  * Sesi lama tanpa PIN (sebelum fitur ini) tidak bisa diklaim lewat login, agar
  * tidak ada yang mengambil alih pekerjaan orang lain hanya dengan mengetahui NIS.
- * Kode kelas disimpan dalam huruf besar supaya "xi-ipa-1" dan "XI-IPA-1" sama.
+ * Kode kelas disimpan dalam huruf besar supaya "x-1" dan "X-1" sama.
  */
 sessionRouter.post(
   '/login',

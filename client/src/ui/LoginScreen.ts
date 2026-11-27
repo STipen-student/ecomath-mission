@@ -37,7 +37,7 @@ export function renderLoginScreen(
   const inputKelas = el('input', {
     class: 'field',
     type: 'text',
-    placeholder: 'Contoh: XI-IPA-1',
+    placeholder: 'Contoh: X-1',
     maxLength: 40,
     ariaLabel: 'Kode kelas',
   });

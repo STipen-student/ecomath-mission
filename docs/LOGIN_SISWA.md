@@ -14,7 +14,7 @@ nomor absen (1–999, nol di depan diabaikan) disimpan di kolom `studentId`.
   koin, misi, dan bangunannya dipulihkan dari server.
 - **Semua level selesai:** siswa langsung ke ringkasan akhir. Refleksi akhir
   masih bisa diisi bila belum pernah.
-- **Kode kelas** disimpan dalam huruf besar, jadi `xi-ipa-1` dan `XI-IPA-1`
+- **Kode kelas** disimpan dalam huruf besar, jadi `x-1` dan `X-1`
   dianggap kelas yang sama.
 
 ## Aturan yang menjaga data penelitian
