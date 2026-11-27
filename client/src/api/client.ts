@@ -72,7 +72,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   baseUrl: API_URL,
 
-  /** Login NIS + kode kelas + PIN: membuat sesi baru atau melanjutkan sesi lama. */
+  /** Login kode kelas + nomor absen + PIN: membuat sesi baru atau melanjutkan sesi lama. */
   login(input: { studentName?: string; studentId: string; classCode: string; pin: string }): Promise<LoginResponse> {
     return request<LoginResponse>('/api/session/login', {
       method: 'POST',

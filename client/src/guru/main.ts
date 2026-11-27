@@ -614,7 +614,7 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
     tombolResetPin.disabled = true;
     try {
       await adminApi.resetPin(kunci, lap.sessionId);
-      pesanPin.textContent = '✓ PIN direset. Minta siswa masuk lagi dengan NIS, kode kelas, dan PIN baru pilihannya.';
+      pesanPin.textContent = '✓ PIN direset. Minta siswa masuk lagi dengan kode kelas, nomor absen, dan PIN baru pilihannya.';
     } catch (err) {
       pesanPin.textContent = err instanceof Error ? err.message : 'Gagal mereset PIN.';
       tombolResetPin.disabled = false;
@@ -649,7 +649,7 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
         el(
           'p',
           { class: 'sub' },
-          `${lap.classCode}${lap.studentId ? ` · NIS ${lap.studentId}` : ''} · ${rentangWaktu}`,
+          `${lap.classCode}${lap.studentId ? ` · absen ${lap.studentId}` : ''} · ${rentangWaktu}`,
         ),
         el(
           'p',

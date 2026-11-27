@@ -57,7 +57,7 @@ export function renderPersetujuan(
           butir('Yang kamu lakukan:', 'mengerjakan 4 level dan satu misi kota hijau, sekitar satu sampai dua jam pelajaran.'),
           butir(
             'Data yang dicatat:',
-            'inisial atau kode, NIS, kode kelas, setiap langkah dan jawabanmu, penilaian dirimu, dan kapan serta berapa lama kamu keluar dari layar penuh atau berpindah tab/aplikasi.',
+            'inisial atau nama panggilan, kode kelas, nomor absen, setiap langkah dan jawabanmu, penilaian dirimu, dan kapan serta berapa lama kamu keluar dari layar penuh atau berpindah tab/aplikasi.',
           ),
           butir('Penyimpanan:', `data disimpan di server Cloudflare (wilayah Asia-Pasifik) dan hanya dibuka oleh peneliti dan gurumu. Data identitas disimpan ${LAMA_PENYIMPANAN}.`),
           butir('Nilai sekolah:', 'skor di game ini untuk penelitian, tidak menjadi nilai rapor kecuali gurumu menyatakan lain.'),

@@ -1,7 +1,7 @@
 /**
  * Layar masuk bergaya papan judul game.
  *
- * Siswa masuk dengan NIS + kode kelas + PIN 4-6 angka. Pada login pertama PIN
+ * Siswa masuk dengan kode kelas + nomor absen + PIN 4-6 angka. Pada login pertama PIN
  * yang diketik menjadi PIN siswa; pada login berikutnya siswa melanjutkan
  * pekerjaannya. PIN tidak pernah disimpan sebagai teks (server/src/lib/pin.ts).
  */
@@ -30,9 +30,9 @@ export function renderLoginScreen(
   const inputNis = el('input', {
     class: 'field',
     type: 'text',
-    placeholder: 'Nomor induk siswa',
+    placeholder: 'Mis. 7',
     maxLength: 30,
-    ariaLabel: 'Nomor induk siswa',
+    ariaLabel: 'Nomor absen',
   });
   const inputKelas = el('input', {
     class: 'field',
@@ -62,7 +62,11 @@ export function renderLoginScreen(
     const pin = inputPin.value.trim();
 
     if (!nis || !kelas) {
-      pesan.textContent = 'NIS dan kode kelas wajib diisi.';
+      pesan.textContent = 'Nomor absen dan kode kelas wajib diisi.';
+      return;
+    }
+    if (!/^\d{1,3}$/.test(nis) || Number(nis) < 1) {
+      pesan.textContent = 'Nomor absen harus berupa angka, misalnya 7.';
       return;
     }
     if (!/^\d{4,6}$/.test(pin)) {
@@ -77,7 +81,7 @@ export function renderLoginScreen(
     try {
       await onSubmit({
         studentName: nama || undefined,
-        studentId: nis,
+        studentId: String(Number(nis)),
         classCode: kelas,
         pin,
       });
@@ -114,7 +118,7 @@ export function renderLoginScreen(
           { class: 'prose' },
           'Kamu adalah perencana kota. Setiap keputusan alokasi lahanmu harus memenuhi kendala anggaran, kapasitas, dan lingkungan yang berlaku di kota tersebut.',
         ),
-        el('label', { class: 'label' }, 'NIS atau kode siswa dari guru'),
+        el('label', { class: 'label' }, 'Nomor absen'),
         inputNis,
         el('label', { class: 'label' }, 'Kode kelas'),
         inputKelas,
@@ -125,7 +129,7 @@ export function renderLoginScreen(
         el(
           'p',
           { class: 'hint' },
-          'Pertama kali masuk? Buat PIN 4–6 angka dan ingat baik-baik. Lain kali, masuk dengan NIS atau kode, kode kelas, dan PIN yang sama untuk melanjutkan pekerjaanmu. Lupa PIN? Minta guru mereset. Tidak perlu menulis nama lengkap: inisial sudah cukup.',
+          'Pertama kali masuk? Buat PIN 4–6 angka dan ingat baik-baik. Lain kali, masuk dengan kode kelas, nomor absen, dan PIN yang sama untuk melanjutkan pekerjaanmu. Lupa PIN? Minta guru mereset. Tidak perlu menulis nama lengkap: inisial sudah cukup.',
         ),
         pesan,
         tombol,

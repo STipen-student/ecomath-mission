@@ -23,10 +23,16 @@ export const CreateSessionSchema = z.object({
 });
 export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
 
-/** Login siswa: NIS + kode kelas + PIN 4-6 angka. Nama hanya wajib saat pertama masuk. */
+/** Login siswa: kode kelas + nomor absen + PIN 4-6 angka. Nama hanya wajib saat pertama masuk. */
 export const LoginSchema = z.object({
   studentName: z.string().trim().max(SHORT_TEXT).optional(),
-  studentId: z.string().trim().min(1, 'NIS wajib diisi').max(SHORT_TEXT),
+  /** Nomor absen (1-999); disimpan di kolom studentId tanpa nol di depan. */
+  studentId: z
+    .string()
+    .trim()
+    .regex(/^\d{1,3}$/, 'Nomor absen harus berupa angka, misalnya 7')
+    .transform((v) => String(Number(v)))
+    .refine((v) => Number(v) >= 1, 'Nomor absen dimulai dari 1'),
   classCode: z.string().trim().min(1, 'Kode kelas wajib diisi').max(SHORT_TEXT),
   pin: z.string().regex(/^\d{4,6}$/, 'PIN harus 4 sampai 6 angka'),
   instrumentVersion: z.string().trim().max(40).optional(),

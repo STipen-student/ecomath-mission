@@ -1,13 +1,14 @@
 # Login siswa dan penyimpanan pekerjaan
 
-Siswa masuk dengan **NIS + kode kelas + PIN 4–6 angka**.
+Siswa masuk dengan **kode kelas + nomor absen + PIN 4–6 angka**. NIS tidak dicatat;
+nomor absen (1–999, nol di depan diabaikan) disimpan di kolom `studentId`.
 
 ## Alurnya
 
-- **Login pertama:** siswa mengisi NIS, kode kelas, PIN baru, dan nama atau
-  inisial. Sesi baru dibuat dan PIN disimpan sebagai hash PBKDF2 bergaram
+- **Login pertama:** siswa mengisi kode kelas, nomor absen, PIN baru, dan inisial
+  atau nama panggilan. Sesi baru dibuat dan PIN disimpan sebagai hash PBKDF2 bergaram
   (`server/src/lib/pin.ts`), tidak pernah sebagai teks.
-- **Login berikutnya:** NIS, kode kelas, dan PIN yang sama. Siswa melanjutkan
+- **Login berikutnya:** kode kelas, nomor absen, dan PIN yang sama. Siswa melanjutkan
   sesi yang sama dari **level pertama yang belum dinilai**. Tutorial dan prolog
   dilewati, dan riwayat skor, saran target berikutnya, kota tiap level, serta
   koin, misi, dan bangunannya dipulihkan dari server.
@@ -24,8 +25,8 @@ Siswa masuk dengan **NIS + kode kelas + PIN 4–6 angka**.
   tidak terpecah menjadi beberapa sesi per siswa.
 - **Sesi lama tanpa PIN** (dibuat sebelum fitur ini) tidak bisa diklaim lewat
   login, agar tidak ada yang mengambil alih pekerjaan orang lain hanya dengan
-  mengetahui NIS-nya.
-- **Pembatas percobaan:** paling banyak 8 percobaan login per NIS + kelas tiap
+  mengetahui nomor absennya.
+- **Pembatas percobaan:** paling banyak 8 percobaan login per nomor absen + kelas tiap
   10 menit. Dihitung per siswa, bukan per IP, karena satu sekolah sering keluar
   lewat satu alamat IP.
 
