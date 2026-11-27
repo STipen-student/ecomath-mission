@@ -283,7 +283,7 @@ describe('POST /api/task/:attemptId/distractor', () => {
 
 describe('POST /api/submit - alur lengkap', () => {
   it('menghasilkan profil K1-K4 penuh untuk siswa yang mengerjakan dengan sempurna', async () => {
-    const sessionId = await buatSesi('UJI-LENGKAP');
+    const sessionId = await buatSesi('XI-LENGKAP');
     const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-A' });
     const attemptId = task.body.attemptId as string;
 
@@ -576,10 +576,10 @@ describe('GET /api/admin - proteksi API key', () => {
   it('dapat menyaring berdasarkan kode kelas', async () => {
     const res = await request(app)
       .get('/api/admin/results')
-      .query({ classCode: 'UJI-LENGKAP' })
+      .query({ classCode: 'XI-LENGKAP' })
       .set('x-admin-key', ADMIN_KEY);
 
-    expect(res.body.results.every((r: { class_code: string }) => r.class_code === 'UJI-LENGKAP')).toBe(true);
+    expect(res.body.results.every((r: { class_code: string }) => r.class_code === 'XI-LENGKAP')).toBe(true);
   });
 
   it('mengekspor CSV yang mengutip payload JSON dengan benar', async () => {
@@ -637,11 +637,11 @@ describe('GET /api/admin/summary - laporan kelas untuk guru', () => {
   it('menyaring berdasarkan kode kelas', async () => {
     const res = await request(app)
       .get('/api/admin/summary')
-      .query({ classCode: 'UJI-LENGKAP' })
+      .query({ classCode: 'XI-LENGKAP' })
       .set('x-admin-key', ADMIN_KEY);
 
-    expect(res.body.classCode).toBe('UJI-LENGKAP');
-    expect(res.body.siswa.every((s: { classCode: string }) => s.classCode === 'UJI-LENGKAP')).toBe(true);
+    expect(res.body.classCode).toBe('XI-LENGKAP');
+    expect(res.body.siswa.every((s: { classCode: string }) => s.classCode === 'XI-LENGKAP')).toBe(true);
   });
 
   it('tidak melempar error saat kelas belum punya data sama sekali', async () => {
@@ -751,7 +751,7 @@ describe('GET /api/admin/attempt/:id - rincian pekerjaan satu siswa', () => {
   it('mengangkat jawaban refleksi siswa ke permukaan', async () => {
     const daftar = await request(app)
       .get('/api/admin/summary')
-      .query({ classCode: 'UJI-LENGKAP' })
+      .query({ classCode: 'XI-LENGKAP' })
       .set('x-admin-key', ADMIN_KEY);
     const attemptId = daftar.body.siswa[0].perLevel[0].attemptId as string;
 

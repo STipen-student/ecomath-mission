@@ -3518,3 +3518,25 @@ button.gacha-kartu {
   max-width: 480px;
   width: 100%;
 }
+
+/* Layar persetujuan ikut penelitian */
+.persetujuan-layar {
+  overflow-y: auto;
+  align-items: flex-start;
+}
+
+.persetujuan-kartu {
+  max-width: 640px;
+  width: 100%;
+}
+
+.persetujuan-daftar {
+  margin: 8px 0 12px;
+  padding-left: 20px;
+  font-family: var(--font-read);
+  line-height: 1.5;
+}
+
+.persetujuan-daftar li {
+  margin-bottom: 6px;
+}

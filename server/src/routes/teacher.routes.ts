@@ -17,7 +17,7 @@
 
 import { Router } from 'express';
 import { prisma } from '../db.js';
-import { KECUALI_DRAF2 } from '../lib/kelasPenelitian.js';
+import { KECUALI_DRAF2, saringKelas } from '../lib/kelasPenelitian.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { AdminResultsQuerySchema } from '../schemas/api.js';
@@ -55,13 +55,13 @@ teacherRouter.get(
     const query = AdminResultsQuerySchema.parse(req.query);
 
     const scores = await prisma.score.findMany({
-      where: { attempt: { session: { ...KECUALI_DRAF2, ...(query.classCode ? { classCode: query.classCode } : {}) } } },
+      where: { attempt: { session: saringKelas(query.classCode) } },
       include: { attempt: { include: { session: true } } },
       orderBy: [{ sessionId: 'asc' }, { level: 'asc' }],
     });
 
     const sesi = await prisma.session.findMany({
-      where: { ...KECUALI_DRAF2, ...(query.classCode ? { classCode: query.classCode } : {}) },
+      where: saringKelas(query.classCode),
       orderBy: [{ classCode: 'asc' }, { startedAt: 'asc' }],
     });
 
@@ -150,6 +150,8 @@ teacherRouter.get(
         levelsCompleted: miliknya.length,
         totalRaw: miliknya.reduce((n, b) => n + b.eff.rawSum, 0),
         sessionComposite: x.sessionComposite,
+        persetujuan: x.persetujuanVersi !== null,
+        izinWali: x.izinWali === true,
         integritas: integritasSesi(x.id),
         perLevel: miliknya.map((b) => ({
           level: b.s.level,
@@ -210,6 +212,29 @@ teacherRouter.post(
     if (!session) throw new HttpError(404, 'Sesi siswa tidak ditemukan');
     if (session.pinHash === null) throw new HttpError(400, 'Sesi ini dibuat tanpa login PIN.');
     await prisma.session.update({ where: { id }, data: { pinHash: PIN_DIRESET } });
+    res.json({ ok: true });
+  }),
+);
+
+/**
+ * DELETE /api/admin/student/:sessionId - hapus PERMANEN seluruh data satu siswa
+ * (siswa/wali menarik persetujuan, atau data identitas dihapus setelah analisis).
+ * Wajib menyertakan { konfirmasi: "HAPUS" } agar tidak terhapus tanpa sengaja.
+ * D1 tidak mendukung transaksi, jadi data anak dihapus satu per satu dulu.
+ */
+teacherRouter.delete(
+  '/student/:sessionId',
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.sessionId);
+    const konfirmasi = (req.body as { konfirmasi?: unknown } | undefined)?.konfirmasi;
+    if (konfirmasi !== 'HAPUS') throw new HttpError(400, 'Ketik HAPUS untuk mengonfirmasi penghapusan permanen.');
+    const session = await prisma.session.findUnique({ where: { id }, select: { id: true } });
+    if (!session) throw new HttpError(404, 'Sesi siswa tidak ditemukan');
+    await prisma.eventLog.deleteMany({ where: { sessionId: id } });
+    await prisma.score.deleteMany({ where: { sessionId: id } });
+    await prisma.kotaHijau.deleteMany({ where: { sessionId: id } });
+    await prisma.taskAttempt.deleteMany({ where: { sessionId: id } });
+    await prisma.session.delete({ where: { id } });
     res.json({ ok: true });
   }),
 );
@@ -348,6 +373,9 @@ teacherRouter.get(
       kotaSiswa,
       kotaHijau,
       layarPenuh,
+      persetujuan: session.persetujuanVersi
+        ? { versi: session.persetujuanVersi, pada: session.persetujuanPada?.toISOString() ?? null, izinWali: session.izinWali === true }
+        : null,
       startedAt: session.startedAt.toISOString(),
       finishedAt: session.finishedAt ? session.finishedAt.toISOString() : null,
       sessionComposite: session.sessionComposite,

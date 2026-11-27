@@ -109,6 +109,8 @@ export interface LoginResponse extends SessionResponse {
     tutorialSelesai: boolean;
     refleksiSelesai: boolean;
     kotaHijauSelesai: boolean;
+    /** Versi teks persetujuan yang sudah disetujui; null bila belum. */
+    persetujuanVersi: string | null;
     sessionComposite: number | null;
     progres: string | null;
   };

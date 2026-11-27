@@ -85,3 +85,45 @@ describe('PUT /api/session/:id/progres', () => {
     expect(lagi.body.lanjutan.progres).toBe(progres);
   });
 });
+
+describe('data uji coba terpisah dari data penelitian', () => {
+  it('kelas berawalan UJI tidak ikut rekap tanpa saringan, tetapi bisa dilihat bila dipilih', async () => {
+    await login({ studentName: 'Uji Coba', studentId: '7001', classCode: 'UJI-PISAH', pin: '1234' });
+    const semua = await request(app).get('/api/admin/summary').set('x-admin-key', ADMIN_KEY);
+    expect(semua.body.siswa.some((s: { classCode: string }) => s.classCode === 'UJI-PISAH')).toBe(false);
+    const dipilih = await request(app).get('/api/admin/summary').query({ classCode: 'UJI-PISAH' }).set('x-admin-key', ADMIN_KEY);
+    expect(dipilih.body.siswa.some((s: { classCode: string }) => s.classCode === 'UJI-PISAH')).toBe(true);
+  });
+});
+
+describe('persetujuan dan penarikan data', () => {
+  it('mencatat persetujuan siswa beserta versinya, dan tampil di laporan guru', async () => {
+    const awal = await login({ studentName: 'Indah', studentId: '1101', classCode: 'XI-UJI-ETIK', pin: '1111' });
+    expect(awal.body.lanjutan.persetujuanVersi).toBeNull();
+    const ok = await request(app).post(`/api/session/${awal.body.sessionId}/persetujuan`).send({ versi: '1', setuju: true, izinWali: true });
+    expect(ok.status).toBe(200);
+    const lagi = await login({ studentId: '1101', classCode: 'XI-UJI-ETIK', pin: '1111' });
+    expect(lagi.body.lanjutan.persetujuanVersi).toBe('1');
+    const lap = await request(app).get(`/api/admin/student/${awal.body.sessionId}`).set('x-admin-key', ADMIN_KEY);
+    expect(lap.body.persetujuan.izinWali).toBe(true);
+  });
+
+  it('menolak persetujuan tanpa kata setuju', async () => {
+    const awal = await login({ studentName: 'Joko', studentId: '1102', classCode: 'XI-UJI-ETIK', pin: '2222' });
+    const res = await request(app).post(`/api/session/${awal.body.sessionId}/persetujuan`).send({ versi: '1', setuju: false, izinWali: true });
+    expect(res.status).toBe(400);
+  });
+
+  it('menghapus permanen seluruh data siswa hanya dengan konfirmasi HAPUS dan kunci admin', async () => {
+    const awal = await login({ studentName: 'Kiki', studentId: '1103', classCode: 'XI-UJI-ETIK', pin: '3333' });
+    const id = awal.body.sessionId as string;
+    await request(app).get('/api/task/1').query({ sessionId: id });
+    expect((await request(app).delete(`/api/admin/student/${id}`).send({ konfirmasi: 'HAPUS' })).status).toBe(401);
+    expect((await request(app).delete(`/api/admin/student/${id}`).set('x-admin-key', ADMIN_KEY).send({})).status).toBe(400);
+    const hapus = await request(app).delete(`/api/admin/student/${id}`).set('x-admin-key', ADMIN_KEY).send({ konfirmasi: 'HAPUS' });
+    expect(hapus.status).toBe(200);
+    expect(await prisma.session.findUnique({ where: { id } })).toBeNull();
+    expect(await prisma.taskAttempt.count({ where: { sessionId: id } })).toBe(0);
+    expect(await prisma.eventLog.count({ where: { sessionId: id } })).toBe(0);
+  });
+});

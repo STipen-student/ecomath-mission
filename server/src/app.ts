@@ -48,7 +48,7 @@ export function createApp() {
         return callback(new HttpError(403, `Origin ${origin} tidak diizinkan oleh kebijakan CORS`));
       },
       credentials: false,
-      methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'x-admin-key', 'Authorization'],
     }),
   );

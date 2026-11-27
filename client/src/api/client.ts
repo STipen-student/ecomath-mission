@@ -92,6 +92,11 @@ export const api = {
     return request('/api/kota-hijau/submit', { method: 'POST', body: JSON.stringify(body) });
   },
 
+  /** Catat persetujuan siswa ikut penelitian (versi teks dan izin wali). */
+  simpanPersetujuan(sessionId: string, body: { versi: string; setuju: true; izinWali: boolean }): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/api/session/${sessionId}/persetujuan`, { method: 'POST', body: JSON.stringify(body) });
+  },
+
   /** Simpan progres permainan (koin, misi, bangunan) agar ikut ke perangkat lain. */
   simpanProgres(sessionId: string, progres: string): Promise<{ ok: boolean }> {
     return request<{ ok: boolean }>(`/api/session/${sessionId}/progres`, {

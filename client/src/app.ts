@@ -7,6 +7,8 @@
  * ada bukti yang luput dicatat.
  */
 
+import { renderPersetujuan, renderTidakBersedia } from './ui/PersetujuanScreen.js';
+import { VERSI_PERSETUJUAN } from './penelitian.js';
 import { jagaLayarPenuh, layarPenuhDidukung, pastikanLayarPenuh } from './ui/layarPenuh.js';
 import { api, ApiError } from './api/client.js';
 import type { DistractorResponse, Klaim, LoginResponse, SkorKlaim, SubmitResponse, TargetBelajar, TaskDto } from './api/types.js';
@@ -154,7 +156,20 @@ export class App {
             if (this.play) logger.record('layar_penuh', { ...c }, true);
           },
         );
-        this.lanjutkanDari(sesi.baru, lanjut);
+        // Persetujuan ikut penelitian diminta sebelum pengerjaan apa pun dimulai,
+        // dan diminta ulang bila teks persetujuannya berubah versi.
+        if (lanjut.persetujuanVersi === VERSI_PERSETUJUAN) {
+          this.lanjutkanDari(sesi.baru, lanjut);
+        } else {
+          renderPersetujuan(
+            this.root,
+            async (izinWali) => {
+              await api.simpanPersetujuan(this.sessionId, { versi: VERSI_PERSETUJUAN, setuju: true, izinWali });
+              this.lanjutkanDari(sesi.baru, lanjut);
+            },
+            () => renderTidakBersedia(this.root, () => this.tampilkanHalamanDepan()),
+          );
+        }
       },
       () => this.tampilkanHalamanDepan(),
     );

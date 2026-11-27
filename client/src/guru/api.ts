@@ -155,6 +155,9 @@ export interface RingkasanSiswa {
   levelsCompleted: number;
   totalRaw: number;
   sessionComposite: number | null;
+  /** Siswa sudah menyetujui ikut penelitian, dan menyatakan wali sudah memberi izin. */
+  persetujuan?: boolean;
+  izinWali?: boolean;
   /** Berapa kali dan berapa lama siswa meninggalkan pengerjaan (pindah tab, keluar layar penuh, dll.). */
   integritas?: {
     jumlah: number;
@@ -288,6 +291,8 @@ export interface LaporanSiswa {
   /** Kota rancangan akhir tiap level, untuk Peta Wilayah (tampilan guru). */
   kota?: KotaLevel[];
   /** Bangunan koin dan perbaikan protes terakhir yang dikirim siswa. */
+  /** Persetujuan ikut penelitian; null bila belum disetujui (sesi lama). */
+  persetujuan?: { versi: string; pada: string | null; izinWali: boolean } | null;
   /** Berapa kali siswa keluar dari layar penuh per level (integritas pengerjaan). */
   layarPenuh?: Array<{
     level: number;
@@ -383,6 +388,19 @@ export const adminApi = {
       throw new AdminError(res.status, body.error ?? `Gagal menyimpan koreksi (${res.status})`);
     }
     return (await res.json()) as { k4: number; rawSum: number; weightedComposite: number; overridden: boolean };
+  },
+
+  /** Hapus PERMANEN seluruh data satu siswa (mis. persetujuan ditarik). */
+  async hapusSiswa(kunci: string, sessionId: string): Promise<void> {
+    const res = await fetch(`${API_URL}/api/admin/student/${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': kunci },
+      body: JSON.stringify({ konfirmasi: 'HAPUS' }),
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new AdminError(res.status, body.error ?? `Gagal menghapus data (${res.status})`);
+    }
   },
 
   /** Reset PIN siswa: PIN yang diketik pada login berikutnya menjadi PIN barunya. */

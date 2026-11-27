@@ -15,7 +15,7 @@
 
 import { Router } from 'express';
 import { prisma } from '../db.js';
-import { KECUALI_DRAF2 } from '../lib/kelasPenelitian.js';
+import { saringKelas } from '../lib/kelasPenelitian.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { AdaptiveToggleSchema, AdminResultsQuerySchema, K4OverrideSchema } from '../schemas/api.js';
@@ -37,7 +37,7 @@ adminRouter.get(
     const query = AdminResultsQuerySchema.parse(req.query);
 
     const scores = await prisma.score.findMany({
-      where: { attempt: { session: { ...KECUALI_DRAF2, ...(query.classCode ? { classCode: query.classCode } : {}) } } },
+      where: { attempt: { session: saringKelas(query.classCode) } },
       include: { attempt: { include: { session: true } } },
       orderBy: [{ sessionId: 'asc' }, { level: 'asc' }],
       take: query.limit,
@@ -86,7 +86,7 @@ adminRouter.get(
     const query = AdminResultsQuerySchema.parse(req.query);
 
     const events = await prisma.eventLog.findMany({
-      where: { attempt: { session: { ...KECUALI_DRAF2, ...(query.classCode ? { classCode: query.classCode } : {}) } } },
+      where: { attempt: { session: saringKelas(query.classCode) } },
       include: { attempt: { include: { session: true } } },
       orderBy: [{ sessionId: 'asc' }, { timestampMs: 'asc' }],
       take: query.limit,

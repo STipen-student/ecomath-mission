@@ -32,6 +32,13 @@ export const LoginSchema = z.object({
   instrumentVersion: z.string().trim().max(40).optional(),
 });
 
+/** Persetujuan partisipasi penelitian oleh siswa. */
+export const PersetujuanSchema = z.object({
+  versi: z.string().trim().min(1).max(20),
+  setuju: z.literal(true),
+  izinWali: z.boolean(),
+});
+
 /** Progres permainan (koin, misi, bangunan) sebagai JSON; dibatasi ukurannya. */
 export const ProgresSchema = z.object({
   progres: z.string().max(30000),

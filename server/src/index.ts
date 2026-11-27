@@ -31,7 +31,7 @@ function validateTaskBank(): void {
   if (problems.length > 0) {
     throw new Error(`Bank skenario tidak valid:\n${problems.map((p) => `  - ${p}`).join('\n')}`);
   }
-  console.log(`[bank] ${TASK_BANK.length} task tervalidasi (assembly rule + daerah penyelesaian).`);
+  console.log(`[bank] ${TASK_BANK.length} task lolos pemeriksaan otomatis (assembly rule + daerah penyelesaian); bukan validasi ahli.`);
 }
 
 async function main(): Promise<void> {

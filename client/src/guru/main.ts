@@ -503,6 +503,11 @@ function panelSiswa(d: Ringkasan): HTMLElement {
       { class: 'cell-wrap is-clickable', ariaLabel: `Buka laporan lengkap ${s.studentName}` },
       el('strong', {}, s.studentName),
       s.studentId ? el('span', { class: 'sub' }, ` ${s.studentId}`) : null,
+      el(
+        'span',
+        { class: s.persetujuan ? 'persetujuan-ok' : 'persetujuan-belum', ariaLabel: s.persetujuan ? 'Sudah menyetujui ikut penelitian' : 'Belum ada persetujuan' },
+        s.persetujuan ? (s.izinWali ? ' ✓ setuju' : ' ✓ setuju · izin wali?') : ' ⚠ belum setuju',
+      ),
     );
     namaSel.title = 'Klik untuk membuka laporan lengkap siswa ini';
     namaSel.addEventListener('click', () => void bukaLaporanSiswa(s.sessionId));
@@ -584,6 +589,23 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
 
   // Kota yang dibangun siswa: Peta Wilayah yang sama dengan milik siswa,
   // dimuat saat diminta karena memuat mesin peta (Phaser).
+  // Hapus data siswa yang menarik persetujuan: permanen, dengan konfirmasi ketik.
+  const tombolHapus = el('button', { class: 'btn btn-small btn-ghost' }, '🗑 Hapus data siswa');
+  tombolHapus.addEventListener('click', async () => {
+    const ketik = window.prompt(
+      `Hapus PERMANEN seluruh data ${lap.studentName} (jawaban, skor, log, kota, misi)? Tindakan ini tidak bisa dibatalkan. Gunakan bila siswa/wali menarik persetujuan. Ketik HAPUS untuk melanjutkan.`,
+    );
+    if (ketik !== 'HAPUS') return;
+    tombolHapus.disabled = true;
+    try {
+      await adminApi.hapusSiswa(kunci, lap.sessionId);
+      pesanPin.textContent = '✓ Data siswa sudah dihapus. Muat ulang halaman untuk memperbarui daftar.';
+    } catch (err) {
+      pesanPin.textContent = err instanceof Error ? err.message : 'Gagal menghapus data.';
+      tombolHapus.disabled = false;
+    }
+  });
+
   // Reset PIN untuk siswa yang lupa; pekerjaannya tetap tersimpan.
   const pesanPin = el('p', { class: 'hint' });
   const tombolResetPin = el('button', { class: 'btn btn-small btn-ghost' }, '🔑 Reset PIN');
@@ -629,7 +651,14 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
           { class: 'sub' },
           `${lap.classCode}${lap.studentId ? ` · NIS ${lap.studentId}` : ''} · ${rentangWaktu}`,
         ),
-        el('div', { class: 'guru-aksi-siswa' }, tombolKota, tombolResetPin),
+        el(
+          'p',
+          { class: lap.persetujuan ? 'persetujuan-ok' : 'persetujuan-belum' },
+          lap.persetujuan
+            ? `✓ Menyetujui ikut penelitian (teks versi ${lap.persetujuan.versi}${lap.persetujuan.pada ? `, ${new Date(lap.persetujuan.pada).toLocaleString('id-ID')}` : ''})${lap.persetujuan.izinWali ? '; menyatakan wali sudah memberi izin tertulis' : '; BELUM menyatakan izin wali'}.`
+            : '⚠ Belum ada persetujuan ikut penelitian (sesi lama atau belum disetujui). Jangan gunakan data ini untuk analisis sebelum persetujuan dan izin wali dipastikan.',
+        ),
+        el('div', { class: 'guru-aksi-siswa' }, tombolKota, tombolResetPin, tombolHapus),
         pesanPin,
       ),
       tombolTutup,

@@ -25,7 +25,7 @@ import { toCsv, type CsvRow } from '../lib/csv.js';
 import { effectiveScore } from '../lib/scoreView.js';
 import { narrateEvent } from '../lib/eventNarrator.js';
 import { SCORING_VERSION } from '../scoring/thresholds.js';
-import { KECUALI_DRAF2 } from '../lib/kelasPenelitian.js';
+import { saringKelas } from '../lib/kelasPenelitian.js';
 import type { Kalibrasi, TinjauanTarget } from '../scoring/assessmentAsLearning.js';
 
 const prisma = new PrismaClient();
@@ -70,7 +70,6 @@ export async function runExport(opts: ExportOptions): Promise<void> {
   const outDir = resolve(opts.outDir);
   mkdirSync(outDir, { recursive: true });
 
-  const filterKelas = opts.classCode ? { classCode: opts.classCode } : {};
 
   console.log(`Mengekspor data penelitian (versi rubrik ${SCORING_VERSION})`);
   if (opts.classCode) console.log(`Disaring pada kode kelas: ${opts.classCode}`);
@@ -78,7 +77,7 @@ export async function runExport(opts: ExportOptions): Promise<void> {
 
   /* ---------------- sessions.csv ---------------- */
   const sessions = await prisma.session.findMany({
-    where: { ...KECUALI_DRAF2, ...filterKelas },
+    where: saringKelas(opts.classCode),
     orderBy: [{ classCode: 'asc' }, { startedAt: 'asc' }],
     include: { attempts: { include: { score: true } } },
   });
@@ -107,7 +106,7 @@ export async function runExport(opts: ExportOptions): Promise<void> {
 
   /* ---------------- scores_long.csv ---------------- */
   const scores = await prisma.score.findMany({
-    where: { attempt: { session: { ...KECUALI_DRAF2, ...(opts.classCode ? { classCode: opts.classCode } : {}) } } },
+    where: { attempt: { session: saringKelas(opts.classCode) } },
     include: { attempt: { include: { session: true } } },
     orderBy: [{ sessionId: 'asc' }, { level: 'asc' }],
   });
@@ -219,7 +218,7 @@ export async function runExport(opts: ExportOptions): Promise<void> {
 
   /* ---------------- events.csv ---------------- */
   const events = await prisma.eventLog.findMany({
-    where: opts.classCode ? { attempt: { session: { classCode: opts.classCode } } } : {},
+    where: { attempt: { session: saringKelas(opts.classCode) } },
     include: { attempt: { include: { session: true } } },
     orderBy: [{ sessionId: 'asc' }, { taskId: 'asc' }, { timestampMs: 'asc' }],
   });

@@ -536,3 +536,15 @@ body {
   color: #2e7d32;
   white-space: nowrap;
 }
+
+/* Status persetujuan ikut penelitian */
+.persetujuan-ok {
+  color: #2e7d32;
+  font-size: 0.85em;
+}
+
+.persetujuan-belum {
+  color: #b3261e;
+  font-size: 0.85em;
+  font-weight: 700;
+}

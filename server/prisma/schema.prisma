@@ -65,6 +65,12 @@ model Session {
   /// Hanya ekonomi permainan; tidak dibaca mesin skoring.
   progres String?
 
+  /// Persetujuan partisipasi penelitian: versi teks yang disetujui siswa,
+  /// waktunya, dan pernyataan bahwa orang tua/wali sudah memberi izin tertulis.
+  persetujuanVersi String?
+  persetujuanPada  DateTime?
+  izinWali         Boolean?
+
   attempts TaskAttempt[]
   kotaHijau KotaHijau?
 

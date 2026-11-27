@@ -6,7 +6,7 @@
 
 import { Router } from 'express';
 import { prisma } from '../db.js';
-import { CreateSessionSchema, LoginSchema, ProgresSchema, TutorialResultSchema } from '../schemas/api.js';
+import { CreateSessionSchema, LoginSchema, PersetujuanSchema, ProgresSchema, TutorialResultSchema } from '../schemas/api.js';
 import { cocokPin, hashPin, PIN_DIRESET } from '../lib/pin.js';
 import { kotaPerLevel, levelSelesai } from '../lib/riwayatSiswa.js';
 import { logLimiter, loginLimiter } from '../middleware/rateLimit.js';
@@ -108,11 +108,32 @@ sessionRouter.post(
         kota: baru ? [] : await kotaPerLevel(s.id),
         tutorialSelesai: s.tutorialStatus !== null,
         refleksiSelesai: refleksi !== null,
+        persetujuanVersi: s.persetujuanVersi,
         kotaHijauSelesai: (await prisma.kotaHijau.findUnique({ where: { sessionId: s.id }, select: { id: true } })) !== null,
         sessionComposite: s.sessionComposite,
         progres: s.progres,
       },
     });
+  }),
+);
+
+/**
+ * POST /api/session/:id/persetujuan - siswa menyetujui ikut penelitian.
+ * Dicatat versi teks persetujuan dan waktunya, serta pernyataan bahwa orang
+ * tua/wali sudah memberi izin tertulis (lembar izin disimpan peneliti/sekolah).
+ */
+sessionRouter.post(
+  '/:id/persetujuan',
+  asyncHandler(async (req, res) => {
+    const input = PersetujuanSchema.parse(req.body);
+    const id = String(req.params.id);
+    const session = await prisma.session.findUnique({ where: { id }, select: { id: true } });
+    if (!session) throw new HttpError(404, 'Sesi tidak ditemukan');
+    await prisma.session.update({
+      where: { id },
+      data: { persetujuanVersi: input.versi, persetujuanPada: new Date(), izinWali: input.izinWali },
+    });
+    res.json({ ok: true });
   }),
 );
 
