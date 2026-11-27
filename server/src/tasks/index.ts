@@ -12,6 +12,8 @@ import { LEVEL_1_TASKS } from './level1.js';
 import { LEVEL_2_TASKS } from './level2.js';
 import { LEVEL_3_TASKS } from './level3.js';
 import { LEVEL_4_TASKS } from './level4.js';
+import { ARSIP_LEVEL_3_PROGRAM_LINEAR } from './level3ProgramLinear.js';
+import { ARSIP_LEVEL_4_PROGRAM_LINEAR } from './level4ProgramLinear.js';
 
 export const TASK_BANK: TaskDefinition[] = [
   ...LEVEL_1_TASKS,
@@ -20,10 +22,23 @@ export const TASK_BANK: TaskDefinition[] = [
   ...LEVEL_4_TASKS,
 ];
 
-const BY_ID = new Map(TASK_BANK.map((t) => [t.id, t]));
+/**
+ * Soal program linear Level 3-4 instrumen 1.x. TIDAK diberikan lagi kepada
+ * siswa (bukan materi kelas X), tetapi tetap dapat dicari dengan id agar sesi
+ * lama, laporan guru, dan penskoran ulang tetap berjalan.
+ */
+export const ARSIP_TASKS: TaskDefinition[] = [...ARSIP_LEVEL_3_PROGRAM_LINEAR, ...ARSIP_LEVEL_4_PROGRAM_LINEAR];
+
+const BY_ID = new Map([...ARSIP_TASKS, ...TASK_BANK].map((t) => [t.id, t]));
 
 export function getTaskById(id: string): TaskDefinition | undefined {
   return BY_ID.get(id);
+}
+
+/** Seperti getTaskById, tetapi hanya soal yang masih DIBERIKAN (bukan arsip). */
+export function getActiveTaskById(id: string): TaskDefinition | undefined {
+  const t = BY_ID.get(id);
+  return t && TASK_BANK.includes(t) ? t : undefined;
 }
 
 /**

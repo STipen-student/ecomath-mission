@@ -15,7 +15,7 @@ import { Router } from 'express';
 import { prisma } from '../db.js';
 import { TaskQuerySchema } from '../schemas/api.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
-import { ASSEMBLY_RULES, feedbackFeaturesFor, getTaskById, pickTaskForLevel } from '../tasks/index.js';
+import { ASSEMBLY_RULES, feedbackFeaturesFor, getActiveTaskById, getTaskById, pickTaskForLevel } from '../tasks/index.js';
 import { getTaskInstance } from '../tasks/index.js';
 import { daftarBentuk, instansiasi } from '../tasks/bentukParalel.js';
 import { selectAdaptiveTask, surfaceLoad, type PriorClaimScores } from '../tasks/adaptive.js';
@@ -116,7 +116,7 @@ taskRouter.get(
 
       if (query.taskId) {
         // Permintaan task eksplisit (pratinjau guru / uji) melewati kedua jalur.
-        picked = getTaskById(query.taskId);
+        picked = getActiveTaskById(query.taskId);
       } else if (adaptif) {
         /**
          * Sinyal kemampuan: skor klaim level-level yang SUDAH selesai dinilai.
@@ -201,7 +201,7 @@ taskRouter.get(
     }
 
     // Tanpa sesi: pratinjau task saja (dipakai guru untuk melihat bank soal).
-    const picked = query.taskId ? getTaskById(query.taskId) : pickTaskForLevel(level, { preferContext: query.preferContext });
+    const picked = query.taskId ? getActiveTaskById(query.taskId) : pickTaskForLevel(level, { preferContext: query.preferContext });
     if (!picked) throw new HttpError(404, `Tidak ada task tersedia untuk level ${level}`);
     // Pratinjau bentuk paralel untuk validator: ?taskId=...&bentuk=B
     res.json({ attemptId: null, task: toClientTask(instansiasi(picked, query.bentuk)), resumed: false });

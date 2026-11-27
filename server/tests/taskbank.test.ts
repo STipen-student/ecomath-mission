@@ -61,8 +61,8 @@ describe('kelengkapan bank skenario', () => {
       [
         'L1-SDG11&13-A', 'L1-SDG11-A', 'L1-SDG13-A',
         'L2-SDG11&13-A', 'L2-SDG11-A', 'L2-SDG13-A',
-        'L3-SDG11&13-A', 'L3-SDG11-A', 'L3-SDG13-A',
-        'L4-SDG11&13-A', 'L4-SDG11-A', 'L4-SDG13-A',
+        'L3-SDG11&13-B', 'L3-SDG11-B', 'L3-SDG13-B',
+        'L4-SDG11&13-B', 'L4-SDG11-B', 'L4-SDG13-B',
       ].sort(),
     );
   });

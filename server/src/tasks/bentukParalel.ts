@@ -142,6 +142,87 @@ export const BENTUK_PARALEL: Record<string, BentukParalel[]> = {
       ],
     },
   ],
+  // Instrumen 2.0.0: soal SPtLDV Level 3-4 (tanpa fungsi tujuan). Frasa panjang
+  // ditulis lebih dulu agar tidak terpotong oleh frasa pendek di dalamnya.
+  'L3-SDG11-B': [
+    {
+      id: 'B',
+      skala: 2,
+      teks: [
+        ['pasar 40 hektar dan ruang hijau 20 hektar', 'pasar 80 hektar dan ruang hijau 40 hektar'],
+        ['60 hektar', '120 hektar'],
+        ['10 hektar', '20 hektar'],
+      ],
+    },
+  ],
+  'L3-SDG13-B': [
+    {
+      id: 'B',
+      skala: 2,
+      teks: [
+        ['30 motor gerobak hanya mengangkut 60 ton', '60 motor gerobak hanya mengangkut 120 ton'],
+        ['Rp 6 miliar', 'Rp 12 miliar'],
+        ['60 ton', '120 ton'],
+        ['30 kendaraan', '60 kendaraan'],
+      ],
+    },
+  ],
+  'L3-SDG11&13-B': [
+    {
+      id: 'B',
+      skala: 2,
+      teks: [
+        ['10 panel dan 20 lampu jalan', '20 panel dan 40 lampu jalan'],
+        ['0,4 x 10 + 0,1 x 20 = 6 kW, kurang dari 8 kW', '0,4 x 20 + 0,1 x 40 = 12 kW, kurang dari 16 kW'],
+        ['Rp 60 juta', 'Rp 120 juta'],
+        ['8 kW', '16 kW'],
+        ['20 buah', '40 buah'],
+      ],
+    },
+  ],
+  'L4-SDG11-B': [
+    {
+      id: 'B',
+      skala: 2,
+      teks: [
+        ['25% x 100 = 25 hektar', '25% x 200 = 50 hektar'],
+        ['angka 25 hektar', 'angka 50 hektar'],
+        ['y = 25 ke y = 35', 'y = 50 ke y = 70'],
+        ['kurang dari 35 hektar', 'kurang dari 70 hektar'],
+        ['y ≥ 35 hektar', 'y ≥ 70 hektar'],
+        ['100 hektar', '200 hektar'],
+        ['Rp 2.400 miliar', 'Rp 4.800 miliar'],
+      ],
+    },
+  ],
+  'L4-SDG13-B': [
+    {
+      id: 'B',
+      skala: 2,
+      teks: [
+        ['separuh dari 120 ton CO2 - siswa harus menyimpulkan angka 60', 'separuh dari 240 ton CO2 - siswa harus menyimpulkan angka 120'],
+        ['separuh dari 120 ton, yaitu 60 ton', 'separuh dari 240 ton, yaitu 120 ton'],
+        ['4y ≤ 60 atau y ≤ 15', '4y ≤ 120 atau y ≤ 30'],
+        ['4y ≤ 60, bukan 4y ≤ 120', '4y ≤ 120, bukan 4y ≤ 240'],
+        ['kuota kota sebesar 120 ton', 'kuota kota sebesar 240 ton'],
+        ['dari 120 menjadi 80 ton', 'dari 240 menjadi 160 ton'],
+        ['menjadi 80 ton', 'menjadi 160 ton'],
+        ['4y ≤ 40 ton CO2', '4y ≤ 80 ton CO2'],
+        ['50 angkot', '100 angkot'],
+        ['Rp 300 juta', 'Rp 600 juta'],
+      ],
+    },
+  ],
+  'L4-SDG11&13-B': [
+    {
+      id: 'B',
+      skala: 2,
+      teks: [
+        ['150 hektar', '300 hektar'],
+        ['Rp 4.800 miliar', 'Rp 9.600 miliar'],
+      ],
+    },
+  ],
 };
 
 /** Daftar id bentuk yang tersedia untuk sebuah soal, selalu diawali 'A'. */

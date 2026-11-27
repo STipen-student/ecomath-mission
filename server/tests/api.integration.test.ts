@@ -12,7 +12,6 @@ import request from 'supertest';
 import type { Express } from 'express';
 import { createApp } from '../src/app.js';
 import { prisma } from '../src/db.js';
-import { L4_KEY } from './fixtures/logBuilder.js';
 
 const ADMIN_KEY = 'kunci-admin-untuk-pengujian-1234';
 
@@ -142,8 +141,8 @@ describe('GET /api/task/:level', () => {
 
   it('dapat memaksa task tertentu untuk desain penelitian terkontrol', async () => {
     const sessionId = await buatSesi();
-    const res = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-A' });
-    expect(res.body.task.id).toBe('L4-SDG11-A');
+    const res = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-B' });
+    expect(res.body.task.id).toBe('L4-SDG11-B');
   });
 });
 
@@ -240,35 +239,35 @@ describe('POST /api/log', () => {
 describe('POST /api/task/:attemptId/distractor', () => {
   it('menolak memunculkan event bila solusi awal belum valid', async () => {
     const sessionId = await buatSesi();
-    const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-A' });
+    const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-B' });
 
     const res = await request(app)
       .post(`/api/task/${task.body.attemptId}/distractor`)
-      .send({ x: 120, y: 10, elapsedMs: 60_000 }); // melanggar kendala RTH
+      .send({ x: 80, y: 10, elapsedMs: 60_000 }); // melanggar kendala RTH
 
     expect(res.status).toBe(409);
   });
 
   it('memunculkan event dan mengirim kendala yang sudah direvisi', async () => {
     const sessionId = await buatSesi();
-    const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-A' });
+    const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-B' });
 
     const res = await request(app)
       .post(`/api/task/${task.body.attemptId}/distractor`)
-      .send({ x: L4_KEY.optimum.x, y: L4_KEY.optimum.y, elapsedMs: 60_000 });
+      .send({ x: 60, y: 30, elapsedMs: 60_000 });
 
     expect(res.status).toBe(200);
-    expect(res.body.narrative).toContain('40%');
-    expect(res.body.changedConstraintIds).toContain('k_rth_who');
+    expect(res.body.narrative).toContain('35%');
+    expect(res.body.changedConstraintIds).toContain('k_rth');
 
-    const rth = res.body.constraints.find((k: { id: string }) => k.id === 'k_rth_who');
-    expect(rth.c).toBe(48); // 30% dari 120 menjadi 40% dari 120
+    const rth = res.body.constraints.find((k: { id: string }) => k.id === 'k_rth');
+    expect(rth.c).toBe(35); // 25% dari 100 menjadi 35% dari 100
   });
 
   it('bersifat idempoten: pemanggilan kedua tidak menggandakan event', async () => {
     const sessionId = await buatSesi();
-    const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-A' });
-    const titik = { x: L4_KEY.optimum.x, y: L4_KEY.optimum.y, elapsedMs: 60_000 };
+    const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-B' });
+    const titik = { x: 60, y: 30, elapsedMs: 60_000 };
 
     await request(app).post(`/api/task/${task.body.attemptId}/distractor`).send(titik);
     const kedua = await request(app).post(`/api/task/${task.body.attemptId}/distractor`).send(titik);
@@ -284,12 +283,12 @@ describe('POST /api/task/:attemptId/distractor', () => {
 describe('POST /api/submit - alur lengkap', () => {
   it('menghasilkan profil K1-K4 penuh untuk siswa yang mengerjakan dengan sempurna', async () => {
     const sessionId = await buatSesi('XI-LENGKAP');
-    const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-A' });
+    const task = await request(app).get('/api/task/4').query({ sessionId, taskId: 'L4-SDG11-B' });
     const attemptId = task.body.attemptId as string;
 
     const dasar = {
       session_id: sessionId,
-      task_id: 'L4-SDG11-A',
+      task_id: 'L4-SDG11-B',
       is_valid_at_time: true,
       duration_since_last_event_ms: 500,
     };
@@ -300,36 +299,36 @@ describe('POST /api/submit - alur lengkap', () => {
         { ...dasar, timestamp_ms: 1000, event_type: 'identify_variable', payload: { variable: 'x', optionId: 'vx1' } },
         { ...dasar, timestamp_ms: 1500, event_type: 'identify_variable', payload: { variable: 'y', optionId: 'vy1' } },
         { ...dasar, timestamp_ms: 2000, event_type: 'select_objective', payload: { optionId: 'g1' } },
-        { ...dasar, timestamp_ms: 2500, event_type: 'write_constraint', payload: { slot: 0, a: 1, b: 1, op: '<=', c: 120, constraint_text: 'x + y <= 120' } },
-        { ...dasar, timestamp_ms: 3000, event_type: 'write_constraint', payload: { slot: 1, a: 25, b: 18, op: '<=', c: 3600, constraint_text: '25x + 18y <= 3600' } },
-        { ...dasar, timestamp_ms: 3500, event_type: 'write_constraint', payload: { slot: 2, a: 0, b: 1, op: '>=', c: 36, constraint_text: 'y >= 36' } },
-        { ...dasar, timestamp_ms: 4000, event_type: 'check_corner_point', payload: { x: 84, y: 36, z: 3360 } },
-        { ...dasar, timestamp_ms: 4500, event_type: 'check_corner_point', payload: { x: 0, y: 120, z: 0 } },
-        { ...dasar, timestamp_ms: 5000, event_type: 'move_slider', payload: { x: 84, y: 36 } },
-        { ...dasar, timestamp_ms: 5500, event_type: 'attempt_submit', payload: { x: 84, y: 36, phase: 'initial' } },
+        { ...dasar, timestamp_ms: 2500, event_type: 'write_constraint', payload: { slot: 0, a: 1, b: 1, op: '<=', c: 100, constraint_text: 'x + y <= 100' } },
+        { ...dasar, timestamp_ms: 3000, event_type: 'write_constraint', payload: { slot: 1, a: 30, b: 10, op: '<=', c: 2400, constraint_text: '30x + 10y <= 2400' } },
+        { ...dasar, timestamp_ms: 3500, event_type: 'write_constraint', payload: { slot: 2, a: 0, b: 1, op: '>=', c: 25, constraint_text: 'y >= 25' } },
+        { ...dasar, timestamp_ms: 4000, event_type: 'check_corner_point', payload: { x: 60, y: 30 } },
+        { ...dasar, timestamp_ms: 4500, event_type: 'check_corner_point', payload: { x: 70, y: 30 } },
+        { ...dasar, timestamp_ms: 5000, event_type: 'move_slider', payload: { x: 60, y: 30 } },
+        { ...dasar, timestamp_ms: 5500, event_type: 'attempt_submit', payload: { x: 60, y: 30, phase: 'initial' } },
       ]);
 
     // Event distraktor dipicu setelah submit awal yang valid.
     const ev = await request(app)
       .post(`/api/task/${attemptId}/distractor`)
-      .send({ x: 84, y: 36, elapsedMs: 6000 });
+      .send({ x: 60, y: 30, elapsedMs: 6000 });
     expect(ev.status).toBe(200);
 
     await request(app)
       .post('/api/log')
       .send([
-        { ...dasar, timestamp_ms: 7000, event_type: 'check_corner_point', payload: { x: 72, y: 48, z: 2880 } },
-        { ...dasar, timestamp_ms: 7500, event_type: 'revise_after_event', payload: { x: 72, y: 48 } },
+        { ...dasar, timestamp_ms: 7000, event_type: 'check_corner_point', payload: { x: 55, y: 40 } },
+        { ...dasar, timestamp_ms: 7500, event_type: 'revise_after_event', payload: { x: 55, y: 40 } },
       ]);
 
     const submit = await request(app).post('/api/submit').send({
       sessionId,
-      taskId: 'L4-SDG11-A',
-      finalX: 72,
-      finalY: 48,
+      taskId: 'L4-SDG11-B',
+      finalX: 55,
+      finalY: 40,
       reflectionClosedOptionId: 'r3',
       reflectionOpenText:
-        'RTH minimal naik dari 36 ke 48 hektar sehingga perumahan turun ke 72 hektar, akibatnya daya tampung berkurang 480 kepala keluarga karena kota mengorbankan hunian demi target lingkungan.',
+        'Angka 25 hektar berasal dari 25% x 100 hektar. Karena standar RTH naik menjadi 35%, garis y = 25 bergeser ke y = 35 sehingga himpunan penyelesaian menyempit; akibatnya rencana dengan RTH 30 hektar keluar, jadi saya mengorbankan 5 hektar hunian dan merevisi rencana menjadi hunian 55 hektar dan RTH 40 hektar.',
       finishSession: true,
     });
 
@@ -338,8 +337,6 @@ describe('POST /api/submit - alur lengkap', () => {
     expect(submit.body.rawSum).toBe(12);
     expect(submit.body.weightedComposite).toBe(3);
     expect(submit.body.finalPositionValid).toBe(true);
-    // Kunci jawaban baru dibuka SETELAH submit.
-    expect(submit.body.optimum.point).toEqual({ x: 72, y: 48 });
     expect(submit.body.feedback).toHaveLength(4);
     expect(submit.body.rubric).toHaveLength(4);
     expect(submit.body.overallMessage.length).toBeGreaterThan(10);
@@ -758,7 +755,7 @@ describe('GET /api/admin/attempt/:id - rincian pekerjaan satu siswa', () => {
     const res = await request(app).get(`/api/admin/attempt/${attemptId}`).set('x-admin-key', ADMIN_KEY);
 
     // Guru harus dapat membaca tulisan siswa tanpa menelusuri log satu per satu.
-    expect(res.body.refleksi.openText).toContain('kepala keluarga');
+    expect(res.body.refleksi.openText).toContain('mengorbankan 5 hektar hunian');
     expect(res.body.refleksi.closedOptionText).toBeTruthy();
     expect(res.body.refleksi.closedOptionQuality).toBe(3);
   });

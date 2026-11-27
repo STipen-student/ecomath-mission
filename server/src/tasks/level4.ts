@@ -1,109 +1,88 @@
 /**
- * Bank Skenario Level 4 (docs/ECD_Framework.md Bagian 9).
+ * Bank Skenario Level 4 (instrumen 2.0.0): SISTEM PERTIDAKSAMAAN LINEAR DUA
+ * VARIABEL tanpa fungsi tujuan, sesuai materi kelas X.
  *
- * Karakteristik: 3-4 kendala termasuk 1 kendala IMPLISIT (harus disimpulkan
- * siswa dari narasi), WAJIB ada event distraktor/perubahan kebijakan di tengah
- * pengerjaan, representasi naratif + grafik parsial. Fokus bukti dominan:
- * K3-K4 dengan bobot K4 diperbesar (lihat scoring/composite.ts).
- *
- * REVISI INSTRUMEN pada L4-SDG13-A - disetujui peneliti sebelum implementasi:
- *   Angka asli dokumen (anggaran Rp 900 juta) menghasilkan daerah penyelesaian
- *   KOSONG, karena x + y >= 60 bersama 12x + 18y <= 900 memaksa x >= 30,
- *   sedangkan 15x + 2y <= 400 memaksa x <= 21,5. Anggaran dinaikkan menjadi
- *   Rp 1.080 juta agar daerah penyelesaian tidak kosong sekaligus tetap
- *   mempertahankan kendala emisi 400 kg sebagai kendala pengikat.
- *   Tarif karbon pada event distraktor dinaikkan dari Rp 4 juta menjadi
- *   Rp 8 juta/unit, karena pada Rp 4 juta mesin fosil (12+4=16) masih lebih
- *   murah daripada mesin listrik (18) sehingga titik optimum TIDAK bergeser -
- *   bertentangan dengan bukti K4 yang diharapkan dokumen. Pada Rp 8 juta,
- *   optimum bergeser dari (21 fosil, 39 listrik) ke (0 fosil, 60 listrik).
+ * Karakteristik: dua kendala eksplisit + satu kendala IMPLISIT yang harus
+ * disimpulkan siswa dari narasi (persentase, separuh batas, perbandingan),
+ * lalu muncul EVENT DISTRAKTOR yang mengubah salah satu kendala. Siswa harus
+ * memeriksa ulang apakah rencananya masih di dalam himpunan penyelesaian dan
+ * merevisinya. Fokus bukti dominan: K3-K4. Soal program linear Level 4
+ * instrumen 1.x diarsipkan di level4ProgramLinear.ts.
  */
 
 import type { TaskDefinition } from '../domain/types.js';
 import { c, nonNegativity } from './helpers.js';
 
+const TANPA_TUJUAN = { type: 'none', cx: 0, cy: 0, label: 'Tidak ada fungsi tujuan', unit: '', display: '-' } as const;
+
 export const LEVEL_4_TASKS: TaskDefinition[] = [
   {
-    id: 'L4-SDG11-A',
+    id: 'L4-SDG11-B',
     level: 4,
     sdgContext: 'SDG11',
-    title: 'Krisis Lahan Meridian Utara',
+    title: 'Kampung Susun Tepi Sungai',
     narrative:
-      'Distrik Meridian Utara memiliki lahan pengembangan 120 hektar untuk Perumahan Padat Terjangkau seluas x hektar dan Ruang Terbuka Hijau seluas y hektar. Anggaran tersedia Rp 3,6 miliar dengan biaya perumahan Rp 25 juta/hektar dan RTH Rp 18 juta/hektar. Standar kota sehat versi WHO yang diadopsi kota ini mensyaratkan RTH minimal 30% dari luas total kawasan. Tiap hektar perumahan menampung 40 kepala keluarga. Tentukan kombinasi yang memaksimumkan jumlah kepala keluarga tertampung.',
+      'Kampung di tepi sungai Meridian akan ditata menjadi kampung susun di atas lahan 100 hektar: x hektar untuk blok hunian susun dan y hektar untuk ruang terbuka hijau (RTH). Biaya pembangunan blok hunian Rp 30 miliar per hektar dan RTH Rp 10 miliar per hektar, dengan dana paling banyak Rp 2.400 miliar. Peraturan daerah mensyaratkan RTH paling sedikit 25% dari luas lahan kampung. Susun sistem pertidaksamaannya, gambar himpunan penyelesaiannya, lalu tentukan satu rencana penataan yang memenuhi semua ketentuan.',
     dataTable: {
-      headers: ['Zona', 'Biaya per hektar', 'Daya tampung per hektar'],
+      headers: ['Peruntukan', 'Biaya per hektar'],
       rows: [
-        ['Perumahan Padat Terjangkau (x)', 'Rp 25 juta', '40 kepala keluarga'],
-        ['Ruang Terbuka Hijau (y)', 'Rp 18 juta', '-'],
+        ['Blok hunian susun (x)', 'Rp 30 miliar'],
+        ['Ruang terbuka hijau (y)', 'Rp 10 miliar'],
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Perumahan Padat Terjangkau', unit: 'hektar', max: 130, step: 1, visual: 'housing', sprite: 'perumahan-padat' },
-      y: { key: 'y', label: 'Ruang Terbuka Hijau', unit: 'hektar', max: 130, step: 1, visual: 'nature', sprite: 'pohon' },
+      x: { key: 'x', label: 'Blok hunian susun', unit: 'hektar', max: 110, step: 1, visual: 'neutral', sprite: 'perumahan-padat' },
+      y: { key: 'y', label: 'Ruang terbuka hijau', unit: 'hektar', max: 110, step: 1, visual: 'nature', sprite: 'pohon' },
     },
     constraints: [
-      c('k_lahan', 'Lahan pengembangan', 1, 1, '<=', 120, 'explicit', 'lahan pengembangan 120 hektar', 'hektar'),
-      c('k_anggaran', 'Anggaran pembangunan', 25, 18, '<=', 3600, 'explicit', 'anggaran tersedia Rp 3,6 miliar', 'juta rupiah'),
-      c('k_rth_who', 'Standar RTH kota sehat (implisit)', 0, 1, '>=', 36, 'implicit', 'RTH minimal 30% dari luas total kawasan - siswa harus menghitung sendiri 30% x 120 = 36 hektar', 'hektar'),
+      c('k_lahan', 'Luas lahan kampung', 1, 1, '<=', 100, 'explicit', 'luas hunian dan RTH tidak boleh melebihi 100 hektar', 'hektar'),
+      c('k_dana', 'Dana pembangunan', 30, 10, '<=', 2400, 'explicit', 'dana paling banyak Rp 2.400 miliar', 'miliar rupiah'),
+      c('k_rth', 'RTH minimal (implisit)', 0, 1, '>=', 25, 'implicit', 'RTH paling sedikit 25% dari lahan - siswa harus menghitung sendiri 25% x 100 = 25 hektar', 'hektar'),
       ...nonNegativity(),
     ],
-    objective: {
-      type: 'max',
-      cx: 40,
-      cy: 0,
-      label: 'Jumlah kepala keluarga tertampung',
-      unit: 'KK',
-      display: 'Maksimumkan Z = 40x',
-    },
+    objective: { ...TANPA_TUJUAN },
     domain: 'continuous',
     numberStyle: 'large_integer',
     representation: 'narrative_partial_graph',
     distractor: {
-      id: 'ev_rth_40',
-      narrative:
-        'Pemerintah pusat baru saja menaikkan standar minimum RTH kota sehat menjadi 40% dari luas total kawasan akibat revisi kebijakan SDG 11 nasional.',
+      id: 'ev_rth_35',
+      narrative: 'Peraturan daerah direvisi setelah banjir besar: RTH kampung kini paling sedikit 35% dari luas lahan.',
       constraintPatches: [
-        {
-          targetId: 'k_rth_who',
-          newC: 48,
-          newLabel: 'Standar RTH kota sehat - REVISI 40%',
-          newDisplay: 'y ≥ 48 hektar',
-        },
+        { targetId: 'k_rth', newC: 35, newLabel: 'RTH minimal - REVISI 35%', newDisplay: 'y ≥ 35 hektar' },
       ],
       instruction:
-        'Revisi alokasi lahanmu agar memenuhi standar baru, lalu jelaskan dampaknya terhadap jumlah kepala keluarga yang dapat tertampung.',
+        'Periksa apakah rencanamu masih termasuk himpunan penyelesaian yang baru. Bila tidak, revisi rencanamu dan jelaskan bagian grafik mana yang berubah.',
     },
     goalOptions: [
-      { id: 'g1', text: 'Maksimumkan Z = 40x (jumlah kepala keluarga tertampung)', correct: true },
-      { id: 'g2', text: 'Minimumkan Z = 25x + 18y (total biaya pembangunan)', correct: false },
-      { id: 'g3', text: 'Maksimumkan Z = 40y (daya tampung dihitung dari RTH)', correct: false },
-      { id: 'g4', text: 'Maksimumkan Z = x + y (total luas kawasan terpakai)', correct: false },
+      { id: 'g1', text: 'Menentukan semua pasangan luas hunian dan RTH yang memenuhi lahan, dana, dan syarat RTH, lalu memilih satu di antaranya', correct: true },
+      { id: 'g2', text: 'Membangun hunian seluas mungkin sampai dana habis', correct: false },
+      { id: 'g3', text: 'Menjadikan seluruh lahan RTH agar kampung paling hijau', correct: false },
     ],
     variableOptions: [
-      { id: 'vx1', text: 'Luas Perumahan Padat Terjangkau dalam hektar', assignsTo: 'x', correct: true },
-      { id: 'vx2', text: 'Luas Ruang Terbuka Hijau dalam hektar', assignsTo: 'x', correct: false },
-      { id: 'vx3', text: 'Jumlah kepala keluarga yang tertampung', assignsTo: 'x', correct: false },
-      { id: 'vy1', text: 'Luas Ruang Terbuka Hijau dalam hektar', assignsTo: 'y', correct: true },
-      { id: 'vy2', text: 'Luas Perumahan Padat Terjangkau dalam hektar', assignsTo: 'y', correct: false },
-      { id: 'vy3', text: 'Persentase standar RTH kota sehat', assignsTo: 'y', correct: false },
+      { id: 'vx1', text: 'Luas blok hunian susun dalam hektar', assignsTo: 'x', correct: true },
+      { id: 'vx2', text: 'Luas RTH dalam hektar', assignsTo: 'x', correct: false },
+      { id: 'vx3', text: 'Banyak keluarga yang tinggal di kampung', assignsTo: 'x', correct: false },
+      { id: 'vy1', text: 'Luas RTH dalam hektar', assignsTo: 'y', correct: true },
+      { id: 'vy2', text: 'Luas blok hunian susun dalam hektar', assignsTo: 'y', correct: false },
+      { id: 'vy3', text: 'Biaya pembangunan per hektar', assignsTo: 'y', correct: false },
     ],
     reflection: {
       closed: {
-        prompt: 'Setelah standar RTH dinaikkan menjadi 40%, apa yang terjadi pada rencana kotamu?',
+        prompt: 'Setelah standar RTH naik menjadi 35%, apa yang terjadi pada himpunan penyelesaian?',
         options: [
-          { id: 'r0', text: 'Tidak ada perubahan berarti', quality: 0 },
-          { id: 'r1', text: 'Luas RTH harus ditambah', quality: 1 },
-          { id: 'r2', text: 'Luas RTH harus ditambah menjadi minimal 48 hektar sehingga luas perumahan berkurang', quality: 2 },
+          { id: 'r0', text: 'Tidak tahu', quality: 0 },
+          { id: 'r1', text: 'Tidak berubah, karena lahan tetap 100 hektar', quality: 1 },
+          { id: 'r2', text: 'Daerahnya menyempit, jadi rencana harus diperiksa ulang', quality: 2 },
           {
             id: 'r3',
-            text: 'RTH minimal naik dari 36 ke 48 hektar, perumahan turun dari 84 ke 72 hektar, sehingga daya tampung berkurang dari 3.360 menjadi 2.880 kepala keluarga - target lingkungan yang lebih ketat dibayar dengan berkurangnya kapasitas hunian',
+            text: 'Garis batas RTH bergeser dari y = 25 ke y = 35, sehingga daerah penyelesaian menyempit; rencana dengan RTH kurang dari 35 hektar keluar dari himpunan penyelesaian dan harus direvisi',
             quality: 3,
           },
         ],
       },
       openPrompt:
-        'Hitung berapa kepala keluarga yang dikorbankan akibat kebijakan baru ini. Menurutmu, apakah kenaikan standar RTH itu sepadan? Berikan alasan berdasarkan hasil perhitunganmu.',
-      expectedTerms: ['rth', 'ruang terbuka hijau', 'hijau', 'perumahan', 'hunian', 'kepala keluarga', 'kk', 'daya tampung', 'hektar', 'anggaran'],
+        'Dari mana kamu memperoleh angka 25 hektar? Lalu jelaskan apakah rencanamu masih memenuhi semua ketentuan setelah standar RTH direvisi.',
+      expectedTerms: ['25%', '35%', 'rth', 'hijau', 'hektar', 'revisi', 'bergeser', 'menyempit', 'himpunan', 'penyelesaian'],
     },
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
@@ -111,100 +90,81 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
     bloom: {
       tugasUtama: 'C4',
       refleksi: 'C5',
-      kko: ['menyimpulkan kendala tersirat', 'merevisi', 'menghitung dampak', 'menilai'],
+      kko: ['menyimpulkan kendala implisit', 'menentukan himpunan penyelesaian', 'mengevaluasi dan merevisi rencana'],
       indikator:
-        'Disajikan masalah lahan dengan standar RTH dalam persen, siswa dapat menyimpulkan kendala tersirat, menentukan solusi optimum, merevisinya setelah kebijakan berubah, dan menilai apakah kenaikan standar RTH sepadan dengan jumlah KK yang dikorbankan.',
+        'Disajikan masalah penataan kampung susun dengan syarat RTH dalam persen, siswa dapat menyimpulkan kendala implisit, menentukan himpunan penyelesaian, dan merevisi rencana setelah standar berubah.',
     },
     gameInteraction:
-      'Mengalokasikan dua zona pada peta distrik dengan grafik parsial daerah penyelesaian; setelah submit valid pertama, sistem memunculkan event kebijakan dan meminta revisi.',
+      'Menata kampung susun di peta tepi sungai; di tengah misi muncul kabar revisi perda RTH yang menggeser satu garis batas, dan siswa memeriksa ulang rencananya.',
   },
 
   {
-    id: 'L4-SDG13-A',
+    id: 'L4-SDG13-B',
     level: 4,
     sdgContext: 'SDG13',
-    title: 'Transisi Energi Mendadak Distrik Industri',
+    title: 'Angkot Rendah Emisi',
     narrative:
-      'Kawasan industri kota Meridian Selatan mengoperasikan x unit mesin produksi bertenaga fosil dan y unit mesin produksi bertenaga listrik. Kapasitas produksi total dibutuhkan minimal 60 unit mesin untuk memenuhi permintaan pasar. Biaya operasional mesin fosil Rp 12 juta/bulan dan mesin listrik Rp 18 juta/bulan, dengan anggaran operasional maksimal Rp 1.080 juta/bulan. Peraturan daerah yang berlaku menyatakan bahwa emisi kawasan industri tidak boleh melebihi separuh dari total emisi maksimum kota yang diizinkan sebesar 800 kg CO2/bulan, dengan emisi mesin fosil 15 kg CO2/unit/bulan dan mesin listrik 2 kg CO2/unit/bulan. Tentukan kombinasi yang meminimumkan biaya operasional.',
+      'Koperasi angkot Meridian menyusun armada baru: x angkot listrik dan y angkot bensin. Agar semua trayek terlayani, armada paling sedikit 50 angkot. Angkot listrik membutuhkan dana Rp 5 juta per bulan dan angkot bensin Rp 3 juta per bulan, dengan dana operasional paling banyak Rp 300 juta per bulan. Satu angkot bensin menghasilkan emisi 4 ton CO2 per bulan, sedangkan angkot listrik tidak beremisi di jalan. Pemerintah kota menetapkan bahwa emisi armada koperasi paling banyak separuh dari kuota kota sebesar 120 ton CO2 per bulan. Susun sistem pertidaksamaannya, gambar himpunan penyelesaiannya, lalu tentukan satu komposisi armada yang memenuhi semua ketentuan.',
     dataTable: {
-      headers: ['Jenis Mesin', 'Biaya operasional/bulan', 'Emisi per unit/bulan'],
+      headers: ['Angkot', 'Dana operasional per bulan', 'Emisi per bulan'],
       rows: [
-        ['Mesin fosil (x)', 'Rp 12 juta', '15 kg CO2'],
-        ['Mesin listrik (y)', 'Rp 18 juta', '2 kg CO2'],
+        ['Angkot listrik (x)', 'Rp 5 juta', '0 ton CO2'],
+        ['Angkot bensin (y)', 'Rp 3 juta', '4 ton CO2'],
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Mesin bertenaga fosil', unit: 'unit', max: 70, step: 1, visual: 'neutral', sprite: 'mesin-fosil' },
-      y: { key: 'y', label: 'Mesin bertenaga listrik', unit: 'unit', max: 70, step: 1, visual: 'clean', sprite: 'mesin-listrik' },
+      x: { key: 'x', label: 'Angkot listrik', unit: 'unit', max: 65, step: 1, visual: 'clean', sprite: 'bus-listrik' },
+      y: { key: 'y', label: 'Angkot bensin', unit: 'unit', max: 30, step: 1, visual: 'neutral', sprite: 'bus-konvensional' },
     },
     constraints: [
-      c('k_kapasitas', 'Kapasitas produksi minimal', 1, 1, '>=', 60, 'explicit', 'kapasitas produksi total dibutuhkan minimal 60 unit mesin', 'unit'),
-      c('k_anggaran', 'Anggaran operasional bulanan', 12, 18, '<=', 1080, 'explicit', 'anggaran operasional maksimal Rp 1.080 juta/bulan', 'juta rupiah'),
-      c('k_emisi', 'Batas emisi kawasan (implisit)', 15, 2, '<=', 400, 'implicit', 'emisi kawasan tidak boleh melebihi separuh dari 800 kg CO2 - siswa harus menyimpulkan angka 400', 'kg CO2'),
+      c('k_trayek', 'Armada minimal untuk trayek', 1, 1, '>=', 50, 'explicit', 'armada paling sedikit 50 angkot', 'unit'),
+      c('k_dana', 'Dana operasional bulanan', 5, 3, '<=', 300, 'explicit', 'dana operasional paling banyak Rp 300 juta per bulan', 'juta rupiah'),
+      c('k_emisi', 'Batas emisi armada (implisit)', 0, 4, '<=', 60, 'implicit', 'emisi paling banyak separuh dari 120 ton CO2 - siswa harus menyimpulkan angka 60', 'ton CO2'),
       ...nonNegativity(),
     ],
-    objective: {
-      type: 'min',
-      cx: 12,
-      cy: 18,
-      label: 'Total biaya operasional bulanan',
-      unit: 'juta rupiah',
-      display: 'Minimumkan Z = 12x + 18y',
-    },
+    objective: { ...TANPA_TUJUAN },
     domain: 'integer',
     numberStyle: 'large_integer',
     representation: 'narrative_partial_graph',
     distractor: {
-      id: 'ev_tarif_karbon',
-      narrative:
-        'Terjadi kenaikan tarif karbon nasional. Kini setiap unit mesin fosil dikenai biaya tambahan Rp 8 juta/bulan, sehingga biaya operasionalnya menjadi Rp 20 juta/bulan.',
+      id: 'ev_kuota_80',
+      narrative: 'Kota Meridian memperketat target iklimnya: kuota emisi kota diturunkan dari 120 menjadi 80 ton CO2 per bulan.',
       constraintPatches: [
-        {
-          targetId: 'k_anggaran',
-          newA: 20,
-          newLabel: 'Anggaran operasional - SETELAH tarif karbon',
-          newDisplay: '20x + 18y ≤ 1080 juta rupiah',
-        },
+        { targetId: 'k_emisi', newC: 40, newLabel: 'Batas emisi armada - SETELAH kuota turun', newDisplay: '4y ≤ 40 ton CO2' },
       ],
-      objectivePatch: {
-        cx: 20,
-        label: 'Total biaya operasional bulanan setelah tarif karbon',
-        display: 'Minimumkan Z = 20x + 18y',
-      },
       instruction:
-        'Evaluasi kembali: apakah komposisi mesin yang tadi kamu pilih masih paling murah setelah struktur biaya berubah? Revisi bila perlu.',
+        'Periksa apakah komposisi armadamu masih termasuk himpunan penyelesaian yang baru. Bila tidak, revisi komposisinya dan jelaskan alasannya.',
     },
     goalOptions: [
-      { id: 'g1', text: 'Minimumkan Z = 12x + 18y (total biaya operasional)', correct: true },
-      { id: 'g2', text: 'Maksimumkan Z = 12x + 18y (total biaya operasional)', correct: false },
-      { id: 'g3', text: 'Minimumkan Z = 15x + 2y (total emisi karbon)', correct: false },
-      { id: 'g4', text: 'Maksimumkan Z = x + y (jumlah mesin beroperasi)', correct: false },
+      { id: 'g1', text: 'Menentukan semua komposisi angkot listrik dan bensin yang memenuhi trayek, dana, dan batas emisi, lalu memilih satu di antaranya', correct: true },
+      { id: 'g2', text: 'Memakai angkot bensin sebanyak mungkin karena dananya paling murah', correct: false },
+      { id: 'g3', text: 'Memenuhi 50 angkot saja tanpa memperhatikan emisi', correct: false },
     ],
     variableOptions: [
-      { id: 'vx1', text: 'Banyak unit mesin produksi bertenaga fosil', assignsTo: 'x', correct: true },
-      { id: 'vx2', text: 'Banyak unit mesin produksi bertenaga listrik', assignsTo: 'x', correct: false },
-      { id: 'vx3', text: 'Emisi karbon per unit mesin fosil', assignsTo: 'x', correct: false },
-      { id: 'vy1', text: 'Banyak unit mesin produksi bertenaga listrik', assignsTo: 'y', correct: true },
-      { id: 'vy2', text: 'Banyak unit mesin produksi bertenaga fosil', assignsTo: 'y', correct: false },
-      { id: 'vy3', text: 'Batas emisi maksimum kota', assignsTo: 'y', correct: false },
+      { id: 'vx1', text: 'Banyak angkot listrik dalam unit', assignsTo: 'x', correct: true },
+      { id: 'vx2', text: 'Banyak angkot bensin dalam unit', assignsTo: 'x', correct: false },
+      { id: 'vx3', text: 'Dana operasional satu angkot listrik', assignsTo: 'x', correct: false },
+      { id: 'vy1', text: 'Banyak angkot bensin dalam unit', assignsTo: 'y', correct: true },
+      { id: 'vy2', text: 'Banyak angkot listrik dalam unit', assignsTo: 'y', correct: false },
+      { id: 'vy3', text: 'Ton CO2 yang dihasilkan armada', assignsTo: 'y', correct: false },
     ],
     reflection: {
       closed: {
-        prompt: 'Setelah tarif karbon naik, apa yang terjadi pada komposisi mesin paling murah?',
+        prompt: 'Mengapa kendala emisinya ditulis 4y ≤ 60, bukan 4y ≤ 120?',
         options: [
-          { id: 'r0', text: 'Tidak ada perubahan berarti', quality: 0 },
-          { id: 'r1', text: 'Biaya operasional kawasan menjadi lebih mahal', quality: 1 },
-          { id: 'r2', text: 'Mesin fosil menjadi lebih mahal sehingga jumlahnya perlu dikurangi', quality: 2 },
+          { id: 'r0', text: 'Tidak tahu', quality: 0 },
+          { id: 'r1', text: 'Karena angkot listrik tidak beremisi', quality: 1 },
+          { id: 'r2', text: 'Karena koperasi hanya boleh memakai separuh kuota kota', quality: 2 },
           {
             id: 'r3',
-            text: 'Mesin fosil naik menjadi Rp 20 juta sehingga kini lebih mahal daripada mesin listrik Rp 18 juta; komposisi termurah bergeser dari 21 fosil menjadi seluruhnya listrik, artinya kebijakan karbon mengubah insentif ekonomi yang tadinya membuat fosil menguntungkan',
+            text: 'Karena batasnya separuh dari 120 ton, yaitu 60 ton, dan hanya angkot bensin yang beremisi 4 ton per unit, sehingga 4y ≤ 60 atau y ≤ 15',
             quality: 3,
           },
         ],
       },
       openPrompt:
-        'Jelaskan mengapa tarif karbon mengubah komposisi mesin termurah. Apakah kota sebaiknya tetap memberlakukan tarif itu walaupun biaya operasional naik? Nilai keputusan itu berdasarkan perubahan biaya dan emisi pada hasilmu.',
-      expectedTerms: ['fosil', 'listrik', 'emisi', 'co2', 'biaya', 'tarif karbon', 'karbon', 'anggaran', 'mesin', 'unit'],
+        'Setelah kuota kota turun menjadi 80 ton, apakah komposisi armadamu masih memenuhi semua ketentuan? Tunjukkan perhitungannya dan jelaskan revisimu.',
+      expectedTerms: ['separuh', 'emisi', 'co2', 'kuota', 'bensin', 'listrik', 'revisi', 'trayek', 'dana'],
     },
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
@@ -212,95 +172,81 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
     bloom: {
       tugasUtama: 'C4',
       refleksi: 'C5',
-      kko: ['menyimpulkan kendala tersirat', 'merevisi', 'menganalisis', 'menilai'],
+      kko: ['menyimpulkan kendala implisit', 'menentukan himpunan penyelesaian', 'mengevaluasi dan merevisi rencana'],
       indikator:
-        'Disajikan masalah mesin industri dengan batas emisi tersirat, siswa dapat menentukan biaya minimum, merevisinya setelah tarif karbon berlaku, menjelaskan pergeseran titik optimum, dan menilai apakah tarif karbon layak dipertahankan.',
+        'Disajikan masalah armada angkot dengan batas emisi berupa separuh kuota kota, siswa dapat menyimpulkan kendala implisit, menentukan himpunan penyelesaian, dan merevisi komposisi armada setelah kuota berubah.',
     },
     gameInteraction:
-      'Mengatur jumlah dua jenis mesin pada denah kawasan industri dengan grafik parsial daerah penyelesaian; setelah submit valid pertama, sistem memunculkan event tarif karbon.',
+      'Menyusun armada angkot di terminal kota; di tengah misi kuota emisi kota diturunkan, dan siswa memeriksa ulang komposisi armadanya.',
   },
 
   {
-    id: 'L4-SDG11&13-A',
+    id: 'L4-SDG11&13-B',
     level: 4,
     sdgContext: 'SDG11&13',
-    title: 'Rencana Induk Kota Baru Solantis',
+    title: 'Kawasan Hunian Tangguh Iklim',
     narrative:
-      'Kota baru bernama Solantis sedang menyusun rencana induk untuk kawasan seluas 200 hektar, dibagi menjadi Zona Hunian Rendah Karbon seluas x hektar dan Zona Hijau Multifungsi (RTH + jalur sepeda + resapan air) seluas y hektar. Total anggaran pembangunan tahap pertama adalah Rp 8 miliar, dengan biaya zona hunian Rp 45 juta/hektar dan zona hijau Rp 22 juta/hektar. Studi kelayakan lingkungan mensyaratkan kapasitas resapan air kota harus mampu menampung debit hujan wilayah tropis, yang menurut standar teknis berarti zona hijau harus mencakup minimal 35% dari total kawasan. Setiap hektar zona hunian menampung setara 500 poin kapasitas penduduk, dan setiap hektar zona hijau berkontribusi 300 poin indeks ketahanan iklim. Tentukan kombinasi yang memaksimumkan total skor gabungan kapasitas penduduk dan ketahanan iklim dengan bobot yang setara.',
+      'Meridian membuka kawasan baru seluas 150 hektar: x hektar untuk hunian rendah karbon dan y hektar untuk kawasan hijau multifungsi (taman, kolam retensi, kebun kota). Biaya pengembangan hunian Rp 40 miliar per hektar dan kawasan hijau Rp 20 miliar per hektar, dengan dana paling banyak Rp 4.800 miliar. Pedoman ketahanan iklim kota menyebutkan bahwa setiap 2 hektar hunian harus diimbangi paling sedikit 1 hektar kawasan hijau. Susun sistem pertidaksamaannya, gambar himpunan penyelesaiannya, lalu tentukan satu rencana kawasan yang memenuhi semua ketentuan.',
     dataTable: {
-      headers: ['Zona', 'Biaya per hektar', 'Kontribusi skor per hektar'],
+      headers: ['Peruntukan', 'Biaya per hektar'],
       rows: [
-        ['Zona Hunian Rendah Karbon (x)', 'Rp 45 juta', '500 poin kapasitas penduduk'],
-        ['Zona Hijau Multifungsi (y)', 'Rp 22 juta', '300 poin ketahanan iklim'],
+        ['Hunian rendah karbon (x)', 'Rp 40 miliar'],
+        ['Kawasan hijau multifungsi (y)', 'Rp 20 miliar'],
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Zona Hunian Rendah Karbon', unit: 'hektar', max: 210, step: 1, visual: 'housing', sprite: 'hunian-rendah-karbon' },
-      y: { key: 'y', label: 'Zona Hijau Multifungsi', unit: 'hektar', max: 210, step: 1, visual: 'nature', sprite: 'hijau-multifungsi' },
+      x: { key: 'x', label: 'Hunian rendah karbon', unit: 'hektar', max: 160, step: 1, visual: 'neutral', sprite: 'hunian-rendah-karbon' },
+      y: { key: 'y', label: 'Kawasan hijau multifungsi', unit: 'hektar', max: 160, step: 1, visual: 'nature', sprite: 'hijau-multifungsi' },
     },
     constraints: [
-      c('k_kawasan', 'Luas kawasan rencana induk', 1, 1, '<=', 200, 'explicit', 'kawasan seluas 200 hektar', 'hektar'),
-      c('k_anggaran', 'Anggaran tahap pertama', 45, 22, '<=', 8000, 'explicit', 'total anggaran pembangunan tahap pertama Rp 8 miliar', 'juta rupiah'),
-      c('k_resapan', 'Kapasitas resapan air (implisit)', 0, 1, '>=', 70, 'implicit', 'zona hijau minimal 35% dari total kawasan - siswa harus menghitung sendiri 35% x 200 = 70 hektar', 'hektar'),
+      c('k_lahan', 'Luas kawasan', 1, 1, '<=', 150, 'explicit', 'luas hunian dan kawasan hijau tidak boleh melebihi 150 hektar', 'hektar'),
+      c('k_dana', 'Dana pengembangan', 40, 20, '<=', 4800, 'explicit', 'dana paling banyak Rp 4.800 miliar', 'miliar rupiah'),
+      c('k_imbang', 'Imbangan hunian dan hijau (implisit)', 1, -2, '<=', 0, 'implicit', 'setiap 2 hektar hunian diimbangi paling sedikit 1 hektar hijau - siswa harus menyimpulkan y ≥ x/2, yaitu x - 2y ≤ 0', 'hektar'),
       ...nonNegativity(),
     ],
-    objective: {
-      type: 'max',
-      cx: 500,
-      cy: 300,
-      label: 'Skor gabungan kapasitas penduduk dan ketahanan iklim',
-      unit: 'poin',
-      display: 'Maksimumkan Z = 500x + 300y',
-    },
+    objective: { ...TANPA_TUJUAN },
     domain: 'continuous',
     numberStyle: 'large_integer',
     representation: 'narrative_partial_graph',
     distractor: {
-      id: 'ev_resapan_45',
-      narrative:
-        'Badan Meteorologi merilis proyeksi baru: intensitas hujan ekstrem meningkat 20%, sehingga standar minimum zona hijau direvisi menjadi 45% dari total kawasan.',
+      id: 'ev_imbang_1banding1',
+      narrative: 'Kajian risiko banjir terbaru membuat pedoman diperketat: kini setiap 1 hektar hunian harus diimbangi paling sedikit 1 hektar kawasan hijau.',
       constraintPatches: [
-        {
-          targetId: 'k_resapan',
-          newC: 90,
-          newLabel: 'Kapasitas resapan air - REVISI 45%',
-          newDisplay: 'y ≥ 90 hektar',
-        },
+        { targetId: 'k_imbang', newB: -1, newLabel: 'Imbangan hunian dan hijau - REVISI 1 : 1', newDisplay: 'x - y ≤ 0' },
       ],
       instruction:
-        'Revisi rencana indukmu agar memenuhi standar resapan baru, lalu jawab pertanyaan reflektif di akhir.',
+        'Periksa apakah rencanamu masih termasuk himpunan penyelesaian yang baru. Bila tidak, revisi rencanamu dan jelaskan bagaimana garis batasnya berubah.',
     },
     goalOptions: [
-      { id: 'g1', text: 'Maksimumkan Z = 500x + 300y (skor gabungan)', correct: true },
-      { id: 'g2', text: 'Maksimumkan Z = 300x + 500y (skor gabungan dengan bobot tertukar)', correct: false },
-      { id: 'g3', text: 'Minimumkan Z = 45x + 22y (total anggaran pembangunan)', correct: false },
-      { id: 'g4', text: 'Maksimumkan Z = 300y (indeks ketahanan iklim saja)', correct: false },
+      { id: 'g1', text: 'Menentukan semua pasangan luas hunian dan kawasan hijau yang memenuhi lahan, dana, dan pedoman imbangan, lalu memilih satu di antaranya', correct: true },
+      { id: 'g2', text: 'Membangun hunian seluas mungkin agar penduduk tertampung', correct: false },
+      { id: 'g3', text: 'Membagi kawasan sama rata tanpa memeriksa dana', correct: false },
     ],
     variableOptions: [
-      { id: 'vx1', text: 'Luas Zona Hunian Rendah Karbon dalam hektar', assignsTo: 'x', correct: true },
-      { id: 'vx2', text: 'Luas Zona Hijau Multifungsi dalam hektar', assignsTo: 'x', correct: false },
-      { id: 'vx3', text: 'Poin kapasitas penduduk per hektar', assignsTo: 'x', correct: false },
-      { id: 'vy1', text: 'Luas Zona Hijau Multifungsi dalam hektar', assignsTo: 'y', correct: true },
-      { id: 'vy2', text: 'Luas Zona Hunian Rendah Karbon dalam hektar', assignsTo: 'y', correct: false },
-      { id: 'vy3', text: 'Persentase minimum zona hijau', assignsTo: 'y', correct: false },
+      { id: 'vx1', text: 'Luas hunian rendah karbon dalam hektar', assignsTo: 'x', correct: true },
+      { id: 'vx2', text: 'Luas kawasan hijau multifungsi dalam hektar', assignsTo: 'x', correct: false },
+      { id: 'vx3', text: 'Banyak rumah yang dibangun', assignsTo: 'x', correct: false },
+      { id: 'vy1', text: 'Luas kawasan hijau multifungsi dalam hektar', assignsTo: 'y', correct: true },
+      { id: 'vy2', text: 'Luas hunian rendah karbon dalam hektar', assignsTo: 'y', correct: false },
+      { id: 'vy3', text: 'Dana pengembangan dalam miliar rupiah', assignsTo: 'y', correct: false },
     ],
     reflection: {
       closed: {
-        prompt: 'Setelah standar zona hijau dinaikkan menjadi 45%, apa yang terjadi pada rencana indukmu?',
+        prompt: 'Bagaimana pedoman "setiap 2 hektar hunian diimbangi paling sedikit 1 hektar hijau" ditulis sebagai pertidaksamaan?',
         options: [
-          { id: 'r0', text: 'Tidak ada perubahan berarti', quality: 0 },
-          { id: 'r1', text: 'Zona hijau harus diperluas', quality: 1 },
-          { id: 'r2', text: 'Zona hijau harus diperluas menjadi minimal 90 hektar sehingga zona hunian menyusut', quality: 2 },
+          { id: 'r0', text: 'Tidak tahu', quality: 0 },
+          { id: 'r1', text: '2x ≤ y', quality: 1 },
+          { id: 'r2', text: 'y ≥ x/2', quality: 2 },
           {
             id: 'r3',
-            text: 'Zona hijau naik dari 70 ke 90 hektar dan hunian turun dari 130 ke 110 hektar, sehingga skor gabungan turun dari 86.000 menjadi 82.000 poin - kota membayar ketahanan iklim yang lebih tinggi dengan berkurangnya kapasitas penduduk',
+            text: 'y ≥ x/2, atau x - 2y ≤ 0; misalnya hunian 60 hektar membutuhkan hijau paling sedikit 30 hektar',
             quality: 3,
           },
         ],
       },
       openPrompt:
-        'Kebijakan mana yang menurutmu lebih penting dipertahankan pada situasi ini: kapasitas penduduk maksimum atau ketahanan terhadap iklim ekstrem? Jelaskan alasanmu berdasarkan hasil optimasimu.',
-      expectedTerms: ['hunian', 'zona hijau', 'hijau', 'resapan', 'iklim', 'ketahanan', 'kapasitas penduduk', 'poin', 'hektar', 'anggaran'],
+        'Setelah pedoman menjadi 1 : 1, jelaskan perubahan garis batas imbangan pada grafik dan apakah rencanamu masih memenuhi semua ketentuan.',
+      expectedTerms: ['imbang', 'perbandingan', 'x - 2y', 'x - y', 'hijau', 'hunian', 'hektar', 'garis', 'revisi', 'himpunan'],
     },
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
@@ -308,11 +254,11 @@ export const LEVEL_4_TASKS: TaskDefinition[] = [
     bloom: {
       tugasUtama: 'C4',
       refleksi: 'C5',
-      kko: ['menyimpulkan kendala tersirat', 'merevisi', 'menilai', 'menjustifikasi'],
+      kko: ['menerjemahkan perbandingan menjadi pertidaksamaan', 'menentukan himpunan penyelesaian', 'mengevaluasi dan merevisi rencana'],
       indikator:
-        'Disajikan rencana induk kota dengan standar resapan tersirat, siswa dapat menentukan solusi optimum, merevisinya setelah proyeksi iklim berubah, dan menilai kebijakan mana yang lebih penting berdasarkan hasilnya.',
+        'Disajikan masalah kawasan hunian dengan pedoman perbandingan hunian dan kawasan hijau, siswa dapat menyimpulkan kendala implisit, menentukan himpunan penyelesaian, dan merevisi rencana setelah pedoman diperketat.',
     },
     gameInteraction:
-      'Menyusun rencana induk dua zona pada viewport isometrik kota baru dengan grafik parsial daerah penyelesaian; event proyeksi iklim muncul setelah submit valid pertama.',
+      'Merancang kawasan baru di peta kota; di tengah misi pedoman imbangan diperketat sehingga garis batas berputar, dan siswa memeriksa ulang rencananya.',
   },
 ];

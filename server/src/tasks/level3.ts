@@ -1,83 +1,158 @@
 /**
- * Bank Skenario Level 3 (docs/ECD_Framework.md Bagian 8).
+ * Bank Skenario Level 3 (instrumen 2.0.0): SISTEM PERTIDAKSAMAAN LINEAR DUA
+ * VARIABEL tanpa fungsi tujuan, sesuai materi kelas X.
  *
- * Karakteristik: 2-3 kendala, bilangan campuran, fungsi tujuan EKSPLISIT
- * (maksimum/minimum), tanpa distraktor. Fokus bukti dominan: K2-K3.
+ * Karakteristik: tiga kendala eksplisit (termasuk batas bawah ">=" yang
+ * memotong daerah dari sisi lain), dibaca dari narasi dan tabel. Siswa menyusun
+ * sistem pertidaksamaan, menggambar himpunan penyelesaiannya, lalu memilih satu
+ * rencana di dalamnya. Fokus bukti dominan: K2-K3 (K3 memakai varian
+ * feasibility_only, lihat scoring/k3.ts).
  *
- * Mulai level ini `goalOptions` berisi fungsi tujuan sesungguhnya, sehingga
- * event select_objective menjadi bukti langsung K2 sesuai Evidence Model.
+ * Ketiga varian sengaja berbeda gaya angkanya (bulat kecil, ribuan, desimal)
+ * agar pemilihan adaptif punya ruang (tasks/adaptive.ts). Soal program linear
+ * Level 3 instrumen 1.x diarsipkan di level3ProgramLinear.ts.
  */
 
 import type { TaskDefinition } from '../domain/types.js';
 import { c, nonNegativity } from './helpers.js';
 
+const TANPA_TUJUAN = { type: 'none', cx: 0, cy: 0, label: 'Tidak ada fungsi tujuan', unit: '', display: '-' } as const;
+
 export const LEVEL_3_TASKS: TaskDefinition[] = [
   {
-    id: 'L3-SDG11-A',
+    id: 'L3-SDG11-B',
     level: 3,
     sdgContext: 'SDG11',
-    title: 'Optimasi Indeks Kenyamanan Kota Meridian',
+    title: 'Menata Ulang Alun-alun Meridian',
     narrative:
-      'Distrik baru kota Meridian memiliki lahan pengembangan seluas 80 hektar untuk dibagi menjadi Taman Kota seluas x hektar dan Trotoar/Ruang Pejalan Kaki seluas y hektar. Anggaran pembangunan sebesar Rp 2,4 miliar, dengan biaya taman Rp 25 juta/hektar dan trotoar Rp 40 juta/hektar. Untuk memenuhi standar aksesibilitas, luas trotoar minimal 10 hektar. Setiap hektar taman memberi skor kenyamanan warga sebesar 8 poin dan setiap hektar trotoar memberi 5 poin. Tentukan kombinasi x dan y yang memaksimumkan total skor kenyamanan warga.',
+      'Alun-alun lama Kota Meridian seluas 60 hektar akan ditata ulang menjadi pasar rakyat seluas x hektar dan ruang hijau seluas y hektar. Luas pasar dan ruang hijau bersama-sama tidak boleh melebihi luas alun-alun. Agar semua pedagang lama mendapat tempat, luas pasar paling sedikit 10 hektar. Agar alun-alun tetap sejuk, luas ruang hijau paling sedikit sama dengan luas pasar. Susun sistem pertidaksamaannya, gambar himpunan penyelesaiannya, lalu tentukan satu rencana penataan yang memenuhi semua ketentuan.',
     dataTable: {
-      headers: ['Peruntukan', 'Biaya per hektar', 'Skor kenyamanan per hektar'],
+      headers: ['Ketentuan', 'Nilai'],
       rows: [
-        ['Taman Kota (x)', 'Rp 25 juta', '8 poin'],
-        ['Trotoar/Ruang Pejalan Kaki (y)', 'Rp 40 juta', '5 poin'],
+        ['Luas alun-alun', '60 hektar'],
+        ['Luas pasar rakyat (x)', 'paling sedikit 10 hektar'],
+        ['Luas ruang hijau (y)', 'paling sedikit sama dengan luas pasar'],
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Taman Kota', unit: 'hektar', max: 90, step: 1, visual: 'nature', sprite: 'taman-kota' },
-      y: { key: 'y', label: 'Trotoar / Ruang Pejalan Kaki', unit: 'hektar', max: 70, step: 1, visual: 'neutral', sprite: 'trotoar' },
+      x: { key: 'x', label: 'Pasar rakyat', unit: 'hektar', max: 65, step: 1, visual: 'neutral', sprite: 'gedung' },
+      y: { key: 'y', label: 'Ruang hijau', unit: 'hektar', max: 65, step: 1, visual: 'nature', sprite: 'taman-kota' },
     },
     constraints: [
-      c('k_lahan', 'Lahan pengembangan', 1, 1, '<=', 80, 'explicit', 'lahan pengembangan seluas 80 hektar', 'hektar'),
-      c('k_anggaran', 'Anggaran pembangunan', 25, 40, '<=', 2400, 'explicit', 'anggaran pembangunan sebesar Rp 2,4 miliar', 'juta rupiah'),
-      c('k_aksesibilitas', 'Standar aksesibilitas trotoar', 0, 1, '>=', 10, 'explicit', 'luas trotoar minimal 10 hektar', 'hektar'),
+      c('k_lahan', 'Luas alun-alun', 1, 1, '<=', 60, 'explicit', 'luas pasar dan ruang hijau tidak boleh melebihi 60 hektar', 'hektar'),
+      c('k_pedagang', 'Pasar minimal untuk pedagang', 1, 0, '>=', 10, 'explicit', 'luas pasar paling sedikit 10 hektar', 'hektar'),
+      c('k_hijau', 'Ruang hijau minimal seluas pasar', -1, 1, '>=', 0, 'explicit', 'luas ruang hijau paling sedikit sama dengan luas pasar'),
       ...nonNegativity(),
     ],
-    objective: {
-      type: 'max',
-      cx: 8,
-      cy: 5,
-      label: 'Total skor kenyamanan warga',
-      unit: 'poin',
-      display: 'Maksimumkan Z = 8x + 5y',
-    },
+    objective: { ...TANPA_TUJUAN },
     domain: 'continuous',
+    numberStyle: 'simple_integer',
+    representation: 'narrative_table',
+    distractor: null,
+    goalOptions: [
+      { id: 'g1', text: 'Menentukan semua pasangan luas pasar dan ruang hijau yang memenuhi ketiga ketentuan, lalu memilih satu di antaranya', correct: true },
+      { id: 'g2', text: 'Memaksimumkan luas pasar rakyat tanpa memperhatikan ruang hijau', correct: false },
+      { id: 'g3', text: 'Membagi alun-alun sama rata antara pasar dan ruang hijau', correct: false },
+    ],
+    variableOptions: [
+      { id: 'vx1', text: 'Luas pasar rakyat dalam hektar', assignsTo: 'x', correct: true },
+      { id: 'vx2', text: 'Luas ruang hijau dalam hektar', assignsTo: 'x', correct: false },
+      { id: 'vx3', text: 'Jumlah pedagang di pasar', assignsTo: 'x', correct: false },
+      { id: 'vy1', text: 'Luas ruang hijau dalam hektar', assignsTo: 'y', correct: true },
+      { id: 'vy2', text: 'Luas pasar rakyat dalam hektar', assignsTo: 'y', correct: false },
+      { id: 'vy3', text: 'Luas alun-alun seluruhnya', assignsTo: 'y', correct: false },
+    ],
+    reflection: {
+      closed: {
+        prompt: 'Bagaimana kamu memastikan rencana penataanmu benar-benar termasuk himpunan penyelesaian?',
+        options: [
+          { id: 'r0', text: 'Tidak tahu / saya hanya menebak', quality: 0 },
+          { id: 'r1', text: 'Karena luas totalnya tidak lebih dari 60 hektar', quality: 1 },
+          { id: 'r2', text: 'Saya memeriksa bahwa titiknya berada di daerah yang diarsir pada grafik', quality: 2 },
+          {
+            id: 'r3',
+            text: 'Saya menyubstitusikan titiknya ke ketiga pertidaksamaan: total tidak lebih dari 60 hektar, pasar minimal 10 hektar, dan ruang hijau tidak kurang dari pasar; semuanya terpenuhi',
+            quality: 3,
+          },
+        ],
+      },
+      openPrompt:
+        'Jelaskan mengapa rencana "pasar 40 hektar dan ruang hijau 20 hektar" tidak termasuk himpunan penyelesaian, walaupun luas totalnya pas 60 hektar.',
+      expectedTerms: ['pasar', 'ruang hijau', 'hijau', 'hektar', 'kurang', 'lebih', 'syarat', 'ketentuan', 'pertidaksamaan', 'kendala'],
+    },
+    expectedConstraintCount: 3,
+    blueprintConstraintCount: 3,
+    dominantClaims: ['K2', 'K3'],
+    bloom: {
+      tugasUtama: 'C4',
+      refleksi: 'C4',
+      kko: ['menyusun sistem pertidaksamaan', 'menentukan himpunan penyelesaian', 'menganalisis'],
+      indikator:
+        'Disajikan masalah penataan alun-alun dengan tiga ketentuan, siswa dapat menyusun sistem pertidaksamaan linear dua variabel, menentukan himpunan penyelesaiannya, dan menjelaskan mengapa suatu rencana tidak termasuk himpunan penyelesaian.',
+    },
+    gameInteraction:
+      'Mengalokasikan pasar dan ruang hijau pada peta alun-alun; siswa menggambar grafik himpunan penyelesaian dari pertidaksamaan yang ditulisnya, lalu memilih satu rencana.',
+  },
+
+  {
+    id: 'L3-SDG13-B',
+    level: 3,
+    sdgContext: 'SDG13',
+    title: 'Armada Pengangkut Sampah Listrik',
+    narrative:
+      'Dinas Lingkungan Hidup Meridian akan mengganti armada pengangkut sampah dengan kendaraan listrik: x truk listrik dan y motor gerobak listrik. Harga satu truk Rp 400 juta dan satu motor gerobak Rp 100 juta, dengan anggaran paling banyak Rp 6 miliar. Satu truk mengangkut 6 ton sampah per hari dan satu motor gerobak 2 ton per hari, sedangkan sampah yang harus terangkut paling sedikit 60 ton per hari. Garasi dinas hanya muat 30 kendaraan. Susun sistem pertidaksamaannya, gambar himpunan penyelesaiannya, lalu tentukan satu komposisi armada yang memenuhi semua ketentuan.',
+    dataTable: {
+      headers: ['Kendaraan', 'Harga per unit', 'Daya angkut per hari'],
+      rows: [
+        ['Truk listrik (x)', 'Rp 400 juta', '6 ton'],
+        ['Motor gerobak listrik (y)', 'Rp 100 juta', '2 ton'],
+      ],
+    },
+    variables: {
+      x: { key: 'x', label: 'Truk listrik', unit: 'unit', max: 20, step: 1, visual: 'clean', sprite: 'daur-ulang' },
+      y: { key: 'y', label: 'Motor gerobak listrik', unit: 'unit', max: 35, step: 1, visual: 'neutral', sprite: 'kompos' },
+    },
+    constraints: [
+      c('k_anggaran', 'Anggaran armada', 400, 100, '<=', 6000, 'explicit', 'anggaran paling banyak Rp 6 miliar', 'juta rupiah'),
+      c('k_angkut', 'Sampah terangkut per hari', 6, 2, '>=', 60, 'explicit', 'sampah yang harus terangkut paling sedikit 60 ton per hari', 'ton'),
+      c('k_garasi', 'Kapasitas garasi', 1, 1, '<=', 30, 'explicit', 'garasi dinas hanya muat 30 kendaraan', 'unit'),
+      ...nonNegativity(),
+    ],
+    objective: { ...TANPA_TUJUAN },
+    domain: 'integer',
     numberStyle: 'large_integer',
     representation: 'narrative_table',
     distractor: null,
     goalOptions: [
-      { id: 'g1', text: 'Maksimumkan Z = 8x + 5y (total skor kenyamanan warga)', correct: true },
-      { id: 'g2', text: 'Minimumkan Z = 25x + 40y (total biaya pembangunan)', correct: false },
-      { id: 'g3', text: 'Maksimumkan Z = 5x + 8y (skor kenyamanan dengan bobot tertukar)', correct: false },
-      { id: 'g4', text: 'Maksimumkan Z = x + y (total luas lahan terpakai)', correct: false },
+      { id: 'g1', text: 'Menentukan semua komposisi truk dan motor gerobak yang memenuhi anggaran, daya angkut, dan garasi, lalu memilih satu di antaranya', correct: true },
+      { id: 'g2', text: 'Membeli sebanyak mungkin truk listrik sampai anggaran habis', correct: false },
+      { id: 'g3', text: 'Memenuhi daya angkut 60 ton saja tanpa memperhatikan anggaran', correct: false },
     ],
     variableOptions: [
-      { id: 'vx1', text: 'Luas Taman Kota dalam hektar', assignsTo: 'x', correct: true },
-      { id: 'vx2', text: 'Luas Trotoar/Ruang Pejalan Kaki dalam hektar', assignsTo: 'x', correct: false },
-      { id: 'vx3', text: 'Skor kenyamanan per hektar taman', assignsTo: 'x', correct: false },
-      { id: 'vy1', text: 'Luas Trotoar/Ruang Pejalan Kaki dalam hektar', assignsTo: 'y', correct: true },
-      { id: 'vy2', text: 'Luas Taman Kota dalam hektar', assignsTo: 'y', correct: false },
-      { id: 'vy3', text: 'Total anggaran pembangunan', assignsTo: 'y', correct: false },
+      { id: 'vx1', text: 'Banyak truk listrik dalam unit', assignsTo: 'x', correct: true },
+      { id: 'vx2', text: 'Banyak motor gerobak listrik dalam unit', assignsTo: 'x', correct: false },
+      { id: 'vx3', text: 'Harga satu truk listrik', assignsTo: 'x', correct: false },
+      { id: 'vy1', text: 'Banyak motor gerobak listrik dalam unit', assignsTo: 'y', correct: true },
+      { id: 'vy2', text: 'Banyak truk listrik dalam unit', assignsTo: 'y', correct: false },
+      { id: 'vy3', text: 'Ton sampah yang terangkut per hari', assignsTo: 'y', correct: false },
     ],
     reflection: {
       closed: {
-        prompt: 'Mengapa kombinasi yang kamu pilih memberi skor kenyamanan tertinggi?',
+        prompt: 'Mengapa Dinas tidak cukup membeli motor gerobak saja karena harganya paling murah?',
         options: [
-          { id: 'r0', text: 'Tidak tahu / saya memilih secara coba-coba', quality: 0 },
-          { id: 'r1', text: 'Karena luas totalnya paling besar', quality: 1 },
-          { id: 'r2', text: 'Karena nilai Z pada titik itu paling tinggi di antara titik pojok yang saya cek', quality: 2 },
+          { id: 'r0', text: 'Tidak tahu', quality: 0 },
+          { id: 'r1', text: 'Karena motor gerobak terlalu kecil', quality: 1 },
+          { id: 'r2', text: 'Karena dengan garasi yang hanya muat 30 kendaraan, motor gerobak saja tidak cukup mengangkut sampah', quality: 2 },
           {
             id: 'r3',
-            text: 'Karena taman memberi 8 poin per hektar sedangkan trotoar hanya 5 poin, sehingga trotoar ditekan sampai batas minimum 10 hektar yang masih diizinkan standar aksesibilitas',
+            text: 'Karena 30 motor gerobak hanya mengangkut 60 ton dan memenuhi garasi tepat penuh; begitu ada satu motor dikurangi, daya angkut di bawah 60 ton, jadi truk dibutuhkan agar daya angkut cukup tanpa melampaui garasi dan anggaran',
             quality: 3,
           },
         ],
       },
-      openPrompt: 'Jelaskan singkat: kendala mana yang menahan kota untuk tidak memperluas taman lebih jauh lagi?',
-      expectedTerms: ['taman', 'trotoar', 'pejalan kaki', 'aksesibilitas', 'anggaran', 'lahan', 'poin', 'hektar', 'kenyamanan'],
+      openPrompt:
+        'Pilih satu komposisi armada dari himpunan penyelesaianmu, lalu tunjukkan dengan perhitungan bahwa komposisi itu memenuhi ketiga ketentuan.',
+      expectedTerms: ['truk', 'motor', 'gerobak', 'anggaran', 'garasi', 'ton', 'angkut', 'juta', 'miliar', 'unit'],
     },
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
@@ -85,160 +160,73 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
     bloom: {
       tugasUtama: 'C4',
       refleksi: 'C4',
-      kko: ['menentukan nilai optimum', 'membandingkan titik pojok', 'menganalisis'],
+      kko: ['menyusun sistem pertidaksamaan', 'menerjemahkan data tabel', 'menentukan himpunan penyelesaian'],
       indikator:
-        'Disajikan masalah alokasi taman dan trotoar dengan fungsi tujuan, siswa dapat menentukan kombinasi yang memaksimumkan skor kenyamanan dengan membandingkan nilai Z di titik pojok.',
+        'Disajikan narasi dan tabel armada pengangkut sampah, siswa dapat menyusun tiga pertidaksamaan (anggaran, daya angkut, garasi), menentukan himpunan penyelesaiannya, dan membuktikan bahwa satu komposisi memenuhi semuanya.',
     },
     gameInteraction:
-      'Setelah menentukan alokasi lahan, sistem menyorot beberapa titik pojok pada peta sebagai kandidat solusi optimum; siswa memverifikasi dengan menghitung nilai Z pada tiap kandidat.',
+      'Menyusun armada pada depo kota; siswa menggambar grafik himpunan penyelesaian dari pertidaksamaan yang ditulisnya, lalu memilih satu komposisi armada.',
   },
 
   {
-    id: 'L3-SDG13-A',
-    level: 3,
-    sdgContext: 'SDG13',
-    title: 'Minimisasi Biaya Pengelolaan Sampah dengan Batas Emisi',
-    narrative:
-      'Setiap hari, Kota Meridian harus mengolah sampah paling sedikit 50 ton. Sampah dapat diolah dengan dua cara: dikomposkan atau didaur ulang. Misalkan x adalah banyak sampah yang dikomposkan (ton/hari) dan y adalah banyak sampah yang didaur ulang (ton/hari). Setiap ton sampah yang dikomposkan menghasilkan emisi 0,5 kg CO2 dan berbiaya Rp 150 ribu, sedangkan setiap ton sampah yang didaur ulang menghasilkan emisi 0,2 kg CO2 dan berbiaya Rp 220 ribu. Total emisi dari kedua cara tidak boleh lebih dari 19 kg CO2 per hari. Berapa ton sampah yang sebaiknya dikomposkan dan berapa ton yang didaur ulang setiap hari agar biaya pengolahan sampah per hari serendah mungkin?',
-    dataTable: {
-      headers: ['Metode', 'Emisi per ton', 'Biaya per ton'],
-      rows: [
-        ['Pengomposan (x)', '0,5 kg CO2', 'Rp 150 ribu'],
-        ['Daur ulang (y)', '0,2 kg CO2', 'Rp 220 ribu'],
-      ],
-    },
-    variables: {
-      x: { key: 'x', label: 'Pengomposan', unit: 'ton/hari', max: 60, step: 0.5, visual: 'clean', sprite: 'kompos' },
-      y: { key: 'y', label: 'Daur ulang', unit: 'ton/hari', max: 110, step: 0.5, visual: 'neutral', sprite: 'daur-ulang' },
-    },
-    constraints: [
-      c('k_kapasitas', 'Kapasitas pengolahan minimal', 1, 1, '>=', 50, 'explicit', 'total kapasitas pengolahan minimal 50 ton/hari', 'ton'),
-      c('k_emisi', 'Batas emisi harian', 0.5, 0.2, '<=', 19, 'explicit', 'batas emisi total tidak lebih dari 19 kg CO2/hari', 'kg CO2'),
-      ...nonNegativity(),
-    ],
-    objective: {
-      type: 'min',
-      cx: 150,
-      cy: 220,
-      label: 'Total biaya pengelolaan sampah',
-      unit: 'ribu rupiah',
-      display: 'Minimumkan Z = 150x + 220y',
-    },
-    domain: 'continuous',
-    numberStyle: 'decimal_mixed',
-    representation: 'narrative_table',
-    distractor: null,
-    goalOptions: [
-      { id: 'g1', text: 'Minimumkan Z = 150x + 220y (total biaya pengelolaan)', correct: true },
-      { id: 'g2', text: 'Maksimumkan Z = 150x + 220y (total biaya pengelolaan)', correct: false },
-      { id: 'g3', text: 'Minimumkan Z = 0,5x + 0,2y (total emisi karbon)', correct: false },
-      { id: 'g4', text: 'Maksimumkan Z = x + y (total sampah yang diolah)', correct: false },
-    ],
-    variableOptions: [
-      { id: 'vx1', text: 'Banyak sampah yang dikomposkan dalam ton per hari', assignsTo: 'x', correct: true },
-      { id: 'vx2', text: 'Banyak sampah yang didaur ulang dalam ton per hari', assignsTo: 'x', correct: false },
-      { id: 'vx3', text: 'Emisi karbon dari pengomposan', assignsTo: 'x', correct: false },
-      { id: 'vy1', text: 'Banyak sampah yang didaur ulang dalam ton per hari', assignsTo: 'y', correct: true },
-      { id: 'vy2', text: 'Banyak sampah yang dikomposkan dalam ton per hari', assignsTo: 'y', correct: false },
-      { id: 'vy3', text: 'Batas emisi harian kota', assignsTo: 'y', correct: false },
-    ],
-    reflection: {
-      closed: {
-        prompt: 'Mengapa kombinasi yang kamu pilih menghasilkan biaya terendah?',
-        options: [
-          { id: 'r0', text: 'Tidak tahu / saya memilih secara coba-coba', quality: 0 },
-          { id: 'r1', text: 'Karena jumlah sampah yang diolah paling sedikit', quality: 1 },
-          { id: 'r2', text: 'Karena nilai Z pada titik itu paling rendah di antara titik pojok yang saya cek', quality: 2 },
-          {
-            id: 'r3',
-            text: 'Karena pengomposan lebih murah tetapi emisinya lebih besar, sehingga porsi pengomposan hanya bisa dinaikkan sampai batas emisi 19 kg CO2 tercapai',
-            quality: 3,
-          },
-        ],
-      },
-      openPrompt: 'Jelaskan singkat: mengapa kota tidak bisa mengomposkan seluruh 50 ton sampah meskipun itu metode termurah?',
-      expectedTerms: ['kompos', 'pengomposan', 'daur ulang', 'emisi', 'co2', 'biaya', 'ton', 'kapasitas'],
-    },
-    expectedConstraintCount: 2,
-    blueprintConstraintCount: 2,
-    dominantClaims: ['K2', 'K3'],
-    bloom: {
-      tugasUtama: 'C4',
-      refleksi: 'C4',
-      kko: ['menentukan nilai optimum', 'membandingkan titik pojok', 'menganalisis'],
-      indikator:
-        'Disajikan masalah pengolahan sampah dengan batas emisi, siswa dapat menentukan kombinasi yang meminimumkan biaya dan menjelaskan kendala yang mencegah solusi termurah.',
-    },
-    gameInteraction:
-      'Mengatur dua jalur konveyor fasilitas pengolahan sampah kota; sistem menampilkan grafik daerah penyelesaian yang ter-render otomatis sebagai overlay pada peta.',
-  },
-
-  {
-    id: 'L3-SDG11&13-A',
+    id: 'L3-SDG11&13-B',
     level: 3,
     sdgContext: 'SDG11&13',
-    title: 'Indeks Kota Berkelanjutan Gabungan',
+    title: 'Energi Surya untuk Sekolah dan Gang',
     narrative:
-      'Kota Meridian mengembangkan kawasan campuran seluas 100 hektar untuk Hunian Vertikal Hemat Energi seluas x hektar dan Koridor Hijau seluas y hektar. Total investasi tidak melebihi Rp 5 miliar, dengan biaya hunian vertikal Rp 60 juta/hektar dan koridor hijau Rp 20 juta/hektar. Untuk menjaga kualitas udara, luas koridor hijau tidak boleh kurang dari seperempat luas hunian vertikal. Indeks keberlanjutan kota dihitung dari kontribusi hunian vertikal (mengurangi urban sprawl) sebesar 6 poin/hektar dan koridor hijau (menyerap karbon) sebesar 9 poin/hektar. Tentukan kombinasi yang memaksimumkan indeks keberlanjutan.',
+      'Kota Meridian ingin sekolah dan gang kampung memakai energi surya. Akan dipasang x panel surya di atap sekolah dan y lampu jalan tenaga surya di gang. Biaya satu panel Rp 1,5 juta dan satu lampu jalan Rp 0,5 juta, dengan dana paling banyak Rp 60 juta. Satu panel menghasilkan daya 0,4 kW, sedangkan setiap lampu jalan membawa panel kecil 0,1 kW; daya terpasang seluruhnya paling sedikit 8 kW. Demi keamanan warga, lampu jalan yang dipasang paling sedikit 20 buah. Susun sistem pertidaksamaannya, gambar himpunan penyelesaiannya, lalu tentukan satu rencana pemasangan yang memenuhi semua ketentuan.',
     dataTable: {
-      headers: ['Zona', 'Biaya per hektar', 'Kontribusi indeks per hektar'],
+      headers: ['Perangkat', 'Biaya per unit', 'Daya per unit'],
       rows: [
-        ['Hunian Vertikal Hemat Energi (x)', 'Rp 60 juta', '6 poin'],
-        ['Koridor Hijau (y)', 'Rp 20 juta', '9 poin'],
+        ['Panel surya atap sekolah (x)', 'Rp 1,5 juta', '0,4 kW'],
+        ['Lampu jalan tenaga surya (y)', 'Rp 0,5 juta', '0,1 kW'],
       ],
     },
     variables: {
-      x: { key: 'x', label: 'Hunian Vertikal Hemat Energi', unit: 'hektar', max: 110, step: 1, visual: 'housing', sprite: 'gedung' },
-      y: { key: 'y', label: 'Koridor Hijau', unit: 'hektar', max: 120, step: 1, visual: 'nature', sprite: 'pohon' },
+      x: { key: 'x', label: 'Panel surya sekolah', unit: 'unit', max: 45, step: 1, visual: 'clean', sprite: 'surya' },
+      y: { key: 'y', label: 'Lampu jalan surya', unit: 'unit', max: 125, step: 1, visual: 'neutral', sprite: 'trotoar' },
     },
     constraints: [
-      c('k_kawasan', 'Luas kawasan campuran', 1, 1, '<=', 100, 'explicit', 'kawasan campuran seluas 100 hektar', 'hektar'),
-      c('k_investasi', 'Total investasi', 60, 20, '<=', 5000, 'explicit', 'total investasi tidak melebihi Rp 5 miliar', 'juta rupiah'),
-      c('k_udara', 'Rasio koridor hijau', -0.25, 1, '>=', 0, 'explicit', 'luas koridor hijau tidak boleh kurang dari seperempat luas hunian vertikal'),
+      c('k_dana', 'Dana pemasangan', 1.5, 0.5, '<=', 60, 'explicit', 'dana paling banyak Rp 60 juta', 'juta rupiah'),
+      c('k_daya', 'Daya terpasang minimal', 0.4, 0.1, '>=', 8, 'explicit', 'daya terpasang seluruhnya paling sedikit 8 kW', 'kW'),
+      c('k_keamanan', 'Lampu jalan minimal', 0, 1, '>=', 20, 'explicit', 'lampu jalan paling sedikit 20 buah', 'unit'),
       ...nonNegativity(),
     ],
-    objective: {
-      type: 'max',
-      cx: 6,
-      cy: 9,
-      label: 'Indeks keberlanjutan kota',
-      unit: 'poin',
-      display: 'Maksimumkan Z = 6x + 9y',
-    },
-    domain: 'continuous',
+    objective: { ...TANPA_TUJUAN },
+    domain: 'integer',
     numberStyle: 'decimal_mixed',
     representation: 'narrative_table',
     distractor: null,
     goalOptions: [
-      { id: 'g1', text: 'Maksimumkan Z = 6x + 9y (indeks keberlanjutan kota)', correct: true },
-      { id: 'g2', text: 'Maksimumkan Z = 9x + 6y (indeks dengan bobot tertukar)', correct: false },
-      { id: 'g3', text: 'Minimumkan Z = 60x + 20y (total investasi)', correct: false },
-      { id: 'g4', text: 'Maksimumkan Z = x (luas hunian vertikal)', correct: false },
+      { id: 'g1', text: 'Menentukan semua pasangan banyak panel dan lampu jalan yang memenuhi dana, daya, dan jumlah lampu minimal, lalu memilih satu di antaranya', correct: true },
+      { id: 'g2', text: 'Memaksimumkan daya terpasang tanpa memperhatikan dana', correct: false },
+      { id: 'g3', text: 'Memasang lampu jalan saja karena paling murah', correct: false },
     ],
     variableOptions: [
-      { id: 'vx1', text: 'Luas Hunian Vertikal Hemat Energi dalam hektar', assignsTo: 'x', correct: true },
-      { id: 'vx2', text: 'Luas Koridor Hijau dalam hektar', assignsTo: 'x', correct: false },
-      { id: 'vx3', text: 'Biaya pembangunan hunian vertikal per hektar', assignsTo: 'x', correct: false },
-      { id: 'vy1', text: 'Luas Koridor Hijau dalam hektar', assignsTo: 'y', correct: true },
-      { id: 'vy2', text: 'Luas Hunian Vertikal Hemat Energi dalam hektar', assignsTo: 'y', correct: false },
-      { id: 'vy3', text: 'Total indeks keberlanjutan kota', assignsTo: 'y', correct: false },
+      { id: 'vx1', text: 'Banyak panel surya di atap sekolah', assignsTo: 'x', correct: true },
+      { id: 'vx2', text: 'Banyak lampu jalan tenaga surya', assignsTo: 'x', correct: false },
+      { id: 'vx3', text: 'Daya satu panel surya dalam kW', assignsTo: 'x', correct: false },
+      { id: 'vy1', text: 'Banyak lampu jalan tenaga surya', assignsTo: 'y', correct: true },
+      { id: 'vy2', text: 'Banyak panel surya di atap sekolah', assignsTo: 'y', correct: false },
+      { id: 'vy3', text: 'Dana yang tersedia dalam juta rupiah', assignsTo: 'y', correct: false },
     ],
     reflection: {
       closed: {
-        prompt: 'Mengapa kombinasi yang kamu pilih memberi indeks keberlanjutan tertinggi?',
+        prompt: 'Rencana "10 panel dan 20 lampu jalan" memenuhi dana dan jumlah lampu minimal. Apakah rencana itu termasuk himpunan penyelesaian?',
         options: [
-          { id: 'r0', text: 'Tidak tahu / saya memilih secara coba-coba', quality: 0 },
-          { id: 'r1', text: 'Karena kawasannya terpakai seluruhnya', quality: 1 },
-          { id: 'r2', text: 'Karena nilai Z pada titik itu paling tinggi di antara titik pojok yang saya cek', quality: 2 },
+          { id: 'r0', text: 'Tidak tahu', quality: 0 },
+          { id: 'r1', text: 'Ya, karena dananya cukup', quality: 1 },
+          { id: 'r2', text: 'Tidak, karena ada ketentuan yang tidak terpenuhi', quality: 2 },
           {
             id: 'r3',
-            text: 'Karena koridor hijau memberi 9 poin per hektar dengan biaya hanya Rp 20 juta, sehingga memperluas koridor hijau lebih menguntungkan indeks daripada hunian vertikal meskipun daya tampung penduduk berkurang',
+            text: 'Tidak, karena dayanya hanya 0,4 x 10 + 0,1 x 20 = 6 kW, kurang dari 8 kW; panel harus ditambah selama dana Rp 60 juta masih cukup',
             quality: 3,
           },
         ],
       },
-      openPrompt: 'Jelaskan singkat: apa konsekuensi bagi daya tampung penduduk jika kota mengejar indeks keberlanjutan tertinggi?',
-      expectedTerms: ['hunian', 'vertikal', 'koridor hijau', 'hijau', 'indeks', 'investasi', 'poin', 'hektar', 'karbon'],
+      openPrompt:
+        'Jelaskan bagaimana kamu memeriksa bahwa rencana pemasangan pilihanmu memenuhi ketiga ketentuan, termasuk perhitungan daya dan dananya.',
+      expectedTerms: ['panel', 'lampu', 'daya', 'kw', 'dana', 'juta', 'surya', 'ketentuan', 'kendala', 'pertidaksamaan'],
     },
     expectedConstraintCount: 3,
     blueprintConstraintCount: 3,
@@ -246,11 +234,11 @@ export const LEVEL_3_TASKS: TaskDefinition[] = [
     bloom: {
       tugasUtama: 'C4',
       refleksi: 'C4',
-      kko: ['menentukan nilai optimum', 'membandingkan titik pojok', 'menganalisis'],
+      kko: ['menyusun sistem pertidaksamaan', 'mengolah bilangan desimal', 'menentukan himpunan penyelesaian'],
       indikator:
-        'Disajikan masalah kawasan campuran dengan kendala rasio, siswa dapat menentukan kombinasi yang memaksimumkan indeks keberlanjutan dan menganalisis konsekuensinya bagi daya tampung.',
+        'Disajikan masalah pemasangan energi surya dengan koefisien desimal, siswa dapat menyusun sistem pertidaksamaan linear dua variabel, menentukan himpunan penyelesaiannya, dan menunjukkan dengan perhitungan bahwa suatu rencana tidak termasuk himpunan penyelesaian.',
     },
     gameInteraction:
-      'Mengatur dua zona pada viewport isometrik; sistem menyorot titik pojok kandidat dan menampilkan nilai indeks Z secara live.',
+      'Memasang panel surya dan lampu jalan pada peta sekolah dan gang; siswa menggambar grafik himpunan penyelesaian dari pertidaksamaan yang ditulisnya, lalu memilih satu rencana.',
   },
 ];

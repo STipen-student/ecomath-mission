@@ -129,7 +129,7 @@ describe('optimum - pergeseran setelah event distraktor', () => {
   it('setiap task Level 4 benar-benar menggeser titik optimumnya', () => {
     // Bila optimum tidak bergeser, event distraktor tidak menghasilkan bukti K4
     // sama sekali - item tersebut gagal mengukur apa yang diklaimnya.
-    for (const task of TASK_BANK.filter((t) => t.distractor)) {
+    for (const task of TASK_BANK.filter((t) => t.distractor && t.objective.type !== 'none')) {
       const sebelum = findOptimum(task);
       const sesudah = findOptimum(task, {
         constraints: applyPatches(task.constraints, task.distractor!.constraintPatches),
@@ -138,6 +138,27 @@ describe('optimum - pergeseran setelah event distraktor', () => {
           : task.objective,
       });
       expect(sesudah.point, `${task.id}: optimum tidak bergeser setelah event`).not.toEqual(sebelum.point);
+    }
+  });
+
+  it('setiap task Level 4 tanpa fungsi tujuan: event mengeluarkan sebagian rencana dari himpunan penyelesaian', () => {
+    // Tanpa optimum, bukti K4 datang dari rencana yang harus direvisi: harus ada
+    // titik yang memenuhi semua kendala sebelum event tetapi tidak sesudahnya.
+    for (const task of TASK_BANK.filter((t) => t.distractor && t.objective.type === 'none')) {
+      const sesudah = applyPatches(task.constraints, task.distractor!.constraintPatches);
+      let keluar = 0;
+      let masihAda = 0;
+      for (let x = 0; x <= task.variables.x.max; x++) {
+        for (let y = 0; y <= task.variables.y.max; y++) {
+          const p = { x, y };
+          const a = evaluate(task.constraints, p).feasible;
+          const b = evaluate(sesudah, p).feasible;
+          if (a && !b) keluar++;
+          if (b) masihAda++;
+        }
+      }
+      expect(keluar, `${task.id}: event tidak mengubah himpunan penyelesaian`).toBeGreaterThan(0);
+      expect(masihAda, `${task.id}: himpunan penyelesaian sesudah event kosong`).toBeGreaterThan(0);
     }
   });
 });

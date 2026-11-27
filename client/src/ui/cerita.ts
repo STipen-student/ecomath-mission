@@ -129,6 +129,48 @@ const CERITA: Record<string, { judul: string; paragraf: string[] }> = {
       'Hujan tropis di wilayah ini sangat deras, dan studi lingkungan memberi syarat yang harus kamu simpulkan sendiri. "Ini kota terakhirmu," kata Bu Laras. "Buat rencana yang bisa dibanggakan, dan siap direvisi bila keadaan berubah."',
     ],
   },
+  'L3-SDG11-B': {
+    judul: 'Alun-alun yang sejuk',
+    paragraf: [
+      'Alun-alun lama Meridian berdebu dan panas. Pedagang pasar ingin tempat berjualan, warga ingin tempat berteduh.',
+      '"Tidak ada satu jawaban yang paling benar," kata Bu Laras. "Tunjukkan semua rencana yang memenuhi aturan, lalu pilih satu yang kamu yakini."',
+    ],
+  },
+  'L3-SDG13-B': {
+    judul: 'Gunungan sampah Meridian',
+    paragraf: [
+      'Tempat pembuangan sampah Meridian hampir penuh, dan truk-truk tua mengepulkan asap setiap pagi.',
+      'Bu Nita dari Dinas Lingkungan Hidup ingin armada listrik. "Anggaran, daya angkut, dan garasi harus cocok semua," katanya. "Coba gambarkan pilihan-pilihannya."',
+    ],
+  },
+  'L3-SDG11&13-B': {
+    judul: 'Matahari untuk sekolah dan gang',
+    paragraf: [
+      'Listrik di sekolah Meridian sering padam, dan gang-gang kampung gelap di malam hari.',
+      'Pak Hadi menawarkan panel surya dan lampu jalan tenaga surya. "Dananya terbatas, tetapi dayanya harus cukup," kata Bu Laras. "Periksa setiap rencana dengan teliti."',
+    ],
+  },
+  'L4-SDG11-B': {
+    judul: 'Kampung di tepi sungai',
+    paragraf: [
+      'Kampung di tepi sungai Meridian sering kebanjiran. Warga setuju pindah ke kampung susun, asal ruang hijaunya tetap ada.',
+      'Aturan ruang hijaunya tertulis dalam persen, bukan hektar. "Hitung sendiri batasnya," pesan Bu Laras. "Dan bersiaplah, aturan bisa berubah di tengah jalan."',
+    ],
+  },
+  'L4-SDG13-B': {
+    judul: 'Angkot rendah emisi',
+    paragraf: [
+      'Angkot-angkot tua Meridian mengepulkan asap di setiap perempatan. Koperasi angkot ingin beralih ke angkot listrik, tetapi dananya terbatas.',
+      '"Batas emisinya tidak ditulis langsung," kata Bu Laras. "Baca baik-baik, dan kabarnya target iklim kota akan diperketat."',
+    ],
+  },
+  'L4-SDG11&13-B': {
+    judul: 'Rencana induk Solantis',
+    paragraf: [
+      'Perjalananmu berakhir di Solantis, kawasan baru yang belum berpenghuni. Semua yang kamu pelajari diuji di sini: hunian, ruang hijau, dan ketahanan iklim.',
+      'Pedomannya ditulis sebagai perbandingan, dan hujan tropis di sini sangat deras. "Ini kota terakhirmu," kata Bu Laras. "Buat rencana yang memenuhi semua aturan, dan siap direvisi bila keadaan berubah."',
+    ],
+  },
 };
 
 /**
@@ -183,6 +225,30 @@ const JEJAK: Record<string, { sah: string; belum: string }> = {
   },
   'L4-SDG11&13-A': {
     sah: 'Di Solantis, kota baru siap dihuni: rumah rendah karbon dan ruang hijau yang menyerap hujan tropis.',
+    belum: 'Di Solantis, rencana induk masih perlu direvisi sebelum warga pertama datang.',
+  },
+  'L3-SDG11-B': {
+    sah: 'Di Meridian, pedagang kembali berjualan di pasar rakyat, dan anak-anak bermain di ruang hijau alun-alun.',
+    belum: 'Di Meridian, rencana alun-alun masih dibahas ulang. Pedagang dan warga menunggu keputusan Dewan.',
+  },
+  'L3-SDG13-B': {
+    sah: 'Di Meridian, truk dan motor gerobak listrik mengangkut sampah tanpa asap, dan gunungan sampah mulai menyusut.',
+    belum: 'Di Meridian, armada listrik belum disetujui, dan truk tua masih mengepulkan asap setiap pagi.',
+  },
+  'L3-SDG11&13-B': {
+    sah: 'Di Meridian, sekolah tidak lagi padam, dan gang-gang kampung terang setiap malam.',
+    belum: 'Di Meridian, rencana energi surya dikembalikan untuk dihitung ulang, dan gang masih gelap.',
+  },
+  'L4-SDG11-B': {
+    sah: 'Di tepi sungai Meridian, keluarga-keluarga pindah ke kampung susun yang dikelilingi ruang hijau.',
+    belum: 'Di tepi sungai Meridian, rencana kampung susun belum memenuhi aturan ruang hijau, dan warga masih menunggu.',
+  },
+  'L4-SDG13-B': {
+    sah: 'Di jalan-jalan Meridian, angkot listrik melaju senyap, dan udara di perempatan mulai bersih.',
+    belum: 'Di jalan-jalan Meridian, rencana armada belum lolos batas emisi, dan asap angkot tua masih mengepul.',
+  },
+  'L4-SDG11&13-B': {
+    sah: 'Di Solantis, kawasan baru siap dihuni: rumah rendah karbon diimbangi taman dan kolam yang menyerap hujan tropis.',
     belum: 'Di Solantis, rencana induk masih perlu direvisi sebelum warga pertama datang.',
   },
 };

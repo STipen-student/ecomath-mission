@@ -17,5 +17,8 @@
  *   1.2.0  bentuk paralel: angka soal diundi per siswa (A/B/C, kolom
  *          TaskAttempt.bentuk); siswa menggambar grafik SPtLDV sendiri; Misi
  *          Kota Hijau (KH1-KH4) setelah Level 4. Rubrik K1-K4 tidak berubah.
+ *   2.0.0  soal program linear Level 3-4 dikeluarkan (bukan materi kelas X)
+ *          dan diganti enam soal SPtLDV baru tanpa fungsi tujuan (id -B).
+ *          Data Level 3-4 versi 1.x dan 2.x mengukur soal berbeda.
  */
-export const INSTRUMENT_VERSION = '1.2.0';
+export const INSTRUMENT_VERSION = '2.0.0';

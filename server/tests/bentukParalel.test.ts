@@ -82,7 +82,9 @@ describe('bentuk paralel', () => {
           const kendala = applyPatches(x.constraints, x.distractor!.constraintPatches);
           return { ...x, constraints: kendala, objective: { ...x.objective, ...(x.distractor!.objectivePatch ?? {}) } };
         };
-        const oa = findOptimum(setelah(asli)).point!;
+        const pa = findOptimum(setelah(asli)).point;
+        if (!pa) return; // tanpa fungsi tujuan (SPtLDV): tidak ada optimum
+        const oa = pa;
         const o = findOptimum(setelah(t)).point!;
         expect(o.x).toBeCloseTo(oa.x * bentuk.skala, 6);
         expect(o.y).toBeCloseTo(oa.y * bentuk.skala, 6);

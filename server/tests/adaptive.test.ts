@@ -17,7 +17,7 @@ import {
 } from '../src/tasks/adaptive.js';
 import { isAdaptiveEnabled, resetAdaptiveEnabled, setAdaptiveEnabled } from '../src/tasks/adaptiveState.js';
 import { prisma } from '../src/db.js';
-import { TASK_BANK, tasksByLevel } from '../src/tasks/index.js';
+import { getTaskById, TASK_BANK, tasksByLevel } from '../src/tasks/index.js';
 import { deriveObservables } from '../src/scoring/observables.js';
 import { scoreAttempt } from '../src/scoring/index.js';
 import type { RawEvent } from '../src/domain/events.js';
@@ -159,7 +159,7 @@ describe('pagar validitas: tutorial terisolasi dari data penelitian', () => {
 });
 
 describe('pagar validitas: adaptivitas tidak boleh menyentuh penskoran', () => {
-  const task = TASK_BANK.find((t) => t.id === 'L3-SDG13-A')!;
+  const task = getTaskById('L3-SDG13-A')!;
 
   const logDasar: RawEvent[] = [
     { session_id: 's', task_id: task.id, timestamp_ms: 1000, event_type: 'identify_variable', payload: { variable: 'x', optionId: task.variableOptions.find((o) => o.assignsTo === 'x' && o.correct)!.id }, is_valid_at_time: true, duration_since_last_event_ms: 0 },
