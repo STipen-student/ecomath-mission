@@ -460,6 +460,28 @@ function panelTask(d: Ringkasan): HTMLElement {
   );
 }
 
+/** Sel "Pindah tab/keluar" di tabel siswa: jumlah dan lama meninggalkan pengerjaan. */
+function selIntegritas(x: NonNullable<Ringkasan['siswa'][number]['integritas']> | undefined): HTMLElement {
+  if (!x) return el('td', {}, '—');
+  const detik = Math.round(x.durasiMs / 1000);
+  const lama = detik >= 60 ? `${Math.floor(detik / 60)}m ${detik % 60}d` : `${detik}d`;
+  const td = el(
+    'td',
+    { class: x.jumlah === 0 ? 'integritas-bersih' : 'integritas-pergi' },
+    x.jumlah === 0 ? (x.tidakDidukung ? '0 · tanpa layar penuh' : '✓ 0') : `⚠ ${x.jumlah}× · ${lama}`,
+  );
+  td.title = [
+    `Pindah tab/aplikasi: ${x.pindahTab}x`,
+    `Jendela kehilangan fokus (mis. Alt+Tab): ${x.kehilanganFokus}x`,
+    `Keluar layar penuh: ${x.keluarLayarPenuh}x`,
+    `Saat Misi Kota Hijau: ${x.diMisi}x`,
+    x.tidakDidukung ? 'Perangkat tidak mendukung layar penuh (mis. iPhone)' : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return td;
+}
+
 function panelSiswa(d: Ringkasan): HTMLElement {
   const rows = d.siswa.map((s) => {
     const sel = (b: BarisLevelSiswa | undefined): HTMLElement => {
@@ -497,6 +519,7 @@ function panelSiswa(d: Ringkasan): HTMLElement {
       el('td', {}, `${s.totalRaw}`),
       el('td', {}, s.sessionComposite === null ? '—' : num(s.sessionComposite)),
       el('td', {}, s.finishedAt ? 'selesai' : `${s.levelsCompleted}/4`),
+      selIntegritas(s.integritas),
     );
   });
 
@@ -504,7 +527,7 @@ function panelSiswa(d: Ringkasan): HTMLElement {
     'section',
     { class: 'plate card' },
     el('h2', {}, 'PEKERJAAN SISWA'),
-    el('p', { class: 'hint' }, 'Angka pada kolom level adalah jumlah skor 0-12 untuk level itu. Klik salah satu untuk membaca rincian pekerjaan siswa dan meninjau skor K4.'),
+    el('p', { class: 'hint' }, 'Angka pada kolom level adalah jumlah skor 0-12 untuk level itu. Klik salah satu untuk membaca rincian pekerjaan siswa dan meninjau skor K4. Kolom "Pindah tab/keluar" menghitung berapa kali dan berapa lama siswa meninggalkan pengerjaan; arahkan kursor untuk rinciannya. Ini penanda untuk ditinjau, bukan bukti kecurangan.'),
     el(
       'div',
       { class: 'table-scroll' },
@@ -514,7 +537,7 @@ function panelSiswa(d: Ringkasan): HTMLElement {
         el(
           'thead',
           {},
-          el('tr', {}, ...['Siswa', 'Kelas', 'L1', 'L2', 'L3', 'L4', 'Total', 'Komposit', 'Status'].map((h) => el('th', {}, h))),
+          el('tr', {}, ...['Siswa', 'Kelas', 'L1', 'L2', 'L3', 'L4', 'Total', 'Komposit', 'Status', 'Pindah tab/keluar'].map((h) => el('th', {}, h))),
         ),
         el('tbody', {}, ...rows),
       ),

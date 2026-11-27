@@ -114,6 +114,30 @@ teacherRouter.get(
       };
     });
 
+    // Integritas pengerjaan per siswa: berapa kali dan berapa lama meninggalkan
+    // pengerjaan (keluar layar penuh, pindah tab/aplikasi, jendela kehilangan fokus).
+    const idSesi = sesi.map((x) => x.id);
+    const pergiRows = await prisma.eventLog.findMany({
+      where: { sessionId: { in: idSesi }, eventType: 'layar_penuh' },
+      select: { sessionId: true, payload: true },
+    });
+    const misiRows = await prisma.kotaHijau.findMany({ where: { sessionId: { in: idSesi } }, select: { sessionId: true, data: true } });
+    const integritasSesi = (id: string) => {
+      const p = pergiRows.filter((r) => r.sessionId === id).map((r) => parseJson(r.payload) as { aksi?: string; sebab?: string; durasiMs?: number });
+      const pergi = p.filter((x) => x.aksi === 'pergi' || x.aksi === 'keluar');
+      const dataMisi = misiRows.find((m) => m.sessionId === id)?.data;
+      const misi = (dataMisi ? (parseJson(dataMisi) as { integritas?: { jumlah?: number; durasiMs?: number } }) : null)?.integritas;
+      return {
+        jumlah: pergi.length + (misi?.jumlah ?? 0),
+        durasiMs: p.filter((x) => x.aksi === 'kembali').reduce((n, x) => n + (Number(x.durasiMs) || 0), 0) + (misi?.durasiMs ?? 0),
+        pindahTab: pergi.filter((x) => x.sebab === 'tab').length,
+        kehilanganFokus: pergi.filter((x) => x.sebab === 'fokus').length,
+        keluarLayarPenuh: pergi.filter((x) => (x.sebab ?? 'layar-penuh') === 'layar-penuh').length,
+        diMisi: misi?.jumlah ?? 0,
+        tidakDidukung: p.some((x) => x.aksi === 'tidak-didukung'),
+      };
+    };
+
     const siswa = sesi.map((x) => {
       const miliknya = baris.filter((b) => b.s.sessionId === x.id);
       return {
@@ -126,6 +150,7 @@ teacherRouter.get(
         levelsCompleted: miliknya.length,
         totalRaw: miliknya.reduce((n, b) => n + b.eff.rawSum, 0),
         sessionComposite: x.sessionComposite,
+        integritas: integritasSesi(x.id),
         perLevel: miliknya.map((b) => ({
           level: b.s.level,
           taskId: b.s.taskId,

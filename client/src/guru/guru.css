@@ -524,3 +524,15 @@ body {
   gap: 6px;
   margin-top: 6px;
 }
+
+/* Kolom integritas pengerjaan di tabel siswa */
+.integritas-pergi {
+  color: #b3261e;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.integritas-bersih {
+  color: #2e7d32;
+  white-space: nowrap;
+}

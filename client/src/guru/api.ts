@@ -155,6 +155,16 @@ export interface RingkasanSiswa {
   levelsCompleted: number;
   totalRaw: number;
   sessionComposite: number | null;
+  /** Berapa kali dan berapa lama siswa meninggalkan pengerjaan (pindah tab, keluar layar penuh, dll.). */
+  integritas?: {
+    jumlah: number;
+    durasiMs: number;
+    pindahTab: number;
+    kehilanganFokus: number;
+    keluarLayarPenuh: number;
+    diMisi: number;
+    tidakDidukung: boolean;
+  };
   perLevel: BarisLevelSiswa[];
 }
 
