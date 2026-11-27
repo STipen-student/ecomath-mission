@@ -6,6 +6,7 @@
  * level yang sesuai - tidak ada kode endpoint maupun kode client yang berubah.
  */
 
+import { instansiasi } from './bentukParalel.js';
 import type { FeedbackFeatures, SdgContext, TaskDefinition } from '../domain/types.js';
 import { LEVEL_1_TASKS } from './level1.js';
 import { LEVEL_2_TASKS } from './level2.js';
@@ -23,6 +24,16 @@ const BY_ID = new Map(TASK_BANK.map((t) => [t.id, t]));
 
 export function getTaskById(id: string): TaskDefinition | undefined {
   return BY_ID.get(id);
+}
+
+/**
+ * Soal sebagaimana diterima siswa pada satu percobaan: soal asli bila bentuk
+ * 'A', atau angka bentuk paralelnya (tasks/bentukParalel.ts). Semua jalur yang
+ * menilai atau menampilkan pekerjaan siswa wajib memakai fungsi ini.
+ */
+export function getTaskInstance(id: string, bentuk: string | null | undefined): TaskDefinition | undefined {
+  const task = BY_ID.get(id);
+  return task ? instansiasi(task, bentuk) : undefined;
 }
 
 export function tasksByLevel(level: number): TaskDefinition[] {

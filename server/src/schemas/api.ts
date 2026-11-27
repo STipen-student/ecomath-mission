@@ -41,6 +41,11 @@ export const TaskQuerySchema = z.object({
   sessionId: z.string().trim().min(1).max(SHORT_TEXT).optional(),
   /** Memaksa task tertentu - dipakai untuk desain penelitian terkontrol dan demo. */
   taskId: z.string().trim().max(SHORT_TEXT).optional(),
+  /**
+   * Memaksa bentuk paralel tertentu (A/B/C). Bila taskId dipaksa tanpa bentuk,
+   * dipakai soal asli (A); tanpa keduanya, bentuk diundi untuk siswa.
+   */
+  bentuk: z.enum(['A', 'B', 'C']).optional(),
   preferContext: z.enum(['SDG11', 'SDG13', 'SDG11&13']).optional(),
 });
 

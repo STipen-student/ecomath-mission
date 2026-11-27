@@ -14,5 +14,8 @@
  *   1.0.0  sebelum penanda ini ada (kolom kosong pada data lama)
  *   1.1.0  rona peta Level 2-4 dari tulisan siswa (§7.20); bidang perencanaan
  *          Level 3 (§7.21); penanda versi ini (§7.22)
+ *   1.2.0  bentuk paralel: angka soal diundi per siswa (A/B/C, kolom
+ *          TaskAttempt.bentuk); siswa menggambar grafik SPtLDV sendiri; Misi
+ *          Kota Hijau (KH1-KH4) setelah Level 4. Rubrik K1-K4 tidak berubah.
  */
-export const INSTRUMENT_VERSION = '1.1.0';
+export const INSTRUMENT_VERSION = '1.2.0';

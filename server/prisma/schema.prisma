@@ -81,6 +81,9 @@ model TaskAttempt {
   session    Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   level      Int
   taskId     String
+  /// Bentuk paralel (set angka) yang diterima siswa: 'A' = soal asli, 'B'/'C' =
+  /// angka terskala dari tasks/bentukParalel.ts. Skoring memakai bentuk ini.
+  bentuk     String    @default("A")
   startedAt  DateTime  @default(now())
   finishedAt DateTime?
 

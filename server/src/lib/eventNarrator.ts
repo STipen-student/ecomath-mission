@@ -18,7 +18,7 @@
  * data mentah, untuk pemrosesan ulang terprogram bila suatu saat diperlukan.
  */
 
-import { getTaskById } from '../tasks/index.js';
+import { getTaskInstance } from '../tasks/index.js';
 
 export interface DecodedEvent {
   keterangan: string;
@@ -70,9 +70,10 @@ function parsePayload(raw: string): Record<string, unknown> {
  * @param taskId      kode task pemilik event, dipakai mencari teks opsi jawaban
  * @param eventType   nilai event_type, sesuai enum di domain/events.ts
  * @param payloadJson isi kolom payload apa adanya (string JSON dari database)
+ * @param bentuk      bentuk paralel percobaan (A/B/C), agar teks opsi sesuai angka yang dilihat siswa
  */
-export function narrateEvent(taskId: string, eventType: string, payloadJson: string): DecodedEvent {
-  const task = getTaskById(taskId);
+export function narrateEvent(taskId: string, eventType: string, payloadJson: string, bentuk?: string): DecodedEvent {
+  const task = getTaskInstance(taskId, bentuk);
   const p = parsePayload(payloadJson);
 
   switch (eventType) {

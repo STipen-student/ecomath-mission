@@ -21,7 +21,7 @@ import { KECUALI_DRAF2 } from '../lib/kelasPenelitian.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { AdminResultsQuerySchema } from '../schemas/api.js';
-import { getTaskById } from '../tasks/index.js';
+import { getTaskById, getTaskInstance } from '../tasks/index.js';
 import { SCORING_VERSION } from '../scoring/thresholds.js';
 import { buildSessionConclusion, JUDUL_KLAIM, type ClaimProfile } from '../scoring/index.js';
 import { effectiveScore } from '../lib/scoreView.js';
@@ -344,7 +344,7 @@ teacherRouter.get(
     });
     if (!attempt) throw new HttpError(404, 'Percobaan tidak ditemukan');
 
-    const task = getTaskById(attempt.taskId);
+    const task = getTaskInstance(attempt.taskId, attempt.bentuk);
 
     // Jawaban refleksi diangkat ke permukaan supaya guru tidak perlu menelusuri
     // log satu per satu untuk membaca tulisan siswa. Inilah bagian yang paling

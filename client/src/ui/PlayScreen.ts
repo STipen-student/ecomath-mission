@@ -1094,13 +1094,13 @@ export class PlayScreen {
         barisGaris.hidden = g.garisBenar;
         barisSisi.hidden = !g.garisBenar;
         petunjuk.textContent = luar
-          ? `Kendala ke-${sekarang.slot + 1}: garis ${persamaan(sekarang.k)} memotong ${titikPotong(sekarang.k)}, jadi tidak melewati bidang gambar ini (x sampai ${num(xMax)}, y sampai ${num(yMax)}). Biasanya ini tanda angka atau satuan kendalanya keliru. Periksa lagi kendala ke-${sekarang.slot + 1} di panel "Perda", atau lewati garis ini.`
+          ? `Kendala ke-${sekarang.slot + 1}: garis ${persamaan(sekarang.k)} memotong ${titikPotong(sekarang.k)}, jadi tidak melewati bidang gambar ini (x sampai ${num(xMax)}, y sampai ${num(yMax)}). Ada dua kemungkinan: kendala ini memang tidak membatasi pilihan di bidang ini (seluruh bidang sudah memenuhinya), atau ada angka atau satuan yang keliru. Periksa lagi kendala ke-${sekarang.slot + 1} di panel "Perda"; bila sudah yakin benar, lewati garis ini.`
           : !g.garisBenar
           ? `Kendala ke-${sekarang.slot + 1}: gambar garis ${persamaan(sekarang.k)}. Ketik dua titik yang dilalui garis itu (misalnya titik potong sumbu), lalu tekan "Gambar garis". Bisa juga dengan mengetuk dua titik di grafik.`
           : `Kendala ke-${sekarang.slot + 1}: garisnya sudah benar. Ketik satu titik uji di sisi yang memenuhi ${persamaan(sekarang.k, simbol(sekarang.k.op))}, lalu tekan "Arsir sisi ini". Bisa juga dengan mengetuk grafik.`;
       } else if (tulisan.some(({ k }) => keadaan(k).dilewati)) {
         tombolLewati.hidden = true;
-        petunjuk.textContent = 'Garis yang bisa digambar sudah selesai. Ada garis yang kamu lewati karena berada di luar bidang gambar; periksa lagi kendala itu di panel "Perda". Daerah hijau dihitung dari semua kendala yang kamu tulis.';
+        petunjuk.textContent = 'Garis yang bisa digambar sudah selesai. Garis yang kamu lewati berada di luar bidang gambar, jadi kendala itu tidak membatasi daerah di sini. Daerah hijau dihitung dari semua kendala yang kamu tulis.';
       } else {
         tombolLewati.hidden = true;
         petunjuk.textContent = '✓ Grafikmu lengkap. Daerah berarsir hijau adalah himpunan penyelesaian. Ketuk grafik atau isi x dan y untuk menguji titik.';

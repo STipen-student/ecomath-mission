@@ -51,6 +51,7 @@ adminRouter.get(
         student_id: s.attempt.session.studentId ?? '',
         class_code: s.attempt.session.classCode,
         task_id: s.taskId,
+        bentuk: s.attempt.bentuk,
         level: s.level,
         K1: s.k1,
         K2: s.k2,
@@ -96,12 +97,13 @@ adminRouter.get(
     // tiap baris hanya berupa blob JSON yang bentuknya berbeda per jenis event
     // dan terlihat acak saat dibuka di Excel.
     const rows = events.map((e) => {
-      const d = narrateEvent(e.taskId, e.eventType, e.payload);
+      const d = narrateEvent(e.taskId, e.eventType, e.payload, e.attempt.bentuk);
       return {
         session_id: e.sessionId,
         student_name: e.attempt.session.studentName,
         class_code: e.attempt.session.classCode,
         task_id: e.taskId,
+        bentuk: e.attempt.bentuk,
         level: e.attempt.level,
         timestamp_ms: e.timestampMs,
         event_type: e.eventType,

@@ -126,6 +126,7 @@ export async function runExport(opts: ExportOptions): Promise<void> {
         instrument_version: s.attempt.session.instrumentVersion ?? '',
         level: s.level,
         task_id: s.taskId,
+        bentuk: s.attempt.bentuk,
         K1: s.k1,
         K2: s.k2,
         K3: s.k3,
@@ -231,13 +232,14 @@ export async function runExport(opts: ExportOptions): Promise<void> {
     outDir,
     'events.csv',
     events.map((e) => {
-      const d = narrateEvent(e.taskId, e.eventType, e.payload);
+      const d = narrateEvent(e.taskId, e.eventType, e.payload, e.attempt.bentuk);
       return {
         session_id: e.sessionId,
         student_name: e.attempt.session.studentName,
         class_code: e.attempt.session.classCode,
         level: e.attempt.level,
         task_id: e.taskId,
+        bentuk: e.attempt.bentuk,
         timestamp_ms: e.timestampMs,
         event_type: e.eventType,
         keterangan: d.keterangan,

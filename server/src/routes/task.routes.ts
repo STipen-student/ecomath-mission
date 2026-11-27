@@ -16,6 +16,8 @@ import { prisma } from '../db.js';
 import { TaskQuerySchema } from '../schemas/api.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { ASSEMBLY_RULES, feedbackFeaturesFor, getTaskById, pickTaskForLevel } from '../tasks/index.js';
+import { getTaskInstance } from '../tasks/index.js';
+import { daftarBentuk, instansiasi } from '../tasks/bentukParalel.js';
 import { selectAdaptiveTask, surfaceLoad, type PriorClaimScores } from '../tasks/adaptive.js';
 import { isAdaptiveEnabled } from '../tasks/adaptiveState.js';
 import type { AdaptiveSelectionPayload } from '../domain/events.js';
@@ -91,7 +93,7 @@ taskRouter.get(
       });
 
       if (existing) {
-        const task = getTaskById(existing.taskId);
+        const task = getTaskInstance(existing.taskId, existing.bentuk);
         if (!task) throw new HttpError(500, `Task ${existing.taskId} tidak ada di bank skenario`);
         res.json({ attemptId: existing.id, task: toClientTask(task), resumed: true });
         return;
@@ -151,8 +153,17 @@ taskRouter.get(
 
       if (!picked) throw new HttpError(404, `Tidak ada task tersedia untuk level ${level}`);
 
+      // Bentuk paralel diundi merata, agar siswa sekelas mendapat angka berbeda
+      // dengan struktur dan tingkat kesulitan yang sama.
+      const pilihanBentuk = daftarBentuk(picked.id);
+      const bentuk =
+        query.bentuk && pilihanBentuk.includes(query.bentuk)
+          ? query.bentuk
+          : query.taskId
+            ? 'A'
+            : pilihanBentuk[Math.floor(Math.random() * pilihanBentuk.length)]!;
       const attempt = await prisma.taskAttempt.create({
-        data: { sessionId: query.sessionId, level, taskId: picked.id },
+        data: { sessionId: query.sessionId, level, taskId: picked.id, bentuk },
       });
 
       /**
@@ -170,6 +181,7 @@ taskRouter.get(
         ranked: [{ taskId: picked.id, surfaceLoad: surfaceLoad(picked) }],
         tanpaRuangAdaptif: false,
       };
+      payload.bentuk = bentuk;
 
       await prisma.eventLog.create({
         data: {
@@ -184,13 +196,14 @@ taskRouter.get(
         },
       });
 
-      res.json({ attemptId: attempt.id, task: toClientTask(picked), resumed: false });
+      res.json({ attemptId: attempt.id, task: toClientTask(instansiasi(picked, bentuk)), resumed: false });
       return;
     }
 
     // Tanpa sesi: pratinjau task saja (dipakai guru untuk melihat bank soal).
     const picked = query.taskId ? getTaskById(query.taskId) : pickTaskForLevel(level, { preferContext: query.preferContext });
     if (!picked) throw new HttpError(404, `Tidak ada task tersedia untuk level ${level}`);
-    res.json({ attemptId: null, task: toClientTask(picked), resumed: false });
+    // Pratinjau bentuk paralel untuk validator: ?taskId=...&bentuk=B
+    res.json({ attemptId: null, task: toClientTask(instansiasi(picked, query.bentuk)), resumed: false });
   }),
 );

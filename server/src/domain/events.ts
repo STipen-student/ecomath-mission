@@ -184,6 +184,8 @@ export interface AdaptiveSelectionPayload {
   ranked: Array<{ taskId: string; surfaceLoad: number }>;
   /** True bila seluruh varian level ini berbeban sama (Level 1 dan 4). */
   tanpaRuangAdaptif: boolean;
+  /** Bentuk paralel (set angka) yang diundi untuk percobaan ini. */
+  bentuk?: string;
 }
 
 /** goal_set: siswa menetapkan tahap yang ingin ditingkatkan sebelum mulai level. */

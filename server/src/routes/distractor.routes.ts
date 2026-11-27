@@ -20,7 +20,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
-import { getTaskById } from '../tasks/index.js';
+import { getTaskInstance } from '../tasks/index.js';
 import { applyPatches, evaluate } from '../domain/feasibility.js';
 import { THRESHOLDS } from '../scoring/thresholds.js';
 
@@ -42,7 +42,7 @@ distractorRouter.post(
     const attempt = await prisma.taskAttempt.findUnique({ where: { id: attemptId } });
     if (!attempt) throw new HttpError(404, 'Percobaan tidak ditemukan');
 
-    const task = getTaskById(attempt.taskId);
+    const task = getTaskInstance(attempt.taskId, attempt.bentuk);
     if (!task) throw new HttpError(500, `Task ${attempt.taskId} tidak ada di bank skenario`);
     if (!task.distractor) throw new HttpError(400, 'Task ini tidak memiliki event distraktor');
 

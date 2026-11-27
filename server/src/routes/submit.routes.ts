@@ -18,7 +18,7 @@ import { prisma } from '../db.js';
 import { SubmitSchema } from '../schemas/api.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { submitLimiter } from '../middleware/rateLimit.js';
-import { getTaskById } from '../tasks/index.js';
+import { getTaskInstance } from '../tasks/index.js';
 import { buildAssessmentAsLearning, parseGoal, parseSelfAssessment, scoreAttempt } from '../scoring/index.js';
 import { evaluate } from '../domain/feasibility.js';
 import { rowsToRawEvents } from '../lib/eventMapper.js';
@@ -38,7 +38,7 @@ submitRouter.post(
       throw new HttpError(404, `Tidak ada percobaan aktif untuk sesi ${input.sessionId} pada task ${input.taskId}`);
     }
 
-    const task = getTaskById(input.taskId);
+    const task = getTaskInstance(input.taskId, attempt.bentuk);
     if (!task) throw new HttpError(500, `Task ${input.taskId} tidak ada di bank skenario`);
 
     const existingEvents = await prisma.eventLog.findMany({

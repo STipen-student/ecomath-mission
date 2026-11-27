@@ -5,7 +5,7 @@
  */
 
 import { prisma } from '../db.js';
-import { getTaskById } from '../tasks/index.js';
+import { getTaskInstance } from '../tasks/index.js';
 
 function parseJson(s: string | null | undefined): unknown {
   if (!s) return null;
@@ -46,7 +46,7 @@ export async function kotaPerLevel(sessionId: string): Promise<KotaLevelDto[]> {
   for (const r of submitRows) akhirPerAttempt.set(r.attemptId, r);
   return attempts.flatMap((a) => {
     const akhir = akhirPerAttempt.get(a.id);
-    const task = getTaskById(a.taskId);
+    const task = getTaskInstance(a.taskId, a.bentuk);
     if (!akhir || !task) return [];
     const p = (parseJson(akhir.payload) ?? {}) as { x?: unknown; y?: unknown };
     return [
