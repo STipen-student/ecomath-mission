@@ -236,6 +236,17 @@ export function narrateEvent(taskId: string, eventType: string, payloadJson: str
       };
     }
 
+    case 'layar_penuh': {
+      const aksi = teks(p.aksi);
+      const keterangan =
+        aksi === 'keluar'
+          ? 'Keluar dari layar penuh (pengerjaan dijeda)'
+          : aksi === 'masuk'
+            ? 'Kembali ke layar penuh'
+            : 'Perangkat tidak mendukung layar penuh';
+      return { ...KOSONG, catatan: aksi, keterangan };
+    }
+
     case 'learning_reflection': {
       const klaim = teks(p.mostImprovedClaim);
       const terbuka = teks(p.openText);

@@ -7,6 +7,7 @@
  * ada bukti yang luput dicatat.
  */
 
+import { jagaLayarPenuh, layarPenuhDidukung, pastikanLayarPenuh } from './ui/layarPenuh.js';
 import { api, ApiError } from './api/client.js';
 import type { DistractorResponse, Klaim, LoginResponse, SkorKlaim, SubmitResponse, TargetBelajar, TaskDto } from './api/types.js';
 import { logger } from './logging/logger.js';
@@ -144,11 +145,23 @@ export class App {
           const id = (ev as CustomEvent<IdRahasia>).detail;
           if (this.progres) umumkanHadiah(this.progres.selesaikan(id));
         });
+        this.lepasPenjagaLayar?.();
+        this.lepasPenjagaLayar = jagaLayarPenuh(
+          () => this.play !== null || this.misiAktif,
+          (aksi) => {
+            // Data proses (event non-bukti): hanya tercatat saat level berjalan.
+            if (this.play) logger.record('layar_penuh', { aksi }, true);
+          },
+        );
         this.lanjutkanDari(sesi.baru, lanjut);
       },
       () => this.tampilkanHalamanDepan(),
     );
   }
+
+  private lepasPenjagaLayar: (() => void) | null = null;
+  /** Misi Kota Hijau sedang dikerjakan (penjaga layar penuh ikut aktif). */
+  private misiAktif = false;
 
   /** Misi Kota Hijau sudah dikerjakan pada sesi ini (satu kali per sesi). */
   private kotaHijauSelesai = false;
@@ -166,13 +179,17 @@ export class App {
     this.play = null;
     this.tampilkanMemuat('Menyiapkan Misi Kota Hijau...');
     void import('./kotaHijau/MisiKotaHijau.js').then((m) =>
-      m.mountMisiKotaHijau(this.root, {
-        sessionId: this.sessionId,
-        studentName: this.studentName,
-        selesai: () => {
-          this.kotaHijauSelesai = true;
-          lalu();
-        },
+      pastikanLayarPenuh(() => {
+        this.misiAktif = true;
+        m.mountMisiKotaHijau(this.root, {
+          sessionId: this.sessionId,
+          studentName: this.studentName,
+          selesai: () => {
+            this.misiAktif = false;
+            this.kotaHijauSelesai = true;
+            lalu();
+          },
+        });
       }),
     );
   }
@@ -306,10 +323,16 @@ export class App {
    * perencanaan pada observable K2. goal_set menjadi event pertama (t = 0).
    */
   private mulaiBermain(task: TaskDto, target: TargetBelajar, disarankan: Klaim | null): void {
+    // Pengerjaan hanya dimulai dalam layar penuh (lihat ui/layarPenuh.ts).
+    pastikanLayarPenuh(() => this.mulaiBermainLayarPenuh(task, target, disarankan));
+  }
+
+  private mulaiBermainLayarPenuh(task: TaskDto, target: TargetBelajar, disarankan: Klaim | null): void {
     this.target = target;
     this.jumlahPusatDipindah = 0;
     logger.start(this.sessionId, task.id);
     logger.record('goal_set', { ...target, suggestedClaim: disarankan }, true);
+    if (!layarPenuhDidukung()) logger.record('layar_penuh', { aksi: 'tidak-didukung' }, true);
 
     this.root.replaceChildren();
     this.play = new PlayScreen(

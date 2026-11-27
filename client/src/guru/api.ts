@@ -278,6 +278,8 @@ export interface LaporanSiswa {
   /** Kota rancangan akhir tiap level, untuk Peta Wilayah (tampilan guru). */
   kota?: KotaLevel[];
   /** Bangunan koin dan perbaikan protes terakhir yang dikirim siswa. */
+  /** Berapa kali siswa keluar dari layar penuh per level (integritas pengerjaan). */
+  layarPenuh?: Array<{ level: number; keluar: number; tidakDidukung: boolean }>;
   /** Misi Kota Hijau: penilaian KPMM kedua (KH1-KH4), terpisah dari K1-K4. */
   kotaHijau?: {
     versi: string;

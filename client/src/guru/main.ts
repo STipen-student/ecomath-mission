@@ -738,6 +738,7 @@ function isiLaporanSiswa(lap: LaporanSiswa, tutup: () => void): HTMLElement[] {
 
   bagian.push(...panelKemandirianBelajar(lap));
   bagian.push(...panelKotaHijau(lap));
+  bagian.push(...panelLayarPenuh(lap));
 
   return bagian;
 }
@@ -1151,6 +1152,28 @@ function panelKotaHijau(lap: LaporanSiswa): HTMLElement[] {
       el('table', { class: 'data-table' }, el('thead', {}, el('tr', {}, el('th', {}, 'Aspek'), el('th', {}, 'Skor sistem'), el('th', {}, 'Penilaian diri'))), el('tbody', {}, ...baris)),
       el('ul', {}, ...ringkasan.map((t) => el('li', {}, t))),
       ...(kh.refleksi?.teks ? [el('p', {}, `Refleksi: "${kh.refleksi.teks}"`)] : []),
+    ),
+  ];
+}
+
+/** Integritas pengerjaan: keluar dari layar penuh per level. */
+function panelLayarPenuh(lap: LaporanSiswa): HTMLElement[] {
+  const data = lap.layarPenuh ?? [];
+  if (data.length === 0) return [];
+  const total = data.reduce((n, d) => n + d.keluar, 0);
+  return [
+    el(
+      'section',
+      { class: 'profile-block' },
+      el('h3', {}, `INTEGRITAS PENGERJAAN · keluar layar penuh ${total} kali`),
+      el('p', { class: 'hint' }, 'Setiap kali siswa keluar dari layar penuh, soal dijeda sampai ia kembali. Data proses saja; tidak memengaruhi skor.'),
+      el(
+        'ul',
+        {},
+        ...data.map((d) =>
+          el('li', {}, `Level ${d.level}: ${d.tidakDidukung ? 'perangkat tidak mendukung layar penuh' : `keluar ${d.keluar} kali`}`),
+        ),
+      ),
     ),
   ];
 }

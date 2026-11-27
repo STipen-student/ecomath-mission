@@ -276,6 +276,21 @@ teacherRouter.get(
 
     const kota = await kotaPerLevel(session.id);
 
+    // Integritas pengerjaan: berapa kali siswa keluar dari layar penuh per level.
+    const layarRows = await prisma.eventLog.findMany({
+      where: { sessionId: session.id, eventType: 'layar_penuh' },
+      select: { payload: true, attempt: { select: { level: true } } },
+    });
+    const layarPenuh = [1, 2, 3, 4].map((level) => {
+      const milik = layarRows.filter((r) => r.attempt.level === level);
+      const aksi = milik.map((r) => (parseJson(r.payload) as { aksi?: string }).aksi);
+      return {
+        level,
+        keluar: aksi.filter((a) => a === 'keluar').length,
+        tidakDidukung: aksi.includes('tidak-didukung'),
+      };
+    });
+
     // Misi Kota Hijau: penilaian KPMM kedua (KH1-KH4), TERPISAH dari K1-K4.
     const kh = await prisma.kotaHijau.findUnique({ where: { sessionId: session.id } });
     const kotaHijau = kh
@@ -299,6 +314,7 @@ teacherRouter.get(
       kota,
       kotaSiswa,
       kotaHijau,
+      layarPenuh,
       startedAt: session.startedAt.toISOString(),
       finishedAt: session.finishedAt ? session.finishedAt.toISOString() : null,
       sessionComposite: session.sessionComposite,

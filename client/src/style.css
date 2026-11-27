@@ -3502,3 +3502,19 @@ button.gacha-kartu {
   overflow-y: auto;
   align-items: flex-start;
 }
+
+/* Penjaga layar penuh: menutup soal sampai layar penuh aktif */
+.layar-penuh-penutup {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(16, 32, 40, 0.92);
+}
+
+.layar-penuh-kartu {
+  max-width: 480px;
+  width: 100%;
+}

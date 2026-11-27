@@ -222,7 +222,8 @@ export type EventType =
   | 'learning_reflection'
   | 'aal_tanggapan_protes'
   | 'gambar_grafik'
-  | 'kota_snapshot';
+  | 'kota_snapshot'
+  | 'layar_penuh';
 
 /** Satu baris log, mengikuti skema Bagian 5.1 dokumen ECD. */
 export interface LogEvent {

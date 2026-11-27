@@ -214,3 +214,20 @@ yang dinilai sesuai bila penyebabnya fasilitas rusak. Menerapkannya memakai koin
 sama seperti tombol Rawat semua. Kesesuaian rencana kini dinilai menurut jenis
 penyebab (emisi, permukiman tanpa ruang hijau, atau fasilitas rusak), bukan
 hanya nomor SDG-nya.
+
+## Wajib layar penuh selama pengerjaan
+
+Level dan Misi Kota Hijau hanya bisa dimulai dalam **layar penuh**
+(`client/src/ui/layarPenuh.ts`). Setelah layar target, siswa menekan
+**Masuk layar penuh dan mulai**; browser tidak mengizinkan layar penuh dibuka
+otomatis tanpa klik siswa.
+
+Bila siswa keluar dari layar penuh di tengah pengerjaan (Esc, pindah tab, dan
+sebagainya), soal ditutup layar **"Pengerjaan dijeda"** sampai ia kembali.
+Setiap keluar dan masuk selama level dicatat sebagai event `layar_penuh`
+(non-bukti, tidak memengaruhi skor), dan laporan siswa di Portal Guru
+menampilkan bagian **Integritas pengerjaan** (berapa kali keluar per level).
+
+Perangkat yang tidak mendukung layar penuh untuk halaman web (misalnya Safari di
+iPhone) tetap bisa mengerjakan; hal itu dicatat sebagai `tidak-didukung` agar
+dapat dipertimbangkan saat analisis.

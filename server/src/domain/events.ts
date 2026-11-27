@@ -45,6 +45,7 @@ export const EVENT_TYPES = [
   'aal_tanggapan_protes',
   'gambar_grafik',
   'kota_snapshot',
+  'layar_penuh',
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
@@ -75,6 +76,9 @@ export const NON_EVIDENCE_EVENTS: ReadonlySet<EventType> = new Set<EventType>([
   // Isi kota hasil pembelian koin dan perbaikan protes, untuk tampilan guru.
   // Hanya ekonomi permainan; bukan bukti rubrik.
   'kota_snapshot',
+  // Siswa keluar/masuk layar penuh selama level (atau perangkat tidak
+  // mendukungnya). Data proses untuk integritas pengerjaan; bukan bukti rubrik.
+  'layar_penuh',
 ]);
 
 /** Satu baris log mentah sesuai Bagian 5.1. */
